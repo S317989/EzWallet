@@ -13,9 +13,12 @@ import { verifyAuth } from "./utils.js";
 export const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
-    const existingUser = await User.findOne({ email: req.body.email });
-    if (existingUser)
+    const existingEmail = await User.findOne({ email: req.body.email });
+    const existingUsername = await User.findOne({ email: req.body.username });
+
+    if (existingEmail || existingUsername)
       return res.status(400).json({ message: "you are already registered" });
+
     const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = await User.create({
       username,
@@ -38,9 +41,13 @@ export const register = async (req, res) => {
 export const registerAdmin = async (req, res) => {
   try {
     const { username, email, password } = req.body;
-    const existingUser = await User.findOne({ email: req.body.email });
-    if (existingUser)
+
+    const existingEmail = await User.findOne({ email: req.body.email });
+    const existingUsername = await User.findOne({ email: req.body.username });
+
+    if (existingEmail || existingUsername)
       return res.status(400).json({ message: "you are already registered" });
+
     const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = await User.create({
       username,
@@ -64,13 +71,15 @@ export const registerAdmin = async (req, res) => {
     - success 200 is returned if the user is already logged in
  */
 export const login = async (req, res) => {
-  const { email, password } = req.body;
-  const cookie = req.cookies;
-  const existingUser = await User.findOne({ email: email });
-  if (verifyAuth(req, res, { authType: "Simple" }))
-    return res.status(200).json("you are already logged in");
-  if (!existingUser) return res.status(400).json("please you need to register");
   try {
+    const { email, password } = req.body;
+    const cookie = req.cookies;
+    const existingUser = await User.findOne({ email: email });
+    if (verifyAuth(req, res, { authType: "Simple" }))
+      return res.status(200).json("you are already logged in");
+    if (!existingUser)
+      return res.status(400).json("please you need to register");
+
     const match = await bcrypt.compare(password, existingUser.password);
     if (!match) return res.status(400).json("wrong credentials");
     //CREATE ACCESSTOKEN
@@ -98,6 +107,7 @@ export const login = async (req, res) => {
     //SAVE REFRESH TOKEN TO DB
     existingUser.refreshToken = refreshToken;
     const savedUser = await existingUser.save();
+
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       domain: "localhost",
@@ -106,6 +116,7 @@ export const login = async (req, res) => {
       sameSite: "none",
       secure: true,
     });
+
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       domain: "localhost",
@@ -114,6 +125,7 @@ export const login = async (req, res) => {
       sameSite: "none",
       secure: true,
     });
+
     res
       .status(200)
       .json({ data: { accessToken: accessToken, refreshToken: refreshToken } });
