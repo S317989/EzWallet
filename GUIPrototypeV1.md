@@ -1,4 +1,4 @@
-# Graphical User Interface Prototype  - CURRENT
+# Graphical User Interface Prototype - CURRENT
 
 Authors: Gaudino Andrea Alessandro, Ugoccioni Lorenzo
 
@@ -13,7 +13,9 @@ Software: Balsamiq
 <hr>
 
 ## Extraction and representation from the code
+
 From the functionality in the Requirements Documents, we have designed an user interface to make the experience in using the application excellent.
+
 <hr>
 
 ### **Main Page**
@@ -23,6 +25,7 @@ When a user is logged in, he has access to single interface that show the wallet
 A central bar to show the total balance.
 
 A top red bar contains:
+
 - the name of the wallet and a link used to share the access to this wallet, on the center;
 - application logo on the left;
 - user icon on the right that will, if clicked, show a simple user menu;
@@ -39,7 +42,7 @@ The red button at the bottom is used to insert a new transaction.
 
 #### **User menu**
 
-If the user click on the icon on the top-right, it will appear a user menu. The functionality that can be selected are: general settings; check and manage the user profile; find the user who use the wallet (application of *getUser()* function); the Logout button.
+If the user click on the icon on the top-right, it will appear a user menu. The functionality that can be selected are: general settings; check and manage the user profile; find the user who use the wallet (application of _getUser()_ function); the Logout button.
 
 ![GUIs](/assets/GUIs%20-%20V1/4.B%20Main%20Page%20with%20setting%20open.png)
 
@@ -48,15 +51,17 @@ If the user click on the icon on the top-right, it will appear a user menu. The 
 #### **Transaction Analysis**
 
 The page will show the information related to the transaction:
+
 - its title;
 - the category;
 - the color label;
 - the amout;
-- the date; 
+- the date;
 
 ![GUIs](/assets/GUIs%20-%20V1/5.%20Info%20page%20about%20a%20transaction.png)
 
 The three buttons in the page allows him to:
+
 - Comeback to the previous page
 - Modify the current transaction (same page as a new transaction)
 - Delete the current transaction
@@ -75,9 +80,9 @@ The link at the bottom will guide a new user to the register page.
 
 <hr>
 
-#### ***Register now* interface**
+#### **_Register now_ interface**
 
-A new user can register itself compiling the fields which are shown here. The form will be sent by pressing the *Register now* button.
+A new user can register itself compiling the fields which are shown here. The form will be sent by pressing the _Register now_ button.
 
 ![GUIs](/assets/GUIs%20-%20V1/2.%20Register%20interface.png)
 
@@ -90,7 +95,6 @@ A link at the bottom resend the user to the previous page if he already have an 
 In this page the user have to compile all the field in order to register correctly a new transaction. In the top-left corner there's an arrow used to undo the process.
 
 The category will be choose in another page. The date can't be chosen and that of the current day will be assigned.
-
 
 ![GUIs](/assets/GUIs%20-%20V1/6.%20New%20Transaction.png)
 

@@ -1,20 +1,19 @@
-img[alt="GUIs"] { 
+img[alt="GUIs"] {
     display: block;
     margin: auto;
     height: 500px;
 }
 
-.doublePicSection { 
+.doublePicSection {
     text-align: center;
 }
 
-img[alt="DoublePicSection"] { 
+img[alt="DoublePicSection"] {
     margin: 0 10px;
     height: 500px;
 }
 
-img[alt="BalanceManagement"]
-{
+img[alt="BalanceManagement"] {
     display: block;
     margin: auto;
     width: 300px;

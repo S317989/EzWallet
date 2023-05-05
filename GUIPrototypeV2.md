@@ -1,4 +1,4 @@
-# Graphical User Interface Prototype  - FUTURE
+# Graphical User Interface Prototype - FUTURE
 
 Authors: Gaudino Andrea Alessandro, Ugoccioni Lorenzo
 
@@ -8,13 +8,15 @@ Version: 4.0
 
 Software: Sketch
 
-<link rel="stylesheet" type="text/css" media="all" href="./markdownStyle.css" /> 
+<link rel="stylesheet" type="text/css" media="all" href="./markdownStyle.css" />
 
-<hr> 
+<hr>
 
 ## What's new
+
 We suggest six new features for the **EzWallet** project's second version, which will give users of the application extra services. <br>
 To give users a clearer view of their transactions, we are specifically introducing improvements to the application's logic as well as to the pages and services they can access. Here is a quick introduction to each of them:
+
 - [*Logic*] Each user can have multiple wallet and can select one of them.
 - [*Logic*] New application management system, based on a dynamic bottom bar.
 - [*Logic*] The total Balance increase automatically when a transaction is added.
@@ -27,9 +29,10 @@ To give users a clearer view of their transactions, we are specifically introduc
 ### Application Logic
 
 #### **Wallet Management**
+
 The user may want to manage their expenses across different areas, such as daily life, work, or even a simple trip, so we have first decided to introduce the possibility of having multiple different wallets.
 
-For appropriate administration of all the wallets claimed by the client, we have presented a unused page that shows their *title*, *creation date*, *balance* and of course, the possibility to create a new one. 
+For appropriate administration of all the wallets claimed by the client, we have presented a unused page that shows their _title_, _creation date_, _balance_ and of course, the possibility to create a new one.
 
 ![GUIs](/assets/GUIs/WalletPage.png)
 
@@ -38,6 +41,7 @@ In addition, if the user would like to delete a wallet, we have not implemented 
 <hr>
 
 #### **Bottom Bar Layout**
+
 Given the significant number of new sections offered by the update, and, at the same time, the difficulty of managing access to them, it was necessary to develop a simple and intuitive system that allows the user to view all available pages and access them quickly.
 
 To achieve this, we have implemented a dynamic bottom bar, allowing the user to access all the desired sections through clicking the logo button; it will expand the second bar showing a list of new pages. (The re-clicking of the logo will contract the bar)
@@ -50,10 +54,11 @@ To achieve this, we have implemented a dynamic bottom bar, allowing the user to 
 
 </div>
 
-<hr> 
+<hr>
 
 #### **Balance Automation**
-Finally, regarding the software logic, we have decided to include and display a total balance of the expenses made. 
+
+Finally, regarding the software logic, we have decided to include and display a total balance of the expenses made.
 
 ![BalanceManagement](/assets/GUIs/BalanceManagement.png)
 
@@ -64,6 +69,7 @@ The balance of the expenses is organized in two different sections: the HomePage
 #### **Login**
 
 Regarding the login management, we have updated the form system adding two new functionalities:
+
 - The "Remember me" button, used to allow the system to remember the account associated.
 - The "Forgot Password" button, used to allow the user to recover his password.
 
@@ -83,7 +89,7 @@ Regarding the registration management, we have updated the form system adding th
 
 #### **Exchange Section**
 
-Regarding the first page we had in mind, we created the "Exchanges" section which contains information about the credits and debts that the user has. 
+Regarding the first page we had in mind, we created the "Exchanges" section which contains information about the credits and debts that the user has.
 
 In particular, the total amount of credits represents the amount of money the user has borrowed from another person. The displayed information includes the description and category of the transaction, the person who lent the money, the exchange date, and the given amount. Additionally, there is a checkbox that indicates whether the credit has been paid or not.
 

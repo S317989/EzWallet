@@ -1,9 +1,9 @@
-import request from 'supertest';
-import { app } from '../app';
-import { User, Group } from '../models/User.js';
-import { transactions, categories } from '../models/model';
-import mongoose, { Model } from 'mongoose';
-import dotenv from 'dotenv';
+import request from "supertest";
+import { app } from "../app";
+import { User, Group } from "../models/User.js";
+import { transactions, categories } from "../models/model";
+import mongoose, { Model } from "mongoose";
+import dotenv from "dotenv";
 
 /**
  * Necessary setup in order to create a new database for testing purposes before starting the execution of test cases.
@@ -18,7 +18,6 @@ beforeAll(async () => {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
-
 });
 
 /**
@@ -35,19 +34,19 @@ describe("getUsers", () => {
    * Database is cleared before each test case, in order to allow insertion of data tailored for each specific test case.
    */
   beforeEach(async () => {
-    await User.deleteMany({})
-  })
+    await User.deleteMany({});
+  });
 
   test("should return empty list if there are no users", (done) => {
     request(app)
       .get("/api/users")
       .then((response) => {
-        expect(response.status).toBe(200)
-        expect(response.body).toHaveLength(0)
-        done()
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveLength(0);
+        done();
       })
-      .catch((err) => done(err))
-  })
+      .catch((err) => done(err));
+  });
 
   test("should retrieve list of all users", (done) => {
     User.create({
@@ -58,31 +57,31 @@ describe("getUsers", () => {
       request(app)
         .get("/api/users")
         .then((response) => {
-          expect(response.status).toBe(200)
-          expect(response.body).toHaveLength(1)
-          expect(response.body[0].username).toEqual("tester")
-          expect(response.body[0].email).toEqual("test@test.com")
-          expect(response.body[0].password).toEqual("tester")
-          expect(response.body[0].role).toEqual("Regular")
-          done() // Notify Jest that the test is complete
+          expect(response.status).toBe(200);
+          expect(response.body).toHaveLength(1);
+          expect(response.body[0].username).toEqual("tester");
+          expect(response.body[0].email).toEqual("test@test.com");
+          expect(response.body[0].password).toEqual("tester");
+          expect(response.body[0].role).toEqual("Regular");
+          done(); // Notify Jest that the test is complete
         })
-        .catch((err) => done(err))
-    })
-  })
-})
+        .catch((err) => done(err));
+    });
+  });
+});
 
-describe("getUser", () => { })
+describe("getUser", () => {});
 
-describe("createGroup", () => { })
+describe("createGroup", () => {});
 
-describe("getGroups", () => { })
+describe("getGroups", () => {});
 
-describe("getGroup", () => { })
+describe("getGroup", () => {});
 
-describe("addToGroup", () => { })
+describe("addToGroup", () => {});
 
-describe("removeFromGroup", () => { })
+describe("removeFromGroup", () => {});
 
-describe("deleteUser", () => { })
+describe("deleteUser", () => {});
 
-describe("deleteGroup", () => { })
+describe("deleteGroup", () => {});
