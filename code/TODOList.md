@@ -9,6 +9,7 @@ Pre-Conditions to be checked:
   - [ ] createCategory role to be checked
   - [ ] getUsers role to be checked
   - [ ] getAllTransactions role to be checked
+  - [ ] registerAdmin role to be checked
 - [ ] Unit Tests
   - [ ] Auth
   - [ ] Controller
