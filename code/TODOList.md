@@ -5,6 +5,10 @@ Pre-Conditions to be checked:
 - Remember to check the token at the start of the method
 
 - [ ] Check if all the developed methods work properly
+- [ ] Roles Problems 
+  - [ ] createCategory role to be checked
+  - [ ] getUsers role to be checked
+  - [ ] getAllTransactions role to be checked
 - [ ] Unit Tests
   - [ ] Auth
   - [ ] Controller
