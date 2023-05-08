@@ -21,7 +21,7 @@ Pre-Conditions to be checked:
   - [ ] Users
   - [ ] Utils
 - [ ] Controller.js
-  - [ ] UpdateCategory
+  - [X] UpdateCategory
   - [ ] DeleteCategory
   - [ ] GetTransactionByUser
   - [ ] GetTransactionByUserByCategory

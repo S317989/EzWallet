@@ -40,6 +40,27 @@ export const createCategory = (req, res) => {
  */
 export const updateCategory = async (req, res) => {
   try {
+    if (!verifyAuth(req, res, "Admin"))
+      return res.status(401).json({ message: "Unauthorized" });
+
+    const oldCategoryType = req.params.type;
+
+    const { type, color } = req.body;
+
+    if (!(await categories.findOne({ type: type })))
+      return res.status(401).json({ message: "Unauthorized" });
+
+    const updatedCategory = await categories.findOneAndUpdate(
+      { type: oldCategoryType },
+      { $set: { type: type, color: color } }
+    );
+
+    return res.status(200).json({
+      message: "Category updated successfully",
+      count: await transactions.countDocuments({
+        category: oldCategoryType,
+      }),
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

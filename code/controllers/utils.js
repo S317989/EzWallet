@@ -50,6 +50,7 @@ export const verifyAuth = (req, res, info) => {
       cookie.refreshToken,
       process.env.ACCESS_KEY
     );
+    
     if (
       !decodedAccessToken.username ||
       !decodedAccessToken.email ||
@@ -74,6 +75,16 @@ export const verifyAuth = (req, res, info) => {
       res.status(401).json({ message: "Mismatched users" });
       return false;
     }
+
+    if (
+      info.authType === "Admin" &&
+      (decodedAccessToken.role !== "Admin" ||
+        decodedRefreshToken.role !== "Admin")
+    ) {
+      res.status(401).json({ message: "Unauthorized" });
+      return false;
+    }
+
     return true;
   } catch (err) {
     if (err.name === "TokenExpiredError") {
