@@ -13,6 +13,9 @@ import {
  */
 export const createCategory = (req, res) => {
   try {
+    if (!verifyAuth(req, res, "Admin"))
+      return res.status(401).json({ message: "Unauthorized" });
+
     const cookie = req.cookies;
     if (!cookie.accessToken) {
       return res.status(401).json({ message: "Unauthorized" }); // unauthorized
@@ -140,6 +143,9 @@ export const createTransaction = async (req, res) => {
  */
 export const getAllTransactions = async (req, res) => {
   try {
+    if (!verifyAuth(req, res, "Admin"))
+      return res.status(401).json({ message: "Unauthorized" });
+      
     const cookie = req.cookies;
     if (!cookie.accessToken) {
       return res.status(401).json({ message: "Unauthorized" }); // unauthorized

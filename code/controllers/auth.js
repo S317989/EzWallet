@@ -40,6 +40,9 @@ export const register = async (req, res) => {
  */
 export const registerAdmin = async (req, res) => {
   try {
+    if (!verifyAuth(req, res, "Admin"))
+      return res.status(401).json({ message: "Unauthorized" });
+      
     const { username, email, password } = req.body;
 
     const existingEmail = await User.findOne({ email: req.body.email });
@@ -74,9 +77,6 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const cookie = req.cookies;
-
-    console.log(cookie);
-
     const existingUser = await User.findOne({ email: email });
 
     if (verifyAuth(req, res, { authType: "Simple" }))

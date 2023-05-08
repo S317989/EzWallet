@@ -4,12 +4,12 @@ Pre-Conditions to be checked:
 - Check the user role for each method (admin can do something that normal user cannot)
 - Remember to check the token at the start of the method
 
-- [ ] Check if all the developed methods work properly
-- [ ] Roles Problems 
-  - [ ] createCategory role to be checked
-  - [ ] getUsers role to be checked
-  - [ ] getAllTransactions role to be checked
-  - [ ] registerAdmin role to be checked
+- [x] Check if all the developed methods work properly
+- [x] Roles Problems 
+  - [x] createCategory role to be checked
+  - [x] getUsers role to be checked
+  - [x] getAllTransactions role to be checked
+  - [x] registerAdmin role to be checked
 - [ ] Unit Tests
   - [ ] Auth
   - [ ] Controller

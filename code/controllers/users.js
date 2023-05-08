@@ -11,6 +11,9 @@ import { verifyAuth } from "./utils.js";
  */
 export const getUsers = async (req, res) => {
   try {
+    if (!verifyAuth(req, res, "Admin"))
+      return res.status(401).json({ message: "Unauthorized" });
+
     const users = await User.find();
     res.status(200).json(users);
   } catch (error) {
