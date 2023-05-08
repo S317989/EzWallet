@@ -2,7 +2,7 @@ import request from "supertest";
 import { app } from "../app";
 import { User } from "../models/User.js";
 import jwt from "jsonwebtoken";
-import { register, registerAdmin } from "../controllers/auth";
+import { register, registerAdmin, login } from "../controllers/auth";
 const bcrypt = require("bcryptjs");
 
 jest.mock("bcryptjs");
@@ -106,6 +106,11 @@ describe("login", () => {
       email: "Prova1",
       password: "Prova1",
     };
+
+    
+    const response = await request(app)
+    .get('/api/login')
+    .set('Cookie', ['accessToken=tokenValue; refreshToken=tokenValue']);
 
     const mockRequest = { body: user };
     const mockResponse = {

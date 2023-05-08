@@ -74,7 +74,11 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const cookie = req.cookies;
+
+    console.log(cookie);
+
     const existingUser = await User.findOne({ email: email });
+
     if (verifyAuth(req, res, { authType: "Simple" }))
       return res.status(200).json("you are already logged in");
     if (!existingUser)
@@ -148,6 +152,7 @@ export const logout = async (req, res) => {
     return res.status(200).json("you are already logged out");
   const refreshToken = req.cookies.refreshToken;
 
+  console.log(refreshToken);
   const user = await User.findOne({ refreshToken: refreshToken });
   if (!user) return res.status(400).json("user not found");
   try {
