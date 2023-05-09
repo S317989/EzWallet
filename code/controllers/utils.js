@@ -50,7 +50,7 @@ export const verifyAuth = (req, res, info) => {
       cookie.refreshToken,
       process.env.ACCESS_KEY
     );
-    
+
     if (
       !decodedAccessToken.username ||
       !decodedAccessToken.email ||
@@ -76,16 +76,12 @@ export const verifyAuth = (req, res, info) => {
       return false;
     }
 
-    if (
-      info.authType === "Admin" &&
-      (decodedAccessToken.role !== "Admin" ||
-        decodedRefreshToken.role !== "Admin")
-    ) {
-      res.status(401).json({ message: "Unauthorized" });
-      return false;
-    }
-
-    return true;
+    return checkRolesPermissions(
+      decodedAccessToken,
+      decodedRefreshToken,
+      info,
+      res
+    );
   } catch (err) {
     if (err.name === "TokenExpiredError") {
       try {
@@ -125,6 +121,67 @@ export const verifyAuth = (req, res, info) => {
       res.status(401).json({ message: err.name });
       return false;
     }
+  }
+};
+
+/**
+ *  Method that contains all the checking roles needed by verifyAuth. (In order to have a clear code)
+ *      Additional criteria:
+ *          - authType === "Admin":
+ *              - either the accessToken or the refreshToken have a `role` which is not Admin => error 401
+ *              - the accessToken is expired and the refreshToken has a ``role` which is not Admin => error 401
+ *              - both the accessToken and the refreshToken have a `role` which is equal to Admin => success
+ *              - the accessToken is expired and the refreshToken has a `role` which is equal to Admin => success
+ *          - authType === "User":
+ *              - either the accessToken or the refreshToken have a `username` different from the requested one => error 401
+ *              - the accessToken is expired and the refreshToken has a `username` different from the requested one => error 401
+ *              - both the accessToken and the refreshToken have a `username` equal to the requested one => success
+ *              - the accessToken is expired and the refreshToken has a `username` equal to the requested one => success
+ *          - authType === "User":
+ *              - either the accessToken or the refreshToken have a `email` which is not in the requested group => error 401
+ *              - the accessToken is expired and the refreshToken has a `email` which is not in the requested group => error 401
+ *              - both the accessToken and the refreshToken have a `email` which is in the requested group => success
+ *              - the accessToken is expired and the refreshToken has a `email` which is in the requested group => success
+ */
+
+const checkRolesPermissions = (
+  decodedAccessToken,
+  decodedRefreshToken,
+  info,
+  res
+) => {
+  switch (info.accessToken) {
+    case "Admin":
+      if (
+        decodedAccessToken.role !== "Admin" ||
+        decodedRefreshToken.role !== "Admin" ||
+        (!decodedAccessToken && decodedRefreshToken.role !== "Admin")
+      ) {
+        res.status(401).json({ message: "Unauthorized" });
+        return false;
+      }
+      break;
+    case "User":
+      if (
+        decodedAccessToken.username !== "User" ||
+        decodedRefreshToken.username !== "User" ||
+        (!decodedAccessToken && decodedRefreshToken.username !== "User")
+      ) {
+        res.status(401).json({ message: "Unauthorized" });
+        return false;
+      }
+      break;
+    case "Group":
+      if (
+        decodedAccessToken.email !== info.group ||
+        (!decodedAccessToken && decodedRefreshToken.email !== info.group)
+      ) {
+        res.status(401).json({ message: "Unauthorized" });
+        return false;
+      }
+      break;
+    default:
+      return true;
   }
 };
 
