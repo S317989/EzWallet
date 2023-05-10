@@ -87,16 +87,14 @@ export const deleteCategory = async (req, res) => {
     if (!(await categories.findOne({ type: categoryToDelete }))) {
       return res
         .status(401)
-        .json({ message: `Category ${category} didn't exist !` });
+        .json({ message: `Category ${category} don't exist !` });
     }
-
-    let affectedTransaction = transactions.countDocuments({
-      type: categoryToDelete,
-    });
 
     return res.status(200).json({
       message: `Category ${categoryToDelete} successfully deleted !`,
-      count: affectedTransaction,
+      count: transactions.countDocuments({
+        type: categoryToDelete,
+      }),
     });
   } catch (error) {
     res.status(400).json({ error: error.message });
