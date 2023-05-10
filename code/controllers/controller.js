@@ -78,21 +78,26 @@ export const updateCategory = async (req, res) => {
  */
 export const deleteCategory = async (req, res) => {
   try {
-    if(!verifyAuth(req, res, "Admin")){ return res.status(401).json({message:"Unauthorized"});}
+    if (!verifyAuth(req, res, "Admin")) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
     const categoryToDelete = req.body;
 
-    if(!(await categories.findOne({ type: categoryToDelete}))){
-       return res.status(401).json({message:`Category ${category} didn't exist !`});
+    if (!(await categories.findOne({ type: categoryToDelete }))) {
+      return res
+        .status(401)
+        .json({ message: `Category ${category} didn't exist !` });
     }
 
-    let affectedTransaction = transactions.countDocuments({ type: categoryToDelete });
+    let affectedTransaction = transactions.countDocuments({
+      type: categoryToDelete,
+    });
 
     return res.status(200).json({
-      message : `Category ${categoryToDelete} successfully deleted !`,
-      count : affectedTransaction,
+      message: `Category ${categoryToDelete} successfully deleted !`,
+      count: affectedTransaction,
     });
-    
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -322,8 +327,14 @@ const getTransactionsDetails = async (req, res) => {
         )
       );
 
-      let filterResultByDate = handleDateFilterParams(req, data);
+      const dataIncludes = ["date", "from", "upTo"];
 
-      res.json(filterResultByDate);
+      if (dataIncludes.some((v) => Object.keys(req.query).includes(v)))
+        data = handleDateFilterParams(req, data);
+
+      if (Object.keys(req.query).toString().includes("amount"))
+        data = handleAmountFilterParams(req, data);
+
+      res.json(data);
     });
 };

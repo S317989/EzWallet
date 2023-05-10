@@ -9,7 +9,9 @@ import jwt from "jsonwebtoken";
  * @throws an error if the query parameters include `date` together with at least one of `from` or `upTo`
  */
 export const handleDateFilterParams = (req, data) => {
-  const { date, from, upTo } = req.query;
+  let { date, from, upTo } = req.query;
+  const queryKey = Object.keys(req.query);
+  const queryValue = req.query[queryKey];
 
   if (date && (from || upTo)) {
     throw new Error(
@@ -17,19 +19,52 @@ export const handleDateFilterParams = (req, data) => {
     );
   }
 
-  switch (Object.keys(req.query).toString()) {
+  switch (queryKey.toString()) {
     case "date":
-      data = data.filter((t) => t.date >= new Date(date));
+      date = date.substring(date.indexOf('"') + 1, date.lastIndexOf('"'));
+
+      if (queryValue.includes("gt"))
+        data = data.filter((t) => t.date >= new Date(date));
+      else if (queryValue.includes("lt"))
+        data = data.filter((t) => t.date <= new Date(date));
+      else
+        data = data.filter(
+          (t) =>
+            new Date(t.date).toDateString() === new Date(date).toDateString()
+        );
+
       break;
     case "from":
       data = data.filter((t) => t.date >= new Date(from));
+
       break;
     case "upTo":
       data = data.filter((t) => t.date <= new Date(upTo));
+
       break;
   }
 
-  console.log(data);
+  return data;
+};
+
+/**
+ * Handle possible amount filtering options in the query parameters for getTransactionsByUser when called by a Regular user.
+ * @param req the request object that can contain query parameters
+ * @returns an object that can be used for filtering MongoDB queries according to the `amount` parameter.
+ *  The returned object must handle all possible combination of amount filtering parameters, including the case where none are present.
+ *  Example: {amount: {$gte: 100}} returns all transactions whose `amount` parameter is greater or equal than 100
+ */
+export const handleAmountFilterParams = (req, data) => {
+  const queryKey = Object.keys(req.query);
+  const queryValue = req.query[queryKey];
+
+  const amount = queryValue.substring(queryValue.indexOf(" ") + 1);
+
+  if (queryValue.includes("gt")) data = data.filter((t) => t.amount >= amount);
+  else if (queryValue.includes("lt"))
+    data = data.filter((t) => t.amount <= amount);
+  else data = data.filter((t) => t.amount == amount);
+
   return data;
 };
 
@@ -189,12 +224,3 @@ const checkRolesPermissions = (
       return true;
   }
 };
-
-/**
- * Handle possible amount filtering options in the query parameters for getTransactionsByUser when called by a Regular user.
- * @param req the request object that can contain query parameters
- * @returns an object that can be used for filtering MongoDB queries according to the `amount` parameter.
- *  The returned object must handle all possible combination of amount filtering parameters, including the case where none are present.
- *  Example: {amount: {$gte: 100}} returns all transactions whose `amount` parameter is greater or equal than 100
- */
-export const handleAmountFilterParams = (req) => {};
