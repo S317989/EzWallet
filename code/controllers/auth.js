@@ -71,64 +71,39 @@ export const registerAdmin = async (req, res) => {
   - Optional behavior:
     - error 400 is returned if the user does not exist
     - error 400 is returned if the supplied password does not match with the one in the database
-    - success 200 is returned if the user is already logged in
  */
 export const login = async (req, res) => {
-  const { email, password } = req.body;
-  const cookie = req.cookies;
-  const existingUser = await User.findOne({ email: email });
-  if (!existingUser) return res.status(400).json("please you need to register");
-  try {
-    const match = await bcrypt.compare(password, existingUser.password);
-    if (!match) return res.status(400).json("wrong credentials");
-    //CREATE ACCESSTOKEN
-    const accessToken = jwt.sign(
-      {
-        email: existingUser.email,
-        id: existingUser.id,
-        username: existingUser.username,
-        role: existingUser.role,
-      },
-      process.env.ACCESS_KEY,
-      { expiresIn: "1h" }
-    );
-    //CREATE REFRESH TOKEN
-    const refreshToken = jwt.sign(
-      {
-        email: existingUser.email,
-        id: existingUser.id,
-        username: existingUser.username,
-        role: existingUser.role,
-      },
-      process.env.ACCESS_KEY,
-      { expiresIn: "7d" }
-    );
-    //SAVE REFRESH TOKEN TO DB
-    existingUser.refreshToken = refreshToken;
-    const savedUser = await existingUser.save();
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      domain: "localhost",
-      path: "/api",
-      maxAge: 60 * 60 * 1000,
-      sameSite: "none",
-      secure: true,
-    });
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      domain: "localhost",
-      path: "/api",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: "none",
-      secure: true,
-    });
-    res
-      .status(200)
-      .json({ data: { accessToken: accessToken, refreshToken: refreshToken } });
-  } catch (error) {
-    res.status(400).json(error);
-  }
-};
+    const { email, password } = req.body
+    const cookie = req.cookies
+    const existingUser = await User.findOne({ email: email })
+    if (!existingUser) return res.status(400).json('please you need to register')
+    try {
+        const match = await bcrypt.compare(password, existingUser.password)
+        if (!match) return res.status(400).json('wrong credentials')
+        //CREATE ACCESSTOKEN
+        const accessToken = jwt.sign({
+            email: existingUser.email,
+            id: existingUser.id,
+            username: existingUser.username,
+            role: existingUser.role
+        }, process.env.ACCESS_KEY, { expiresIn: '1h' })
+        //CREATE REFRESH TOKEN
+        const refreshToken = jwt.sign({
+            email: existingUser.email,
+            id: existingUser.id,
+            username: existingUser.username,
+            role: existingUser.role
+        }, process.env.ACCESS_KEY, { expiresIn: '7d' })
+        //SAVE REFRESH TOKEN TO DB
+        existingUser.refreshToken = refreshToken
+        const savedUser = await existingUser.save()
+        res.cookie("accessToken", accessToken, { httpOnly: true, domain: "localhost", path: "/api", maxAge: 60 * 60 * 1000, sameSite: "none", secure: true })
+        res.cookie('refreshToken', refreshToken, { httpOnly: true, domain: "localhost", path: '/api', maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'none', secure: true })
+        res.status(200).json({ data: { accessToken: accessToken, refreshToken: refreshToken } })
+    } catch (error) {
+        res.status(400).json(error)
+    }
+}
 
 /**
  * Perform logout

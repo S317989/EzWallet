@@ -41,6 +41,7 @@ export const handleDateFilterParams = (req, data) => {
  * @returns true if the user satisfies all the conditions of the specified `authType` and false if at least one condition is not satisfied
  *  Refreshes the accessToken if it has expired and the refreshToken is still valid
  */
+
 export const verifyAuth = (req, res, info) => {
   const cookie = req.cookies;
   if (!cookie.accessToken || !cookie.refreshToken) {
@@ -56,7 +57,6 @@ export const verifyAuth = (req, res, info) => {
       cookie.refreshToken,
       process.env.ACCESS_KEY
     );
-
     if (
       !decodedAccessToken.username ||
       !decodedAccessToken.email ||
@@ -81,7 +81,6 @@ export const verifyAuth = (req, res, info) => {
       res.status(401).json({ message: "Mismatched users" });
       return false;
     }
-
     return checkRolesPermissions(
       decodedAccessToken,
       decodedRefreshToken,
@@ -135,7 +134,7 @@ export const verifyAuth = (req, res, info) => {
  *      Additional criteria:
  *          - authType === "Admin":
  *              - either the accessToken or the refreshToken have a `role` which is not Admin => error 401
- *              - the accessToken is expired and the refreshToken has a ``role` which is not Admin => error 401
+ *              - the accessToken is expired and the refreshToken has a `role` which is not Admin => error 401
  *              - both the accessToken and the refreshToken have a `role` which is equal to Admin => success
  *              - the accessToken is expired and the refreshToken has a `role` which is equal to Admin => success
  *          - authType === "User":
@@ -143,7 +142,7 @@ export const verifyAuth = (req, res, info) => {
  *              - the accessToken is expired and the refreshToken has a `username` different from the requested one => error 401
  *              - both the accessToken and the refreshToken have a `username` equal to the requested one => success
  *              - the accessToken is expired and the refreshToken has a `username` equal to the requested one => success
- *          - authType === "User":
+ *          - authType === "Group":
  *              - either the accessToken or the refreshToken have a `email` which is not in the requested group => error 401
  *              - the accessToken is expired and the refreshToken has a `email` which is not in the requested group => error 401
  *              - both the accessToken and the refreshToken have a `email` which is in the requested group => success
