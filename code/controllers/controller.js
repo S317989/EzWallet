@@ -78,6 +78,21 @@ export const updateCategory = async (req, res) => {
  */
 export const deleteCategory = async (req, res) => {
   try {
+    if(!verifyAuth(req, res, "Admin")){ return res.status(401).json({message:"Unauthorized"});}
+
+    const categoryToDelete = req.body;
+
+    if(!(await categories.findOne({ type: categoryToDelete}))){
+       return res.status(401).json({message:`Category ${category} didn't exist !`});
+    }
+
+    let affectedTransaction = transactions.countDocuments({ type: categoryToDelete });
+
+    return res.status(200).json({
+      message : `Category ${categoryToDelete} successfully deleted !`,
+      count : affectedTransaction,
+    });
+    
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
