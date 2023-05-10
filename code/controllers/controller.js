@@ -145,7 +145,7 @@ export const getAllTransactions = async (req, res) => {
   try {
     if (!verifyAuth(req, res, "Admin"))
       return res.status(401).json({ message: "Unauthorized" });
-      
+
     const cookie = req.cookies;
     if (!cookie.accessToken) {
       return res.status(401).json({ message: "Unauthorized" }); // unauthorized
@@ -153,37 +153,9 @@ export const getAllTransactions = async (req, res) => {
     /**
      * MongoDB equivalent to the query "SELECT * FROM transactions, categories WHERE transactions.type = categories.type"
      */
-    transactions
-      .aggregate([
-        {
-          $lookup: {
-            from: "categories",
-            localField: "type",
-            foreignField: "type",
-            as: "categories_info",
-          },
-        },
-        { $unwind: "$categories_info" },
-      ])
-      .then((result) => {
-        let data = result.map((v) =>
-          Object.assign(
-            {},
-            {
-              _id: v._id,
-              username: v.username,
-              amount: v.amount,
-              type: v.type,
-              color: v.categories_info.color,
-              date: v.date,
-            }
-          )
-        );
-        res.json(data);
-      })
-      .catch((error) => {
-        throw error;
-      });
+    getTransactionsDetails(req, res).catch((error) => {
+      throw error;
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -200,10 +172,23 @@ export const getAllTransactions = async (req, res) => {
  */
 export const getTransactionsByUser = async (req, res) => {
   try {
-    //Distinction between route accessed by Admins or Regular users for functions that can be called by both
-    //and different behaviors and access rights
-    if (req.url.indexOf("/transactions/users/") >= 0) {
+    if (!req.params.hasOwnProperty("username")) {
+      console.log("Admin Section");
+
+      /** Admin Section because there is not the user path param */
+      if (!verifyAuth(req, res, "Admin"))
+        return res.status(401).json({ message: "Unauthorized" });
+
+      return res.status(200).json(await getTransactionsDetails(req, res));
     } else {
+      console.log("Regular Section");
+      if (
+        !verifyAuth(req, res, "Regular") ||
+        !(await User.findOne({ username: req.params.username }))
+      )
+        return res.status(401).json({ message: "Unauthorized" });
+
+      return res.status(200).json(await getTransactionsDetails(req, res));
     }
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -287,4 +272,43 @@ export const deleteTransactions = async (req, res) => {
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
+};
+
+const getTransactionsDetails = async (req, res) => {
+  return await transactions
+    .aggregate([
+      {
+        $lookup: {
+          from: "categories",
+          localField: "type",
+          foreignField: "type",
+          as: "categories_info",
+        },
+      },
+      { $unwind: "$categories_info" },
+    ])
+    .then((result) => {
+      let filterResult =
+        req.params.username != undefined
+          ? result.filter((user) => user.username == req.params.username)
+          : result;
+
+      let data = filterResult.map((v) =>
+        Object.assign(
+          {},
+          {
+            _id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            color: v.categories_info.color,
+            date: v.date,
+          }
+        )
+      );
+
+      let filterResultByDate = handleDateFilterParams(req, data);
+
+      res.json(filterResultByDate);
+    });
 };

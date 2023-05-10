@@ -66,6 +66,7 @@ router.delete("/categories", deleteCategory);
 router.get("/transactions", getAllTransactions);
 router.delete("/transactions", deleteTransactions);
 router.get("/transactions/users/:username", getTransactionsByUser);
+router.get("/transactions/users/", getTransactionsByUser);
 router.get(
   "/transactions/users/:username/category/:category",
   getTransactionsByUserByCategory
