@@ -56,7 +56,7 @@ export const handleDateFilterParams = (req, data) => {
  */
 export const handleAmountFilterParams = (req, data) => {
   const queryKey = Object.keys(req.query);
-  const queryValue = req.query[queryKey];
+  const queryValue = req.query["queryKey"];
 
   const amount = queryValue.substring(queryValue.indexOf(" ") + 1);
 
@@ -67,6 +67,13 @@ export const handleAmountFilterParams = (req, data) => {
 
   return data;
 };
+
+export const handleCategoryFilterParams = (req, data) => {
+  const paramsValue = req.params.category;
+
+  return data.filter((t) => t.type == paramsValue);
+};
+
 
 /**
  * Handle possible authentication modes depending on `authType`

@@ -23,8 +23,8 @@ Pre-Conditions to be checked:
 - [ ] Controller.js
   - [x] UpdateCategory
   - [x] DeleteCategory
-  - [ ] GetTransactionByUser
-  - [ ] GetTransactionByUserByCategory
+  - [x] GetTransactionByUser
+  - [x] GetTransactionByUserByCategory
   - [ ] GetTransactionByGroup
   - [ ] GetTransactionByGroupByCategory
   - [ ] DeleteTransactions
@@ -36,9 +36,9 @@ Pre-Conditions to be checked:
   - [ ] removeFromGroup
   - [ ] deleteUser
   - [ ] deleteGroup
-- [ ] Utils
-  - [ ] handleDataFilterParams
-  - [ ] handleAmountFilterParams
+- [x] Utils
+  - [x] handleDataFilterParams
+  - [x] handleAmountFilterParams
 
 To be checked:
-  - [] DeleteCategory
+  - [x] DeleteCategory

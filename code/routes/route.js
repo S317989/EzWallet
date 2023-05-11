@@ -71,6 +71,10 @@ router.get(
   "/transactions/users/:username/category/:category",
   getTransactionsByUserByCategory
 );
+router.get(
+  "/transactions/users/category/:category",
+  getTransactionsByUserByCategory
+);
 router.get("/transactions/groups/:name", getTransactionsByGroup);
 router.get(
   "/transactions/groups/:name/category/:category",

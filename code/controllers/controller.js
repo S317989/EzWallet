@@ -3,6 +3,7 @@ import { Group, User } from "../models/User.js";
 import {
   handleDateFilterParams,
   handleAmountFilterParams,
+  handleCategoryFilterParams,
   verifyAuth,
 } from "./utils.js";
 
@@ -223,6 +224,24 @@ export const getTransactionsByUser = async (req, res) => {
  */
 export const getTransactionsByUserByCategory = async (req, res) => {
   try {
+    if (!req.params.hasOwnProperty("username")) {
+      console.log("Admin Section");
+
+      /** Admin Section because there is not the user path param */
+      if (!verifyAuth(req, res, "Admin"))
+        return res.status(401).json({ message: "Unauthorized" });
+
+      return res.status(200).json(await getTransactionsDetails(req, res));
+    } else {
+      console.log("Regular Section");
+      if (
+        !verifyAuth(req, res, "Regular") ||
+        !(await User.findOne({ username: req.params.username }))
+      )
+        return res.status(401).json({ message: "Unauthorized" });
+
+      return res.status(200).json(await getTransactionsDetails(req, res));
+    }
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -238,6 +257,24 @@ export const getTransactionsByUserByCategory = async (req, res) => {
  */
 export const getTransactionsByGroup = async (req, res) => {
   try {
+    if (!req.params.name == ":name") {
+      console.log("Admin Section");
+
+      /** Admin Section because there is not the user path param */
+      if (!verifyAuth(req, res, "Admin"))
+        return res.status(401).json({ message: "Unauthorized" });
+
+      return res.status(200).json(await getTransactionsDetails(req, res));
+    } else {
+      console.log("Regular Section");
+      if (
+        !verifyAuth(req, res, "Regular") ||
+        !(await Group.findOne({ name: req.params.name }))
+      )
+        return res.status(401).json({ message: "Unauthorized" });
+
+      return res.status(200).json(await getTransactionsDetails(req, res));
+    }
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -332,6 +369,10 @@ const getTransactionsDetails = async (req, res) => {
 
       if (Object.keys(req.query).toString().includes("amount"))
         data = handleAmountFilterParams(req, data);
+
+      if (Object.keys(req.params).toString().includes("category"))
+        data = handleCategoryFilterParams(req, data);
+
 
       res.json(data);
     });
