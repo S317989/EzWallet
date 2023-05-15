@@ -58,40 +58,43 @@ export const getUser = async (req, res) => {
  */
 export const createGroup = async (req, res) => {
   try {
-    const { name, memberEmails } = req.body;
+    const { name, members } = req.body;
 
     const membersNotFound = [];
     const alreadyInGroup = [];
-    const members = [];
+    const memberEmails = members.map((member) => member.email);
+
     // if the group already exists
-    const groupExists = await group.findOne({ name });
-    if (groupExists) {
+    if (await Group.findOne({ name }))
       return res.status(401).json({ message: "group already exists" });
-    }
+
     //if all members exist and are not already in a group
+    let user;
+    let checkInGroup = false;
     for (let email of memberEmails) {
-      const user = await user.findOne({ email });
-      if (!user) {
-        membersNotFound.push(email);
-      } else if (user.groups.inlcudes(name)) {
-        alreadyInGroup.push(email);
-      }
+      user = await User.findOne({ email });
+
+      if (!user) membersNotFound.push(email);
+
+      // if the user is already in a group
+      checkInGroup = await Group.findOne({
+        members: { $elemMatch: { email } },
+      });
+
+      if (checkInGroup == null) alreadyInGroup.push(email);
     }
-    if (alreadyInGroup.length > 0 || membersNotFound.length > 0) {
-      return res.status(401).json({ alreadyInGroup, memberNotFound });
-    }
+
     // create new group and add members to it
-    const Group = new Group({ name, members: memberEmails });
-    await Group.save();
-    for (let email of memberEmails) {
-      await user.updateOne({ email }, { $push: { groups: name } });
-    }
+    const newGroup = await Group.create({ name, members });
+    await newGroup.save();
+
     //  response data content
-    const responsedata = {
-      group: { name, members: memberEmails },
+    const responseData = {
+      newGroup: { name, members: memberEmails },
       alreadyInGroup: [],
       memberNotFound: [],
     };
+
     res.status(201).json(responseData);
   } catch (err) {
     res.status(500).json(err.message);
@@ -108,6 +111,11 @@ export const createGroup = async (req, res) => {
  */
 export const getGroups = async (req, res) => {
   try {
+    if (!verifyAuth(req, res, "Admin"))
+      return res.status(401).json({ message: "Unauthorized" });
+
+    const groups = await Group.find();
+    res.status(200).json(groups);
   } catch (err) {
     res.status(500).json(err.message);
   }
