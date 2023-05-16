@@ -155,8 +155,44 @@ export const getGroup = async (req, res) => {
     - error 401 is returned if the group does not exist
     - error 401 is returned if all the `memberEmails` either do not exist or are already in a group
  */
+
 export const addToGroup = async (req, res) => {
   try {
+    const { group, memberEmails } = req.body;
+
+    const existingGroup = await Group.findOne({ name: group });
+    if (!existingGroup) {
+      return res.status(401).json({ message: "Group does not exist" });
+    }
+
+    const membersNotFound = [];
+    const alreadyInGroup = [];
+
+    for (let email of memberEmails) {
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        membersNotFound.push(email);
+      } else if (existingGroup.members.some((member) => member.email === email)) {
+        alreadyInGroup.push(email);
+      } else {
+        existingGroup.members.push({ email, username: user.username });
+      }
+    }
+
+    await existingGroup.save();
+
+    const responseData = {
+      group: {
+        name: existingGroup.name,
+        members: existingGroup.members.map((member) => member.email),
+      },
+      alreadyInGroup,
+      membersNotFound,
+    };
+
+    res.status(200).json(responseData);
+
   } catch (err) {
     res.status(500).json(err.message);
   }
