@@ -260,12 +260,11 @@ export const deleteUser = async (req, res) => {
 export const deleteGroup = async (req, res) => {
   try {
     const groupName = req.body.name;
+    const groupDeleted = await Group.findOne({name: groupName});
 
-    if(!Group.findOne({name: groupName})){
+    if(!groupDeleted){
       return res.status(401).json({message: `The group ${groupName} doesn't exist !`});
     }
-
-    const groupDeleted = Group.find({name : groupName});
 
     await Group.remove(groupDeleted);
     res.status(200).json({message : "Group cancelled with seccess !"})

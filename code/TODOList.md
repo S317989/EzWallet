@@ -31,11 +31,11 @@ Pre-Conditions to be checked:
 - [ ] Users
   - [x] CreateGroup
   - [x] getGroups
-  - [ ] getGroup
-  - [ ] addToGroup
+  - [x] getGroup
+  - [x] addToGroup
   - [ ] removeFromGroup
   - [ ] deleteUser
-  - [ ] deleteGroup
+  - [x] deleteGroup
 - [x] Utils
   - [x] handleDataFilterParams
   - [x] handleAmountFilterParams
