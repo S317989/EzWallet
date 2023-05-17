@@ -51,7 +51,7 @@ export const getUser = async (req, res) => {
   - Response `data` Content: An object having an attribute `group` (this object must have a string attribute for the `name`
     of the created group and an array for the `members` of the group), an array that lists the `alreadyInGroup` members
     (members whose email is already present in a group) and an array that lists the `membersNotFound` (members whose email
-    +does not appear in the system)
+    does not appear in the system)
   - Optional behavior:
     - error 401 is returned if there is already an existing group with the same name
     - error 401 is returned if all the `memberEmails` either do not exist or are already in a group
@@ -59,45 +59,53 @@ export const getUser = async (req, res) => {
 export const createGroup = async (req, res) => {
   try {
     const name = req.body.name;
-    const membersEmail = req.body.memberEmails;
-    
-    const membersNotFound = [];
-    const alreadyInGroup = [];
-    const members = membersEmail.map((ans) => User.find({ email : ans }));
 
     // if the group already exists
     if (await Group.findOne({ name }))
       return res.status(401).json({ message: "Group already exists" });
 
+    const userNotFound = [];
+    const alreadyInGroup = [];
+    const newGroupMembers = [];
+
+    const membersEmails = req.body.memberEmails;
+
     //if all members exist and are not already in a group
     let user;
     let checkInGroup = false;
-    for (let email of membersEmail) {
+
+    for (let email of membersEmails) {
       user = await User.findOne({ email });
-
-      if (!user) membersNotFound.push(email);
-
-      // if the user is already in a group
-      checkInGroup = await Group.findOne({
-        members: { $elemMatch: { email } },
-      });
-
-      if (checkInGroup == null) alreadyInGroup.push(email);
+      
+      if (!user){
+        // If the user cannot be found
+        userNotFound.push(email);
+      
+      }else{
+        checkInGroup = await Group.findOne({ members : { $elemMatch : { email } } });
+        
+        if (checkInGroup !== null){
+          // if the user is already in a group
+          alreadyInGroup.push(user);
+        
+        }else{
+          newGroupMembers.push(user);
+        
+        }
+      }
     }
 
-    const newGroupMembers = members.map((ans)=>{
-      return { email: ans.email , user: ans };
-    })
-
+    if(newGroupMembers.length === 0){
+      return res.status(401).json({ message: "All the user either don't exist or are already in a group !" });
+    }
     // create new group and add members to it
-    const newGroup = await Group.create({ name, newGroupMembers });
+    const newGroup = await Group.create({ name : name, members: newGroupMembers });
     await newGroup.save();
-    console.log(newGroup);
     //  response data content
     const responseData = {
-      newGroup: { name, members: newGroupMembers },
-      alreadyInGroup: [],
-      memberNotFound: [],
+      group : newGroup,
+      alreadyInGroup : alreadyInGroup,
+      membersNotFound : userNotFound,
     };
 
     res.status(201).json(responseData);

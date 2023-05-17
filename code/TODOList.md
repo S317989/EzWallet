@@ -29,7 +29,7 @@ Pre-Conditions to be checked:
   - [ ] GetTransactionByGroupByCategory
   - [ ] DeleteTransactions
 - [ ] Users
-  - [x] CreateGroup
+  - [x] createGroup
   - [x] getGroups
   - [x] getGroup
   - [x] addToGroup
@@ -41,4 +41,4 @@ Pre-Conditions to be checked:
   - [x] handleAmountFilterParams
 
 To be checked:
-  - [x] DeleteCategory
+  - [] Check the request specifically for the createGroup -> All his special cases !!!
