@@ -233,11 +233,37 @@ export const addToGroup = async (req, res) => {
  */
 export const removeFromGroup = async (req, res) => {
   try {
-    const groupName = req.body.group.name;
-    const groupParticipant = req.body.group.members;
-    const notInGroup = req.body.notInGroup;
-    const membersNotFound = req.body.membersNotFound;
+    const group = await Group.findOne({ name : req.params.name });
+    if (!group) {
+      return res.status(401).json({ message: "Group does not exist" });
+    }
 
+    const groupParticipant = req.body.users;
+    const notInGroup = [];
+    const usersNotFound = [];
+
+    for(let email of groupParticipant){
+      let user = await User.findOne({ email });
+
+      if (!user) {
+        usersNotFound.push(email);
+      } else if (!group.members.some((member) => member.email === email)) {
+        notInGroup.push(email);
+      } else {
+        existingGroup.members.push({ username: user});
+      }
+    }
+
+    if(oldMemberList === existingGroup.members){
+      return res.status(401).json({ message: "All the specified members either do not exist or are not in the specified group !" });
+    }
+    await existingGroup.save();
+
+    res.status(201).json({
+      group : newGroup,
+      notInGroup : notInGroup,
+      membersNotFound : usersNotFound,
+    });
   } catch (err) {
     res.status(500).json(err.message);
   }

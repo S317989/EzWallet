@@ -42,3 +42,5 @@ Pre-Conditions to be checked:
 
 To be checked:
   - [] Check the request specifically for the createGroup -> All his special cases !!!
+  - [] Admin checks, on the methods that can be performed only by ADMIN !!
+  - [] Cookies checks, on the methods that can performed only by authenticated users !!
