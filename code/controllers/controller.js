@@ -62,7 +62,7 @@ export const updateCategory = async (req, res) => {
     return res.status(200).json({
       message: "Category updated successfully",
       count: await transactions.countDocuments({
-        category: oldCategoryType,
+        type: oldCategoryType,
       }),
     });
   } catch (error) {
@@ -140,7 +140,9 @@ export const createTransaction = async (req, res) => {
     if (!cookie.accessToken) {
       return res.status(401).json({ message: "Unauthorized" }); // unauthorized
     }
-    const { username, amount, type } = req.body;
+    let username = req.params.username;
+    const { amount, type } = req.body;
+
     const new_transactions = new transactions({ username, amount, type });
     new_transactions
       .save()
@@ -191,24 +193,80 @@ export const getAllTransactions = async (req, res) => {
  */
 export const getTransactionsByUser = async (req, res) => {
   try {
-    if (!req.params.hasOwnProperty("username")) {
-      console.log("Admin Section");
+    let username,
+      filter = null,
+      dateFilter = {},
+      amountFilter = {};
 
-      /** Admin Section because there is not the user path param */
-      if (!verifyAuth(req, res, "Admin"))
-        return res.status(401).json({ message: "Unauthorized" });
+    /** Using of ternary condition, equals to if() else () */
+    req.url.includes("/transactions/users/")
+      ? (async () => {
+          if (!verifyAuth(req, res, "Admin"))
+            return res.status(401).json({ message: "Unauthorized" });
 
-      return res.status(200).json(await getTransactionsDetails(req, res));
-    } else {
-      console.log("Regular Section");
-      if (
-        !verifyAuth(req, res, "Regular") ||
-        !(await User.findOne({ username: req.params.username }))
-      )
-        return res.status(401).json({ message: "Unauthorized" });
+          /** If url contains username param  */
+          if (Object.keys(req.params).includes("username")) {
+            /** Wait till checking user existing */
+            await User.findOne({
+              username: req.params.username,
+            }).then((data) => {
+              username = data;
+            });
+          }
 
-      return res.status(200).json(await getTransactionsDetails(req, res));
-    }
+          /** If user not found */
+          if (username === null)
+            return res.status(401).json({ message: "User not found" });
+
+          /** If admin wants to get transactions of a user, the username param will be checked in getTransactionsDetails */
+          return res
+            .status(200)
+            .json(await getTransactionsDetails(req, res, filter));
+        })()
+      : (async () => {
+          if (!verifyAuth(req, res, "Regular"))
+            return res.status(401).json({ message: "Unauthorized" });
+
+          /** Wait till checking user existing */
+          await User.findOne({
+            username: req.params.username,
+          }).then((data) => {
+            username = data;
+          });
+
+          /** If user not found */
+          if (username === null)
+            return res.status(401).json({ message: "User not found" });
+
+          const dateIncludes = ["date", "from", "upTo"];
+
+          if (dateIncludes.some((v) => Object.keys(req.query).includes(v)))
+            dateFilter = handleDateFilterParams(req);
+
+          const amountIncludes = ["minAmount", "maxAmount"];
+          if (amountIncludes.some((v) => Object.keys(req.query).includes(v)))
+            amountFilter = handleAmountFilterParams(req);
+
+          const filter = {
+            $and: [
+              { username: req.params.username },
+              ...(dateIncludes.some((v) => Object.keys(req.query).includes(v))
+                ? [handleDateFilterParams(req)]
+                : []),
+              ...(amountIncludes.some((v) => Object.keys(req.query).includes(v))
+                ? [handleAmountFilterParams(req)]
+                : []),
+            ],
+          };
+
+          // Remove the null element
+          filter.$and = filter.$and.filter((condition) => condition !== null);
+
+          /** If admin wants to get transactions of a user, the username param will be checked in getTransactionsDetails */
+          return res
+            .status(200)
+            .json(await getTransactionsDetails(req, res, filter));
+        })();
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -329,51 +387,41 @@ export const deleteTransactions = async (req, res) => {
   }
 };
 
-const getTransactionsDetails = async (req, res) => {
-  return await transactions
-    .aggregate([
-      {
-        $lookup: {
-          from: "categories",
-          localField: "type",
-          foreignField: "type",
-          as: "categories_info",
-        },
+const getTransactionsDetails = async (req, res, filter) => {
+  // Esegui l'aggregazione senza la fase di $match se il filtro è vuoto
+  const aggregationPipeline = [
+    {
+      $lookup: {
+        from: "categories",
+        localField: "type",
+        foreignField: "type",
+        as: "categories_info",
       },
-      { $unwind: "$categories_info" },
-    ])
-    .then((result) => {
-      let filterResult =
-        req.params.username != undefined
-          ? result.filter((user) => user.username == req.params.username)
-          : result;
+    },
+    { $unwind: "$categories_info" },
+  ];
 
-      let data = filterResult.map((v) =>
-        Object.assign(
-          {},
-          {
-            _id: v._id,
-            username: v.username,
-            amount: v.amount,
-            type: v.type,
-            color: v.categories_info.color,
-            date: v.date,
-          }
-        )
-      );
+  if (filter.$and.length > 0) {
+    // Aggiungi la fase di $match solo se il filtro non è vuoto
+    aggregationPipeline.unshift({ $match: filter });
+  }
 
-      const dataIncludes = ["date", "from", "upTo"];
+  return await transactions.aggregate(aggregationPipeline).then((result) => {
+    let data = result.map((v) =>
+      Object.assign(
+        {},
+        {
+          _id: v._id,
+          username: v.username,
+          amount: v.amount,
+          type: v.type,
+          color: v.categories_info.color,
+          date: v.date,
+        }
+      )
+    );
 
-      if (dataIncludes.some((v) => Object.keys(req.query).includes(v)))
-        data = handleDateFilterParams(req, data);
-
-      if (Object.keys(req.query).toString().includes("amount"))
-        data = handleAmountFilterParams(req, data);
-
-      if (Object.keys(req.params).toString().includes("category"))
-        data = handleCategoryFilterParams(req, data);
-
-
-      res.json(data);
-    });
+    // Resto del codice...
+    res.json(data);
+  });
 };
