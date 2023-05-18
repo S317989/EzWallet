@@ -24,7 +24,13 @@ export const handleDateFilterParams = (req) => {
     /** Date must be alone, without from and upTo */
     if (from) filter.date.$gte = new Date(req.query["from"]);
 
-    if (upTo) filter.date.$lte = new Date(req.query["upTo"]);
+    if (upTo) {
+      const upToDate = new Date(req.query["upTo"]);
+      upToDate.setHours(23);
+      upToDate.setMinutes(59);
+
+      filter.date.$lte = upToDate;
+    }
   }
 
   return filter;

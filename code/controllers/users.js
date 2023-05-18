@@ -34,14 +34,28 @@ export const getUser = async (req, res) => {
       authType: "User",
       username: req.params.username,
     });
+
     if (userAuth.authorized) {
       //User auth successful
+      const user = await User.findOne({ username: req.params.username });
+
+      if (user.refreshToken !== req.cookies.refreshToken)
+        return res.status(401).json({ message: "Unauthorized" });
+
+      if (!user) return res.status(401).json({ message: "User not found" });
+
+      return res.status(200).json({ data: user });
     } else {
       const adminAuth = verifyAuth(req, res, { authType: "Admin" });
       if (adminAuth.authorized) {
         //Admin auth successful
+
+        const user = await User.findOne({ refreshToken: cookie.refreshToken });
+        if (!user) return res.status(401).json({ message: "User not found" });
+
+        return res.status(200).json({ data: user });
       } else {
-        res.status(401).json({ error: adminAuth.message });
+        return res.status(401).json({ error: adminAuth.message });
       }
     }
   } catch (error) {
@@ -99,12 +113,9 @@ export const createGroup = async (req, res) => {
     }
 
     if (newGroupMembers.length === 0) {
-      return res
-        .status(401)
-        .json({
-          message:
-            "All the user either don't exist or are already in a group !",
-        });
+      return res.status(401).json({
+        message: "All the user either don't exist or are already in a group !",
+      });
     }
     // create new group and add members to it
     const newGroup = await Group.create({
@@ -214,15 +225,12 @@ export const addToGroup = async (req, res) => {
         existingGroup.members.push({ username: user });
       }
     }
-    console.log(oldMemberList, existingGroup.members);
 
     if (oldMemberList === existingGroup.members) {
-      return res
-        .status(401)
-        .json({
-          message:
-            "All the specified members either do not exist or are already in a group !",
-        });
+      return res.status(401).json({
+        message:
+          "All the specified members either do not exist or are already in a group !",
+      });
     }
 
     await existingGroup.save();
@@ -273,12 +281,10 @@ export const removeFromGroup = async (req, res) => {
     }
 
     if (oldMemberList === existingGroup.members) {
-      return res
-        .status(401)
-        .json({
-          message:
-            "All the specified members either do not exist or are not in the specified group !",
-        });
+      return res.status(401).json({
+        message:
+          "All the specified members either do not exist or are not in the specified group !",
+      });
     }
     await existingGroup.save();
 
