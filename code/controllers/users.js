@@ -250,9 +250,10 @@ export const removeFromGroup = async (req, res) => {
       return res.status(401).json({ message: "Group does not exist" });
     }
 
-    const groupParticipant = req.body.users;
+    const removingEmails = req.body.users;
     const notInGroup = [];
     const usersNotFound = [];
+    const oldMemberList = [...modifiedGroup.members];
     
     for(let email of removingEmails){
       let user = await User.findOne({ email });
@@ -274,7 +275,7 @@ export const removeFromGroup = async (req, res) => {
             "All the specified members either do not exist or are not in the specified group !",
         });
     }
-    await existingGroup.save();
+    await modifiedGroup.save();
 
     res.status(201).json({
       group: modifiedGroup,
