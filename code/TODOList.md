@@ -29,16 +29,16 @@ Pre-Conditions to be checked:
   - [ ] GetTransactionByGroupByCategory
   - [ ] DeleteTransactions
 - [ ] Users
-  - [x] CreateGroup
+  - [x] createGroup
   - [x] getGroups
-  - [ ] getGroup
-  - [ ] addToGroup
+  - [x] getGroup
+  - [x] addToGroup
   - [ ] removeFromGroup
   - [ ] deleteUser
-  - [ ] deleteGroup
+  - [x] deleteGroup
 - [x] Utils
   - [x] handleDataFilterParams
   - [x] handleAmountFilterParams
 
 To be checked:
-  - [x] DeleteCategory
+  - [] Check the request specifically for the createGroup -> All his special cases !!!
