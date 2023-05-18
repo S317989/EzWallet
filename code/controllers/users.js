@@ -30,18 +30,22 @@ export const getUsers = async (req, res) => {
  */
 export const getUser = async (req, res) => {
   try {
-    const cookie = req.cookies;
-    if (!cookie.accessToken || !cookie.refreshToken) {
-      return res.status(401).json({ message: "Unauthorized" }); // unauthorized
+    const userAuth = verifyAuth(req, res, {
+      authType: "User",
+      username: req.params.username,
+    });
+    if (userAuth.authorized) {
+      //User auth successful
+    } else {
+      const adminAuth = verifyAuth(req, res, { authType: "Admin" });
+      if (adminAuth.authorized) {
+        //Admin auth successful
+      } else {
+        res.status(401).json({ error: adminAuth.message });
+      }
     }
-    const username = req.params.username;
-    const user = await User.findOne({ refreshToken: cookie.refreshToken });
-    if (!user) return res.status(401).json({ message: "User not found" });
-    if (user.username !== username)
-      return res.status(401).json({ message: "Unauthorized" });
-    res.status(200).json(user);
   } catch (error) {
-    res.status(500).json(error.message);
+    res.status(500).json({ error: error.message });
   }
 };
 

@@ -8,43 +8,26 @@ import jwt from "jsonwebtoken";
  *  Example: {date: {$gte: "2023-04-30T00:00:00.000Z"}} returns all transactions whose `date` parameter indicates a date from 30/04/2023 (included) onwards
  * @throws an error if the query parameters include `date` together with at least one of `from` or `upTo`
  */
-export const handleDateFilterParams = (req, data) => {
+export const handleDateFilterParams = (req) => {
   let { date, from, upTo } = req.query;
-  const queryKey = Object.keys(req.query);
-  const queryValue = req.query[queryKey];
 
-  if (date && (from || upTo)) {
-    throw new Error(
-      "Cannot use date parameter together with from or upTo parameters"
-    );
+  if (date && (from || upTo))
+    throw new Error("Date cannot be with from or upTo");
+
+  let filter = {
+    date: {},
+  };
+
+  if (date) {
+    filter.date = { $gte: new Date(req.query["date"]) };
+  } else {
+    /** Date must be alone, without from and upTo */
+    if (from) filter.date.$gte = new Date(req.query["from"]);
+
+    if (upTo) filter.date.$lte = new Date(req.query["upTo"]);
   }
 
-  switch (queryKey.toString()) {
-    case "date":
-      date = date.substring(date.indexOf('"') + 1, date.lastIndexOf('"'));
-
-      if (queryValue.includes("gt"))
-        data = data.filter((t) => t.date >= new Date(date));
-      else if (queryValue.includes("lt"))
-        data = data.filter((t) => t.date <= new Date(date));
-      else
-        data = data.filter(
-          (t) =>
-            new Date(t.date).toDateString() === new Date(date).toDateString()
-        );
-
-      break;
-    case "from":
-      data = data.filter((t) => t.date >= new Date(from));
-
-      break;
-    case "upTo":
-      data = data.filter((t) => t.date <= new Date(upTo));
-
-      break;
-  }
-
-  return data;
+  return filter;
 };
 
 /**
@@ -55,17 +38,17 @@ export const handleDateFilterParams = (req, data) => {
  *  Example: {amount: {$gte: 100}} returns all transactions whose `amount` parameter is greater or equal than 100
  */
 export const handleAmountFilterParams = (req, data) => {
-  const queryKey = Object.keys(req.query);
-  const queryValue = req.query["queryKey"];
+  let { minAmount, maxAmount } = req.query;
 
-  const amount = queryValue.substring(queryValue.indexOf(" ") + 1);
+  let filter = {
+    amount: {},
+  };
 
-  if (queryValue.includes("gt")) data = data.filter((t) => t.amount >= amount);
-  else if (queryValue.includes("lt"))
-    data = data.filter((t) => t.amount <= amount);
-  else data = data.filter((t) => t.amount == amount);
+  if (minAmount) filter.amount.$gte = parseInt(minAmount);
 
-  return data;
+  if (maxAmount) filter.amount.$lte = parseInt(maxAmount);
+
+  return filter;
 };
 
 export const handleCategoryFilterParams = (req, data) => {
@@ -73,7 +56,6 @@ export const handleCategoryFilterParams = (req, data) => {
 
   return data.filter((t) => t.type == paramsValue);
 };
-
 
 /**
  * Handle possible authentication modes depending on `authType`
@@ -87,8 +69,7 @@ export const handleCategoryFilterParams = (req, data) => {
 export const verifyAuth = (req, res, info) => {
   const cookie = req.cookies;
   if (!cookie.accessToken || !cookie.refreshToken) {
-    res.status(401).json({ message: "Unauthorized" });
-    return false;
+    return { authorized: false, message: "Unauthorized" };
   }
   try {
     const decodedAccessToken = jwt.verify(
@@ -104,25 +85,23 @@ export const verifyAuth = (req, res, info) => {
       !decodedAccessToken.email ||
       !decodedAccessToken.role
     ) {
-      res.status(401).json({ message: "Token is missing information" });
-      return false;
+      return { authorized: false, message: "Token is missing information" };
     }
     if (
       !decodedRefreshToken.username ||
       !decodedRefreshToken.email ||
       !decodedRefreshToken.role
     ) {
-      res.status(401).json({ message: "Token is missing information" });
-      return false;
+      return { authorized: false, message: "Token is missing information" };
     }
     if (
       decodedAccessToken.username !== decodedRefreshToken.username ||
       decodedAccessToken.email !== decodedRefreshToken.email ||
       decodedAccessToken.role !== decodedRefreshToken.role
     ) {
-      res.status(401).json({ message: "Mismatched users" });
-      return false;
+      return { authorized: false, message: "Mismatched users" };
     }
+
     return checkRolesPermissions(
       decodedAccessToken,
       decodedRefreshToken,
@@ -155,22 +134,19 @@ export const verifyAuth = (req, res, info) => {
         });
         res.locals.message =
           "Access token has been refreshed. Remember to copy the new one in the headers of subsequent calls";
-        return true;
+        return { authorized: true, message: "Authorized" };
       } catch (err) {
         if (err.name === "TokenExpiredError") {
-          res.status(401).json({ message: "Perform login again" });
+          return { authorized: false, message: "Perform login again" };
         } else {
-          res.status(401).json({ message: err.name });
+          return { authorized: false, message: err.name };
         }
-        return false;
       }
     } else {
-      res.status(401).json({ message: err.name });
-      return false;
+      return { authorized: false, message: err.name };
     }
   }
 };
-
 /**
  *  Method that contains all the checking roles needed by verifyAuth. (In order to have a clear code)
  *      Additional criteria:
@@ -197,7 +173,8 @@ const checkRolesPermissions = (
   info,
   res
 ) => {
-  switch (info.accessToken) {
+  console.log(info);
+  switch (info) {
     case "Admin":
       if (
         decodedAccessToken.role !== "Admin" ||
