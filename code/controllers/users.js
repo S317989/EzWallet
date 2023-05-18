@@ -86,29 +86,24 @@ export const createGroup = async (req, res) => {
     const alreadyInGroup = [];
     const newGroupMembers = [];
 
-    const membersEmails = req.body.memberEmails;
+    const membersList = req.body.members;
 
     //if all members exist and are not already in a group
     let user;
     let checkInGroup = false;
 
-    for (let email of membersEmails) {
-      user = await User.findOne({ email });
+    for (let member of membersList) {
+      user = await User.findOne({ email: member.email });
 
-      if (!user) {
-        // If the user cannot be found
-        userNotFound.push(email);
-      } else {
+      if (!user) userNotFound.push(member.email);
+      else {
         checkInGroup = await Group.findOne({
-          members: { $elemMatch: { email } },
+          members: { $elemMatch: { email: member.email } },
         });
 
-        if (checkInGroup !== null) {
-          // if the user is already in a group
-          alreadyInGroup.push(user);
-        } else {
-          newGroupMembers.push(user);
-        }
+        checkInGroup
+          ? alreadyInGroup.push(member.email)
+          : newGroupMembers.push(user);
       }
     }
 
@@ -118,12 +113,13 @@ export const createGroup = async (req, res) => {
       });
     }
     // create new group and add members to it
-    const newGroup = await Group.create({
+    /*const newGroup = await Group.create({
       name: name,
       members: newGroupMembers,
     });
     await newGroup.save();
-    //  response data content
+    //  response data content*/
+
     const responseData = {
       group: newGroup,
       alreadyInGroup: alreadyInGroup,
@@ -215,22 +211,22 @@ export const addToGroup = async (req, res) => {
       let user = await User.findOne({ email });
       if (!user) {
         membersNotFound.push(email);
-      } else if (existingGroup.members.some((member) => member.email === email)) {
+      } else if (
+        existingGroup.members.some((member) => member.email === email)
+      ) {
         alreadyInGroup.push(email);
       } else {
         existingGroup.members.push(user);
       }
     }
-    
-    if ( existingGroup.members.every((user)=>oldMemberList.includes(user)) ) {
-      return res
-        .status(401)
-        .json({
-          message:
-            "All the specified members either do not exist or are already in a group !",
-        });
+
+    if (existingGroup.members.every((user) => oldMemberList.includes(user))) {
+      return res.status(401).json({
+        message:
+          "All the specified members either do not exist or are already in a group !",
+      });
     }
-    
+
     await existingGroup.save();
 
     res.status(200).json({
@@ -255,7 +251,7 @@ export const addToGroup = async (req, res) => {
  */
 export const removeFromGroup = async (req, res) => {
   try {
-    const modifiedGroup = await Group.findOne({ name : req.params.name });
+    const modifiedGroup = await Group.findOne({ name: req.params.name });
     if (!modifiedGroup) {
       return res.status(401).json({ message: "Group does not exist" });
     }
@@ -264,26 +260,26 @@ export const removeFromGroup = async (req, res) => {
     const notInGroup = [];
     const usersNotFound = [];
     const oldMemberList = [...modifiedGroup.members];
-    
-    for(let email of removingEmails){
+
+    for (let email of removingEmails) {
       let user = await User.findOne({ email });
 
       if (!user) {
         usersNotFound.push(email);
-      } else if (!modifiedGroup.members.some((member) => member.email === email)) {
+      } else if (
+        !modifiedGroup.members.some((member) => member.email === email)
+      ) {
         notInGroup.push(email);
       } else {
         modifiedGroup.members.remove(user);
       }
     }
 
-    if (oldMemberList.every((user)=>modifiedGroup.members.includes(user))) {
-      return res
-        .status(401)
-        .json({
-          message:
-            "All the specified members either do not exist or are not in the specified group !",
-        });
+    if (oldMemberList.every((user) => modifiedGroup.members.includes(user))) {
+      return res.status(401).json({
+        message:
+          "All the specified members either do not exist or are not in the specified group !",
+      });
     }
     await modifiedGroup.save();
 
@@ -323,14 +319,16 @@ export const deleteUser = async (req, res) => {
 export const deleteGroup = async (req, res) => {
   try {
     const groupName = req.body.name;
-    const groupDeleted = await Group.findOne({name: groupName});
+    const groupDeleted = await Group.findOne({ name: groupName });
 
-    if(!groupDeleted){
-      return res.status(401).json({message: `The group ${groupName} doesn't exist !`});
+    if (!groupDeleted) {
+      return res
+        .status(401)
+        .json({ message: `The group ${groupName} doesn't exist !` });
     }
 
     await Group.remove(groupDeleted); //<- Metodo deprecato !!
-    res.status(200).json({message : "Group cancelled with seccess !"})
+    res.status(200).json({ message: "Group cancelled with seccess !" });
   } catch (err) {
     res.status(500).json(err.message);
   }

@@ -341,6 +341,32 @@ export const getTransactionsByUserByCategory = async (req, res) => {
  */
 export const getTransactionsByGroup = async (req, res) => {
   try {
+    let filter;
+
+    req.url.includes("/transactions/groups")
+      ? (async () => {
+          if (!verifyAuth(req, res, "Admin"))
+            return res.status(401).json({ message: "Unauthorized" });
+
+          // Trova il gruppo desiderato
+          const group = await Group.findOne({ name: req.params.name });
+
+          if (!group)
+            return res.status(404).json({ message: "Group not found" });
+
+          // Estrai gli ID degli utenti associati ai membri del gruppo
+          const memberUserIds = group.members.map((member) => member.email);
+
+          // Filtra le transazioni in base agli ID degli utenti
+          const transactionList = await transactions.find({
+            username: { $in: memberUserIds },
+            group: group._id,
+          });
+
+          // Restituisci le transazioni filtrate come risultato
+          return res.status(200).json(transactionList);
+        })()
+      : (async () => {})();
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
