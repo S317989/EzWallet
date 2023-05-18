@@ -3,7 +3,6 @@ import { Group, User } from "../models/User.js";
 import {
   handleDateFilterParams,
   handleAmountFilterParams,
-  handleCategoryFilterParams,
   verifyAuth,
 } from "./utils.js";
 
@@ -218,7 +217,9 @@ export const getTransactionsByUser = async (req, res) => {
           if (username === null)
             return res.status(401).json({ message: "User not found" });
 
-          /** If admin wants to get transactions of a user, the username param will be checked in getTransactionsDetails */
+          if (req.params.username)
+            filter = { $and: [{ username: req.params.username }] };
+
           return res
             .status(200)
             .json(await getTransactionsDetails(req, res, filter));
@@ -262,7 +263,6 @@ export const getTransactionsByUser = async (req, res) => {
           // Remove the null element
           filter.$and = filter.$and.filter((condition) => condition !== null);
 
-          /** If admin wants to get transactions of a user, the username param will be checked in getTransactionsDetails */
           return res
             .status(200)
             .json(await getTransactionsDetails(req, res, filter));
@@ -282,24 +282,50 @@ export const getTransactionsByUser = async (req, res) => {
  */
 export const getTransactionsByUserByCategory = async (req, res) => {
   try {
-    if (!req.params.hasOwnProperty("username")) {
-      console.log("Admin Section");
+    let filter;
 
-      /** Admin Section because there is not the user path param */
-      if (!verifyAuth(req, res, "Admin"))
-        return res.status(401).json({ message: "Unauthorized" });
+    req.url.includes("/transactions/users/")
+      ? (async () => {
+          if (!verifyAuth(req, res, "Admin"))
+            return res.status(401).json({ message: "Unauthorized" });
 
-      return res.status(200).json(await getTransactionsDetails(req, res));
-    } else {
-      console.log("Regular Section");
-      if (
-        !verifyAuth(req, res, "Regular") ||
-        !(await User.findOne({ username: req.params.username }))
-      )
-        return res.status(401).json({ message: "Unauthorized" });
+          filter = {
+            $and: [
+              { username: req.params.username },
+              { type: req.params.category },
+            ],
+          };
 
-      return res.status(200).json(await getTransactionsDetails(req, res));
-    }
+          // Remove the null element
+          filter.$and = filter.$and.filter((condition) => condition !== null);
+
+          return res
+            .status(200)
+            .json(await getTransactionsDetails(req, res, filter));
+        })()
+      : (async () => {
+          let user = await User.findOne({ username: req.params.username });
+
+          if (
+            !verifyAuth(req, res, "Regular") ||
+            user.refreshToken !== req.cookies.refreshToken
+          )
+            return res.status(401).json({ message: "Unauthorized" });
+
+          filter = {
+            $and: [
+              { username: req.params.username },
+              { type: req.params.category },
+            ],
+          };
+
+          // Remove the null element
+          filter.$and = filter.$and.filter((condition) => condition !== null);
+
+          return res
+            .status(200)
+            .json(await getTransactionsDetails(req, res, filter));
+        })();
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -315,24 +341,6 @@ export const getTransactionsByUserByCategory = async (req, res) => {
  */
 export const getTransactionsByGroup = async (req, res) => {
   try {
-    if (!req.params.name == ":name") {
-      console.log("Admin Section");
-
-      /** Admin Section because there is not the user path param */
-      if (!verifyAuth(req, res, "Admin"))
-        return res.status(401).json({ message: "Unauthorized" });
-
-      return res.status(200).json(await getTransactionsDetails(req, res));
-    } else {
-      console.log("Regular Section");
-      if (
-        !verifyAuth(req, res, "Regular") ||
-        !(await Group.findOne({ name: req.params.name }))
-      )
-        return res.status(401).json({ message: "Unauthorized" });
-
-      return res.status(200).json(await getTransactionsDetails(req, res));
-    }
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -362,7 +370,6 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
  */
 export const deleteTransaction = async (req, res) => {
   try {
-    const cookie = req.cookies;
     if (!cookie.accessToken) {
       return res.status(401).json({ message: "Unauthorized" }); // unauthorized
     }
@@ -401,7 +408,7 @@ const getTransactionsDetails = async (req, res, filter) => {
     { $unwind: "$categories_info" },
   ];
 
-  if (filter.$and.length > 0) {
+  if (filter != null && filter.$and.length > 0) {
     // Aggiungi la fase di $match solo se il filtro non è vuoto
     aggregationPipeline.unshift({ $match: filter });
   }
@@ -421,7 +428,6 @@ const getTransactionsDetails = async (req, res, filter) => {
       )
     );
 
-    // Resto del codice...
     res.json(data);
   });
 };
