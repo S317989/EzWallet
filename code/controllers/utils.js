@@ -51,12 +51,6 @@ export const handleAmountFilterParams = (req, data) => {
   return filter;
 };
 
-export const handleCategoryFilterParams = (req, data) => {
-  const paramsValue = req.params.category;
-
-  return data.filter((t) => t.type == paramsValue);
-};
-
 /**
  * Handle possible authentication modes depending on `authType`
  * @param req the request object that contains cookie information
