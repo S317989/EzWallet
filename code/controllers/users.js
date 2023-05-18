@@ -176,45 +176,46 @@ export const getGroup = async (req, res) => {
     - error 401 is returned if the group does not exist
     - error 401 is returned if all the `memberEmails` either do not exist or are already in a group
  */
-
 export const addToGroup = async (req, res) => {
   try {
-    const memberEmails = req.body.newMembers;
-
     const existingGroup = await Group.findOne({ name: req.params.name });
-    console.log(existingGroup);
     if (!existingGroup) {
       return res.status(401).json({ message: "Group does not exist" });
     }
+
+    const oldMemberList = existingGroup.members;
+
+    const memberEmails = req.body.newMembers;
 
     const membersNotFound = [];
     const alreadyInGroup = [];
 
     for (let email of memberEmails) {
-      const user = await User.findOne({ email });
+      let user = await User.findOne({ email });
 
       if (!user) {
         membersNotFound.push(email);
       } else if (existingGroup.members.some((member) => member.email === email)) {
         alreadyInGroup.push(email);
       } else {
-        existingGroup.members.push({ email, username: user.username });
+        existingGroup.members.push({ username: user});
       }
+    }
+    console.log(oldMemberList, existingGroup.members);
+
+    if(oldMemberList === existingGroup.members){
+      return res.status(401).json({ message: "All the specified members either do not exist or are already in a group !" });
     }
 
     await existingGroup.save();
 
     const responseData = {
-      group: {
-        name: existingGroup.name,
-        members: existingGroup.members.map((ans) => User.findOne({email: ans})),
-      },
+      group: existingGroup,
       alreadyInGroup,
       membersNotFound,
     };
 
     res.status(200).json(responseData);
-
   } catch (err) {
     res.status(500).json(err.message);
   }
@@ -274,7 +275,7 @@ export const deleteGroup = async (req, res) => {
       return res.status(401).json({message: `The group ${groupName} doesn't exist !`});
     }
 
-    await Group.remove(groupDeleted);
+    await Group.remove(groupDeleted); //<- Metodo deprecato !!
     res.status(200).json({message : "Group cancelled with seccess !"})
   } catch (err) {
     res.status(500).json(err.message);
