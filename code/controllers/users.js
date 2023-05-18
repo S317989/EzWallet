@@ -80,36 +80,43 @@ export const createGroup = async (req, res) => {
 
     for (let email of membersEmails) {
       user = await User.findOne({ email });
-      
-      if (!user){
+
+      if (!user) {
         // If the user cannot be found
         userNotFound.push(email);
-      
-      }else{
-        checkInGroup = await Group.findOne({ members : { $elemMatch : { email } } });
-        
-        if (checkInGroup !== null){
+      } else {
+        checkInGroup = await Group.findOne({
+          members: { $elemMatch: { email } },
+        });
+
+        if (checkInGroup !== null) {
           // if the user is already in a group
           alreadyInGroup.push(user);
-        
-        }else{
+        } else {
           newGroupMembers.push(user);
-        
         }
       }
     }
 
-    if(newGroupMembers.length === 0){
-      return res.status(401).json({ message: "All the user either don't exist or are already in a group !" });
+    if (newGroupMembers.length === 0) {
+      return res
+        .status(401)
+        .json({
+          message:
+            "All the user either don't exist or are already in a group !",
+        });
     }
     // create new group and add members to it
-    const newGroup = await Group.create({ name : name, members: newGroupMembers });
+    const newGroup = await Group.create({
+      name: name,
+      members: newGroupMembers,
+    });
     await newGroup.save();
     //  response data content
     const responseData = {
-      group : newGroup,
-      alreadyInGroup : alreadyInGroup,
-      membersNotFound : userNotFound,
+      group: newGroup,
+      alreadyInGroup: alreadyInGroup,
+      membersNotFound: userNotFound,
     };
 
     res.status(201).json(responseData);
@@ -156,12 +163,12 @@ export const getGroup = async (req, res) => {
     const groupName = req.params.name;
     const groupInfo = await Group.findOne({ name: groupName });
     console.log(groupInfo);
-    if(!groupInfo){
+    if (!groupInfo) {
       return res.status(401).json(`${groupName} doesn't exist !`);
-    }else{
+    } else {
       res.status(200).json({
-        name : groupName,
-        members : groupInfo.members
+        name: groupName,
+        members: groupInfo.members,
       });
     }
   } catch (err) {
@@ -205,8 +212,13 @@ export const addToGroup = async (req, res) => {
 
     }
     
-    if( existingGroup.members.every((user)=>oldMemberList.includes(user)) ){
-      return res.status(401).json({ message: "All the specified members either do not exist or are already in a group !" });
+    if ( existingGroup.members.every((user)=>oldMemberList.includes(user)) ) {
+      return res
+        .status(401)
+        .json({
+          message:
+            "All the specified members either do not exist or are already in a group !",
+        });
     }
     
     await existingGroup.save();
@@ -238,9 +250,7 @@ export const removeFromGroup = async (req, res) => {
       return res.status(401).json({ message: "Group does not exist" });
     }
 
-    const oldMemberList = [...modifiedGroup.members];
-    const removingEmails = req.body.users;
-    
+    const groupParticipant = req.body.users;
     const notInGroup = [];
     const usersNotFound = [];
     
@@ -255,18 +265,21 @@ export const removeFromGroup = async (req, res) => {
         modifiedGroup.members.remove(user);
       }
     }
-    console.log(oldMemberList, modifiedGroup.members);
 
-    if(oldMemberList.every((user)=>modifiedGroup.members.includes(user))){
-      return res.status(401).json({ message: "All the specified members either do not exist or are not in the specified group !" });
+    if (oldMemberList.every((user)=>modifiedGroup.members.includes(user))) {
+      return res
+        .status(401)
+        .json({
+          message:
+            "All the specified members either do not exist or are not in the specified group !",
+        });
     }
-
-    await modifiedGroup.save();
+    await existingGroup.save();
 
     res.status(201).json({
-      group : modifiedGroup,
-      notInGroup : notInGroup,
-      membersNotFound : usersNotFound,
+      group: modifiedGroup,
+      notInGroup: notInGroup,
+      membersNotFound: usersNotFound,
     });
   } catch (err) {
     res.status(500).json(err.message);
