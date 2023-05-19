@@ -248,7 +248,7 @@ export const getTransactionsByUser = async (req, res) => {
 
           return res
             .status(200)
-            .json(await getTransactionsDetails(req, res, filter));
+            .json({ data: await getTransactionsDetails(req, res, filter) });
         })()
       : (async () => {
           if (
@@ -332,7 +332,7 @@ export const getTransactionsByUserByCategory = async (req, res) => {
 
           return res
             .status(200)
-            .json(await getTransactionsDetails(req, res, filter));
+            .json({ data: await getTransactionsDetails(req, res, filter) });
         })()
       : (async () => {
           let user = await User.findOne({ username: req.params.username });
@@ -443,6 +443,77 @@ export const getTransactionsByGroup = async (req, res) => {
 export const getTransactionsByGroupByCategory = async (req, res) => {
   try {
     let filter;
+    req.url.includes("/transactions/groups")
+      ? (async () => {
+          if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+            return res.status(401).json({ message: "Unauthorized" });
+
+          // Trova il gruppo desiderato
+          const group = await Group.findOne({ name: req.params.name });
+
+          if (!group)
+            return res.status(400).json({ message: "Group not found" });
+
+          const category = await categories.findOne({
+            type: req.params.category,
+          });
+
+          if (!category)
+            return res.status(400).json({ message: "Category not found" });
+
+          // Estrai gli ID degli utenti associati ai membri del gruppo
+          const memberUserIds = group.members.map((member) => member.email);
+
+          filter = {
+            $and: [
+              { username: { $in: memberUserIds } },
+              { type: category.type },
+            ],
+          };
+
+          let trans = await getTransactionsDetails(req, res, filter);
+          return res.status(200).json({ data: trans });
+        })()
+      : (async () => {
+          let groupSearched = await Group.findOne({ name: req.params.name });
+
+          if (!groupSearched)
+            return res.status(400).json({ message: "Group not found" });
+
+          const category = await categories.findOne({
+            type: req.params.category,
+          });
+
+          if (!category)
+            return res.status(400).json({ message: "Category not found" });
+
+          let membersEmail = groupSearched.members.map(
+            (member) => member.email
+          );
+
+          if (
+            !verifyAuth(req, res, {
+              authType: "Group",
+              emails: membersEmail,
+            }).authorized
+          )
+            return res.status(401).json({ message: "Unauthorized" });
+
+          // Estrai gli ID degli utenti associati ai membri del gruppo
+          const memberUserIds = groupSearched.members.map(
+            (member) => member.email
+          );
+
+          filter = {
+            $and: [
+              { username: { $in: memberUserIds } },
+              { type: category.type },
+            ],
+          };
+
+          let trans = await getTransactionsDetails(req, res, filter);
+          return res.status(200).json({ data: trans });
+        })();
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -505,20 +576,21 @@ const getTransactionsDetails = async (req, res, filter) => {
   if (filter != null && filter.$and.length > 0)
     aggregationPipeline.unshift({ $match: filter });
 
-  return await transactions.aggregate(aggregationPipeline).then((result) => {
-    let data = result.map((v) =>
-      Object.assign(
-        {},
-        {
-          _id: v._id,
-          username: v.username,
-          amount: v.amount,
-          type: v.type,
-          color: v.categories_info.color,
-          date: v.date,
-        }
-      )
-    );
-    res.json(data);
-  });
+  const result = await transactions.aggregate(aggregationPipeline);
+
+  const data = result.map((v) =>
+    Object.assign(
+      {},
+      {
+        _id: v._id,
+        username: v.username,
+        amount: v.amount,
+        type: v.type,
+        color: v.categories_info.color,
+        date: v.date,
+      }
+    )
+  );
+
+  return data;
 };
