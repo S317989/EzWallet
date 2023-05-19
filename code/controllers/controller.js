@@ -549,12 +549,30 @@ export const deleteTransaction = async (req, res) => {
   - Request Body Content: An array of strings that lists the `_ids` of the transactions to be deleted
   - Response `data` Content: A message confirming successful deletion
   - Optional behavior:
-    - error 401 is returned if at least one of the `_ids` does not have a corresponding transaction. Transactions that have an id are not deleted in this case
+    - error 400 is returned if at least one of the `_ids` does not have a corresponding transaction. Transactions that have an id are not deleted in this case
  */
 export const deleteTransactions = async (req, res) => {
   try {
+    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+      return res.status(401).json({ message: "Unauthorized" });
+
+    let transactionIds = req.body._ids;
+
+    if (!(await transactions.findOne({ _id: { $in: transactionIds } })))
+      return res.status(400).json({
+        data: [],
+        message:
+          "At least one of the _ids does not have a corresponding transaction",
+      });
+
+    await transactions.deleteMany({ _id: { $in: transactionIds } });
+
+    return res.status(200).json({
+      data: [],
+      message: `Transactions ${req.body._ids} successfully deleted`,
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
