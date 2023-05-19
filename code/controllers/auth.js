@@ -3,6 +3,12 @@ import { User } from "../models/User.js";
 import jwt from "jsonwebtoken";
 import { verifyAuth } from "./utils.js";
 
+const validateEmail = (email) => {
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  return emailPattern.test(email);
+};
+
 /**
  * Register a new user in the system
   - Request Body Content: An object having attributes `username`, `email` and `password`
@@ -13,6 +19,10 @@ import { verifyAuth } from "./utils.js";
 export const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
+
+    if (!validateEmail(email))
+      return res.status(400).json({ message: "Invalid email" });
+
     const existingEmail = await User.findOne({ email: req.body.email });
     const existingUsername = await User.findOne({ email: req.body.username });
 
@@ -25,9 +35,11 @@ export const register = async (req, res) => {
       email,
       password: hashedPassword,
     });
-    res.status(200).json("user added succesfully");
+    res
+      .status(200)
+      .json({ data: [], message: `User ${username} added succesfully` });
   } catch (err) {
-    res.status(400).json(err);
+    res.status(500).json(err);
   }
 };
 
@@ -45,6 +57,9 @@ export const registerAdmin = async (req, res) => {
 
     const { username, email, password } = req.body;
 
+    if (!validateEmail(email))
+      return res.status(400).json({ message: "Invalid email" });
+
     const existingEmail = await User.findOne({ email: req.body.email });
     const existingUsername = await User.findOne({ email: req.body.username });
 
@@ -58,7 +73,10 @@ export const registerAdmin = async (req, res) => {
       password: hashedPassword,
       role: "Admin",
     });
-    res.status(200).json("admin added succesfully");
+
+    res
+      .status(200)
+      .json({ data: [], message: `Admin ${username} added succesfully` });
   } catch (err) {
     res.status(500).json(err);
   }
@@ -73,37 +91,61 @@ export const registerAdmin = async (req, res) => {
     - error 400 is returned if the supplied password does not match with the one in the database
  */
 export const login = async (req, res) => {
-    const { email, password } = req.body
-    const cookie = req.cookies
-    const existingUser = await User.findOne({ email: email })
-    if (!existingUser) return res.status(400).json('please you need to register')
-    try {
-        const match = await bcrypt.compare(password, existingUser.password)
-        if (!match) return res.status(400).json('wrong credentials')
-        //CREATE ACCESSTOKEN
-        const accessToken = jwt.sign({
-            email: existingUser.email,
-            id: existingUser.id,
-            username: existingUser.username,
-            role: existingUser.role
-        }, process.env.ACCESS_KEY, { expiresIn: '1h' })
-        //CREATE REFRESH TOKEN
-        const refreshToken = jwt.sign({
-            email: existingUser.email,
-            id: existingUser.id,
-            username: existingUser.username,
-            role: existingUser.role
-        }, process.env.ACCESS_KEY, { expiresIn: '7d' })
-        //SAVE REFRESH TOKEN TO DB
-        existingUser.refreshToken = refreshToken
-        const savedUser = await existingUser.save()
-        res.cookie("accessToken", accessToken, { httpOnly: true, domain: "localhost", path: "/api", maxAge: 60 * 60 * 1000, sameSite: "none", secure: true })
-        res.cookie('refreshToken', refreshToken, { httpOnly: true, domain: "localhost", path: '/api', maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'none', secure: true })
-        res.status(200).json({ data: { accessToken: accessToken, refreshToken: refreshToken } })
-    } catch (error) {
-        res.status(400).json(error)
-    }
-}
+  const { email, password } = req.body;
+  const cookie = req.cookies;
+  const existingUser = await User.findOne({ email: email });
+  if (!existingUser) return res.status(400).json("please you need to register");
+  try {
+    const match = await bcrypt.compare(password, existingUser.password);
+    if (!match) return res.status(400).json("wrong credentials");
+    //CREATE ACCESSTOKEN
+    const accessToken = jwt.sign(
+      {
+        email: existingUser.email,
+        id: existingUser.id,
+        username: existingUser.username,
+        role: existingUser.role,
+      },
+      process.env.ACCESS_KEY,
+      { expiresIn: "1h" }
+    );
+    //CREATE REFRESH TOKEN
+    const refreshToken = jwt.sign(
+      {
+        email: existingUser.email,
+        id: existingUser.id,
+        username: existingUser.username,
+        role: existingUser.role,
+      },
+      process.env.ACCESS_KEY,
+      { expiresIn: "7d" }
+    );
+    //SAVE REFRESH TOKEN TO DB
+    existingUser.refreshToken = refreshToken;
+    const savedUser = await existingUser.save();
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      domain: "localhost",
+      path: "/api",
+      maxAge: 60 * 60 * 1000,
+      sameSite: "none",
+      secure: true,
+    });
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      domain: "localhost",
+      path: "/api",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: "none",
+      secure: true,
+    });
+    res
+      .status(200)
+      .json({ data: { accessToken: accessToken, refreshToken: refreshToken } });
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
 
 /**
  * Perform logout
@@ -141,6 +183,6 @@ export const logout = async (req, res) => {
     const savedUser = await user.save();
     res.status(200).json("logged out");
   } catch (error) {
-    res.status(400).json(error);
+    res.status(500).json(error);
   }
 };

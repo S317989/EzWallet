@@ -24,7 +24,7 @@ export const createCategory = (req, res) => {
     const new_categories = new categories({ type, color });
     new_categories
       .save()
-      .then((data) => res.json(data))
+      .then((result) => res.json({ data: result }))
       .catch((err) => {
         throw err;
       });
@@ -38,8 +38,8 @@ export const createCategory = (req, res) => {
   - Request Body Content: An object having attributes `type` and `color` equal to the new values to assign to the category
   - Response `data` Content: An object with parameter `message` that confirms successful editing and a parameter `count` that is equal to the count of transactions whose category was changed with the new type
   - Optional behavior:
-    - error 401 returned if the specified category does not exist
-    - error 401 is returned if new parameters have invalid values
+    - error 400 returned if the specified category does not exist
+    - error 400 is returned if new parameters have invalid values
  */
 export const updateCategory = async (req, res) => {
   try {
@@ -48,10 +48,18 @@ export const updateCategory = async (req, res) => {
 
     const oldCategoryType = req.params.type;
 
+    // Check if transaction have oldCategoryType
+    if (!(await categories.findOne({ type: oldCategoryType })))
+      return res
+        .status(400)
+        .json({ message: `Category ${oldCategoryType} doesn't exists` });
+
     const { type, color } = req.body;
 
     if (!(await categories.findOne({ type: type })))
-      return res.status(401).json({ message: "Unauthorized" });
+      return res
+        .status(400)
+        .json({ message: `Category ${type} doesn't exists` });
 
     const updatedCategory = await categories.findOneAndUpdate(
       { type: oldCategoryType },
@@ -59,13 +67,14 @@ export const updateCategory = async (req, res) => {
     );
 
     return res.status(200).json({
+      data: [],
       message: "Category updated successfully",
       count: await transactions.countDocuments({
         type: oldCategoryType,
       }),
     });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -74,7 +83,7 @@ export const updateCategory = async (req, res) => {
   - Request Body Content: An array of strings that lists the `types` of the categories to be deleted
   - Response `data` Content: An object with parameter `message` that confirms successful deletion and a parameter `count` that is equal to the count of affected transactions (deleting a category sets all transactions with that category to have `investment` as their new category)
   - Optional behavior:
-    - error 401 is returned if the specified category does not exist
+    - error 400 is returned if the specified category does not exist
  */
 export const deleteCategory = async (req, res) => {
   try {
@@ -86,18 +95,19 @@ export const deleteCategory = async (req, res) => {
 
     if (!(await categories.findOne({ type: categoryToDelete }))) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: `Category ${category} don't exist !` });
     }
 
     return res.status(200).json({
+      data: [],
       message: `Category ${categoryToDelete} successfully deleted !`,
       count: transactions.countDocuments({
         type: categoryToDelete,
       }),
     });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -116,13 +126,13 @@ export const getCategories = async (req, res) => {
     }
     let data = await categories.find({});
 
-    let filter = data.map((v) =>
+    let catList = data.map((v) =>
       Object.assign({}, { type: v.type, color: v.color })
     );
 
-    return res.json(filter);
+    return res.status(200).json({ data: catList });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -131,7 +141,7 @@ export const getCategories = async (req, res) => {
   - Request Body Content: An object having attributes `username`, `type` and `amount`
   - Response `data` Content: An object having attributes `username`, `type`, `amount` and `date`
   - Optional behavior:
-    - error 401 is returned if the username or the type of category does not exist
+    - error 400 is returned if the username or the type of category does not exist
  */
 export const createTransaction = async (req, res) => {
   try {
@@ -140,17 +150,30 @@ export const createTransaction = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" }); // unauthorized
     }
     let username = req.params.username;
-    const { amount, type } = req.body;
+    const { usernameBody, amount, type } = req.body;
+
+    if (usernameBody !== username)
+      return res
+        .status(400)
+        .json({ message: "Username values are not equivalent" });
+
+    if (
+      !(await User.findOne({ username: username })) ||
+      !(await categories.findOne({ type: type }))
+    )
+      return res.status(400).json({
+        message: `Username ${username} or category ${type} doesn't exist`,
+      });
 
     const new_transactions = new transactions({ username, amount, type });
     new_transactions
       .save()
-      .then((data) => res.json(data))
+      .then((result) => res.status(200).json({ data: result }))
       .catch((err) => {
         throw err;
       });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -173,11 +196,9 @@ export const getAllTransactions = async (req, res) => {
     /**
      * MongoDB equivalent to the query "SELECT * FROM transactions, categories WHERE transactions.type = categories.type"
      */
-    getTransactionsDetails(req, res).catch((error) => {
-      throw error;
-    });
+    return res.status(200).json(await getTransactionsDetails(req, res, null));
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -186,16 +207,14 @@ export const getAllTransactions = async (req, res) => {
   - Request Body Content: None
   - Response `data` Content: An array of objects, each one having attributes `username`, `type`, `amount`, `date` and `color`
   - Optional behavior:
-    - error 401 is returned if the user does not exist
+    - error 400 is returned if the user does not exist
     - empty array is returned if there are no transactions made by the user
     - if there are query parameters and the function has been called by a Regular user then the returned transactions must be filtered according to the query parameters
  */
 export const getTransactionsByUser = async (req, res) => {
   try {
     let username,
-      filter = null,
-      dateFilter = {},
-      amountFilter = {};
+      filter = null;
 
     /** Using of ternary condition, equals to if() else () */
     req.url.includes("/transactions/users/")
@@ -215,7 +234,7 @@ export const getTransactionsByUser = async (req, res) => {
 
           /** If user not found */
           if (username === null)
-            return res.status(401).json({ message: "User not found" });
+            return res.status(400).json({ message: "User not found" });
 
           if (req.params.username)
             filter = { $and: [{ username: req.params.username }] };
@@ -237,7 +256,7 @@ export const getTransactionsByUser = async (req, res) => {
 
           /** If user not found */
           if (username === null)
-            return res.status(401).json({ message: "User not found" });
+            return res.status(400).json({ message: "User not found" });
 
           const dateIncludes = ["date", "from", "upTo"];
 
@@ -268,7 +287,7 @@ export const getTransactionsByUser = async (req, res) => {
             .json(await getTransactionsDetails(req, res, filter));
         })();
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -327,7 +346,7 @@ export const getTransactionsByUserByCategory = async (req, res) => {
             .json(await getTransactionsDetails(req, res, filter));
         })();
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -336,7 +355,7 @@ export const getTransactionsByUserByCategory = async (req, res) => {
   - Request Body Content: None
   - Response `data` Content: An array of objects, each one having attributes `username`, `type`, `amount`, `date` and `color`
   - Optional behavior:
-    - error 401 is returned if the group does not exist
+    - error 400 is returned if the group does not exist
     - empty array must be returned if there are no transactions made by the group
  */
 export const getTransactionsByGroup = async (req, res) => {
@@ -352,7 +371,7 @@ export const getTransactionsByGroup = async (req, res) => {
           const group = await Group.findOne({ name: req.params.name });
 
           if (!group)
-            return res.status(404).json({ message: "Group not found" });
+            return res.status(400).json({ message: "Group not found" });
 
           // Estrai gli ID degli utenti associati ai membri del gruppo
           const memberUserIds = group.members.map((member) => member.email);
@@ -364,11 +383,11 @@ export const getTransactionsByGroup = async (req, res) => {
           });
 
           // Restituisci le transazioni filtrate come risultato
-          return res.status(200).json(transactionList);
+          return res.status(200).json({ data: transactionList });
         })()
       : (async () => {})();
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -383,7 +402,7 @@ export const getTransactionsByGroup = async (req, res) => {
 export const getTransactionsByGroupByCategory = async (req, res) => {
   try {
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -400,9 +419,12 @@ export const deleteTransaction = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" }); // unauthorized
     }
     let data = await transactions.deleteOne({ _id: req.body._id });
-    return res.json("deleted");
+    return res.status(200).json({
+      data: [],
+      message: `Transaction ${req.body._id} successfully deleted`,
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -434,10 +456,9 @@ const getTransactionsDetails = async (req, res, filter) => {
     { $unwind: "$categories_info" },
   ];
 
-  if (filter != null && filter.$and.length > 0) {
-    // Aggiungi la fase di $match solo se il filtro non è vuoto
+  // Aggiungi la fase di $match solo se il filtro non è vuoto
+  if (filter != null && filter.$and.length > 0)
     aggregationPipeline.unshift({ $match: filter });
-  }
 
   return await transactions.aggregate(aggregationPipeline).then((result) => {
     let data = result.map((v) =>
