@@ -25,9 +25,9 @@ Pre-Conditions to be checked:
   - [x] DeleteCategory
   - [x] GetTransactionByUser
   - [x] GetTransactionByUserByCategory
-  - [ ] GetTransactionByGroup
-  - [ ] GetTransactionByGroupByCategory
-  - [ ] DeleteTransactions
+  - [x] GetTransactionByGroup
+  - [x] GetTransactionByGroupByCategory
+  - [x] DeleteTransactions
 - [ ] Users
   - [x] createGroup
   - [x] getGroups
