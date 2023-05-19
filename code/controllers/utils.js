@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 /**
- * Handle possible date filtering options in the query parameters for getTransactionsByUser when called by a Regular user.
+ * Handle possible date filtering options in the query parameters for getTransactionsByUser when called by a User user.
  * @param req the request object that can contain query parameters
  * @returns an object that can be used for filtering MongoDB queries according to the `date` parameter.
  *  The returned object must handle all possible combination of date filtering parameters, including the case where none are present.
@@ -37,7 +37,7 @@ export const handleDateFilterParams = (req) => {
 };
 
 /**
- * Handle possible amount filtering options in the query parameters for getTransactionsByUser when called by a Regular user.
+ * Handle possible amount filtering options in the query parameters for getTransactionsByUser when called by a User user.
  * @param req the request object that can contain query parameters
  * @returns an object that can be used for filtering MongoDB queries according to the `amount` parameter.
  *  The returned object must handle all possible combination of amount filtering parameters, including the case where none are present.
