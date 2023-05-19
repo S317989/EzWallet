@@ -52,7 +52,7 @@ export const register = async (req, res) => {
  */
 export const registerAdmin = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, "Admin"))
+    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
       return res.status(401).json({ message: "Unauthorized" });
 
     const { username, email, password } = req.body;

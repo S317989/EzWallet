@@ -13,7 +13,7 @@ import {
  */
 export const createCategory = (req, res) => {
   try {
-    if (!verifyAuth(req, res, "Admin"))
+    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
       return res.status(401).json({ message: "Unauthorized" });
 
     const cookie = req.cookies;
@@ -43,7 +43,7 @@ export const createCategory = (req, res) => {
  */
 export const updateCategory = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, "Admin"))
+    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
       return res.status(401).json({ message: "Unauthorized" });
 
     const oldCategoryType = req.params.type;
@@ -87,9 +87,8 @@ export const updateCategory = async (req, res) => {
  */
 export const deleteCategory = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, "Admin")) {
+    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
       return res.status(401).json({ message: "Unauthorized" });
-    }
 
     const categoryToDelete = req.body;
 
@@ -120,6 +119,9 @@ export const deleteCategory = async (req, res) => {
  */
 export const getCategories = async (req, res) => {
   try {
+    if (!verifyAuth(req, res, { authType: "Simple" }).authorized)
+      return res.status(401).json({ message: "Unauthorized" });
+
     const cookie = req.cookies;
     if (!cookie.accessToken) {
       return res.status(401).json({ message: "Unauthorized" }); // unauthorized
@@ -145,6 +147,9 @@ export const getCategories = async (req, res) => {
  */
 export const createTransaction = async (req, res) => {
   try {
+    if (!verifyAuth(req, res, { authType: "Simple" }).authorized)
+      return res.status(401).json({ message: "Unauthorized" });
+
     const cookie = req.cookies;
     if (!cookie.accessToken) {
       return res.status(401).json({ message: "Unauthorized" }); // unauthorized
@@ -186,7 +191,7 @@ export const createTransaction = async (req, res) => {
  */
 export const getAllTransactions = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, "Admin"))
+    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
       return res.status(401).json({ message: "Unauthorized" });
 
     const cookie = req.cookies;
@@ -196,7 +201,9 @@ export const getAllTransactions = async (req, res) => {
     /**
      * MongoDB equivalent to the query "SELECT * FROM transactions, categories WHERE transactions.type = categories.type"
      */
-    return res.status(200).json(await getTransactionsDetails(req, res, null));
+    return res
+      .status(200)
+      .json({ data: await getTransactionsDetails(req, res, null) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -209,7 +216,7 @@ export const getAllTransactions = async (req, res) => {
   - Optional behavior:
     - error 400 is returned if the user does not exist
     - empty array is returned if there are no transactions made by the user
-    - if there are query parameters and the function has been called by a Regular user then the returned transactions must be filtered according to the query parameters
+    - if there are query parameters and the function has been called by a User user then the returned transactions must be filtered according to the query parameters
  */
 export const getTransactionsByUser = async (req, res) => {
   try {
@@ -219,7 +226,7 @@ export const getTransactionsByUser = async (req, res) => {
     /** Using of ternary condition, equals to if() else () */
     req.url.includes("/transactions/users/")
       ? (async () => {
-          if (!verifyAuth(req, res, "Admin"))
+          if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
             return res.status(401).json({ message: "Unauthorized" });
 
           /** If url contains username param  */
@@ -244,7 +251,12 @@ export const getTransactionsByUser = async (req, res) => {
             .json(await getTransactionsDetails(req, res, filter));
         })()
       : (async () => {
-          if (!verifyAuth(req, res, "Regular"))
+          if (
+            !verifyAuth(req, res, {
+              authType: "User",
+              username: req.params.username,
+            }).authorized
+          )
             return res.status(401).json({ message: "Unauthorized" });
 
           /** Wait till checking user existing */
@@ -284,7 +296,7 @@ export const getTransactionsByUser = async (req, res) => {
 
           return res
             .status(200)
-            .json(await getTransactionsDetails(req, res, filter));
+            .json({ data: await getTransactionsDetails(req, res, filter) });
         })();
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -305,7 +317,7 @@ export const getTransactionsByUserByCategory = async (req, res) => {
 
     req.url.includes("/transactions/users/")
       ? (async () => {
-          if (!verifyAuth(req, res, "Admin"))
+          if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
             return res.status(401).json({ message: "Unauthorized" });
 
           filter = {
@@ -326,7 +338,10 @@ export const getTransactionsByUserByCategory = async (req, res) => {
           let user = await User.findOne({ username: req.params.username });
 
           if (
-            !verifyAuth(req, res, "Regular") ||
+            !verifyAuth(req, res, {
+              authType: "User",
+              username: req.params.username,
+            }).authorized ||
             user.refreshToken !== req.cookies.refreshToken
           )
             return res.status(401).json({ message: "Unauthorized" });
@@ -343,7 +358,7 @@ export const getTransactionsByUserByCategory = async (req, res) => {
 
           return res
             .status(200)
-            .json(await getTransactionsDetails(req, res, filter));
+            .json({ data: await getTransactionsDetails(req, res, filter) });
         })();
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -364,7 +379,7 @@ export const getTransactionsByGroup = async (req, res) => {
 
     req.url.includes("/transactions/groups")
       ? (async () => {
-          if (!verifyAuth(req, res, "Admin"))
+          if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
             return res.status(401).json({ message: "Unauthorized" });
 
           // Trova il gruppo desiderato
@@ -385,7 +400,33 @@ export const getTransactionsByGroup = async (req, res) => {
           // Restituisci le transazioni filtrate come risultato
           return res.status(200).json({ data: transactionList });
         })()
-      : (async () => {})();
+      : (async () => {
+          let groupSearched = await Group.findOne({ name: req.params.name });
+
+          if (!groupSearched)
+            return res.status(400).json({ message: "Group not found" });
+
+          let membersEmail = groupSearched.members.map(
+            (member) => member.email
+          );
+
+          if (
+            !verifyAuth(req, res, {
+              authType: "Group",
+              emails: membersEmail,
+            }).authorized
+          )
+            return res.status(401).json({ message: "Unauthorized" });
+
+          // Filtra le transazioni in base agli ID degli utenti
+          const transactionList = await transactions.find({
+            username: { $in: membersEmail },
+            group: groupSearched._id,
+          });
+
+          // Restituisci le transazioni filtrate come risultato
+          return res.status(200).json({ data: transactionList });
+        })();
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -401,6 +442,7 @@ export const getTransactionsByGroup = async (req, res) => {
  */
 export const getTransactionsByGroupByCategory = async (req, res) => {
   try {
+    let filter;
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -415,6 +457,9 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
  */
 export const deleteTransaction = async (req, res) => {
   try {
+    if (!verifyAuth(req, res, { authType: "Simple" }).authorized)
+      return res.status(401).json({ message: "Unauthorized" });
+
     if (!cookie.accessToken) {
       return res.status(401).json({ message: "Unauthorized" }); // unauthorized
     }
@@ -474,7 +519,6 @@ const getTransactionsDetails = async (req, res, filter) => {
         }
       )
     );
-
     res.json(data);
   });
 };

@@ -11,7 +11,7 @@ import { verifyAuth } from "./utils.js";
  */
 export const getUsers = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, "Admin"))
+    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
       return res.status(401).json({ message: "Unauthorized" });
 
     const users = await User.find();
@@ -76,6 +76,9 @@ export const getUser = async (req, res) => {
  */
 export const createGroup = async (req, res) => {
   try {
+    if (!verifyAuth(req, res, { authType: "Simple" }).authorized)
+      return res.status(401).json({ message: "Unauthorized" });
+
     const name = req.body.name;
 
     // if the group already exists
@@ -143,7 +146,7 @@ export const createGroup = async (req, res) => {
  */
 export const getGroups = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, "Admin"))
+    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
       return res.status(401).json({ message: "Unauthorized" });
 
     const groups = await Group.find();
@@ -313,6 +316,9 @@ export const deleteUser = async (req, res) => {
  */
 export const deleteGroup = async (req, res) => {
   try {
+    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+      return res.status(401).json({ message: "Unauthorized" });
+
     const groupName = req.body.name;
     const groupDeleted = await Group.findOne({ name: groupName });
 

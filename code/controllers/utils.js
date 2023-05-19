@@ -76,6 +76,7 @@ export const verifyAuth = (req, res, info) => {
       cookie.accessToken,
       process.env.ACCESS_KEY
     );
+
     const decodedRefreshToken = jwt.verify(
       cookie.refreshToken,
       process.env.ACCESS_KEY
@@ -102,12 +103,7 @@ export const verifyAuth = (req, res, info) => {
       return { authorized: false, message: "Mismatched users" };
     }
 
-    return checkRolesPermissions(
-      decodedAccessToken,
-      decodedRefreshToken,
-      info,
-      res
-    );
+    return checkRolesPermissions(decodedAccessToken, decodedRefreshToken, info);
   } catch (err) {
     if (err.name === "TokenExpiredError") {
       try {
@@ -132,18 +128,24 @@ export const verifyAuth = (req, res, info) => {
           sameSite: "none",
           secure: true,
         });
-        res.locals.message =
+        res.locals.refreshedTokenMessage =
           "Access token has been refreshed. Remember to copy the new one in the headers of subsequent calls";
-        return { authorized: true, message: "Authorized" };
+
+        let newDecodedAccessToken = jwt.verify(
+          newAccessToken,
+          process.env.ACCESS_KEY
+        );
+
+        return checkRolesPermissions(newDecodedAccessToken, refreshToken, info);
       } catch (err) {
         if (err.name === "TokenExpiredError") {
-          return { authorized: false, message: "Perform login again" };
+          return { authorized: false, cause: "Perform login again" };
         } else {
-          return { authorized: false, message: err.name };
+          return { authorized: false, cause: err.name };
         }
       }
     } else {
-      return { authorized: false, message: err.name };
+      return { authorized: false, cause: err.name };
     }
   }
 };
@@ -170,20 +172,20 @@ export const verifyAuth = (req, res, info) => {
 const checkRolesPermissions = (
   decodedAccessToken,
   decodedRefreshToken,
-  info,
-  res
+  info
 ) => {
-  console.log(info);
-  switch (info) {
+  switch (info.authType) {
     case "Admin":
       if (
         decodedAccessToken.role !== "Admin" ||
         decodedRefreshToken.role !== "Admin" ||
         (!decodedAccessToken && decodedRefreshToken.role !== "Admin")
       ) {
-        res.status(401).json({ message: "Unauthorized" });
-        return false;
+        return { authorized: false, message: "Mismatched users" };
       }
+      break;
+    case "Simple":
+      return { authorized: true, message: "Authorized" };
       break;
     case "User":
       if (
@@ -191,20 +193,16 @@ const checkRolesPermissions = (
         decodedRefreshToken.username !== "User" ||
         (!decodedAccessToken && decodedRefreshToken.username !== "User")
       ) {
-        res.status(401).json({ message: "Unauthorized" });
-        return false;
+        return { authorized: false, message: "Mismatched users" };
       }
       break;
     case "Group":
-      if (
-        decodedAccessToken.email !== info.group ||
-        (!decodedAccessToken && decodedRefreshToken.email !== info.group)
-      ) {
-        res.status(401).json({ message: "Unauthorized" });
-        return false;
-      }
+      if (!info.emails.includes(decodedAccessToken.email))
+        return { authorized: false, message: "User not in group" };
       break;
     default:
-      return true;
+      return { authorized: true, message: "Authorized" };
   }
+
+  return { authorized: true, message: "Authorized" };
 };
