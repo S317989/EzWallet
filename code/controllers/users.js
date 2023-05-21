@@ -9,16 +9,16 @@ import { verifyAuth } from "./utils.js";
   - Optional behavior:
     - empty array is returned if there are no users
  */
-export const getUsers = async (req, res) => { //Check if the mMAP functions works properly also with an empty array !!
+export const getUsers = async (req, res) => { //Check if the MAP functions works properly also with an empty array !!
   try {
     if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
       return res.status(401).json({ message: "Unauthorized" });
 
-    const users = (await User.find())/*.map((user)=>{   //-> Use MAP functions to obtain only the information that are necessary
+    const users = (await User.find()).map((user)=>{     //-> Use MAP functions to obtain only the information that are necessary
       return {username: user.username,                  //-> Without it's the more general cases, usefull to program and see all
         email: user.email,                              //-> the info related to all users !!
         role: user.role}
-    })*/;
+    });/**/
     res.status(200).json({ data: users });
   } catch (error) {
     res.status(500).json(error.message);
@@ -159,7 +159,7 @@ export const createGroup = async (req, res) => {
   - Optional behavior:
     - empty array is returned if there are no groups
  */
-export const getGroups = async (req, res) => { //Check if a NON-Admin user can't use it !!
+export const getGroups = async (req, res) => {
   try {
     if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
       return res.status(401).json({ message: "Unauthorized" });
@@ -184,18 +184,32 @@ export const getGroups = async (req, res) => { //Check if a NON-Admin user can't
   - Optional behavior:
     - error 400 is returned if the group does not exist
  */
-export const getGroup = async (req, res) => {//Check if a NON-Admin user can only obtain the info about his group !!
+export const getGroup = async (req, res) => {//Add the cookies check + role check !! -> different behavior between User & Admin !!
   try {
     const cookie = req.cookies;
+    console.log(cookie);
+
     if (!cookie.accessToken || !cookie.refreshToken) {
       return res.status(401).json({ message: "Unauthorized" }); // unauthorized
     }
 
     const groupName = req.params.name;
     const groupInfo = await Group.findOne({ name: groupName });
+    /**
+     * If the user associated with those accessToken & refreshToken IS NOT in the group &&
+     * IS NOT an Admin,
+     * then reply with Unauthorized !! */
     if (!groupInfo) return res.status(400).json(`${groupName} doesn't exist !`);
+    
 
-    return res.status(200).json({
+    if (!verifyAuth(req, res, { authType: "Admin" }).authorized){
+      const user = await User.findOne({refreshToken: req.cookies.refreshToken})
+      if(!user){
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
+    
+      return res.status(200).json({
       data: {
         name: groupName,
         members: groupInfo.members,
@@ -219,6 +233,7 @@ export const getGroup = async (req, res) => {//Check if a NON-Admin user can onl
  */
 export const addToGroup = async (req, res) => { //Add the cookies check + role check !!->different behavior between User & Admin !!
   try {
+
     const existingGroup = await Group.findOne({ name: req.params.name });
     if (!existingGroup)
       return res.status(400).json({ message: "Group does not exist" });
@@ -327,20 +342,28 @@ export const removeFromGroup = async (req, res) => { //Add the cookies check + r
  */
 export const deleteUser = async (req, res) => {
   try {
+    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+      return res.status(401).json({ message: "Unauthorized" });
+
     const user = await User.findOne({ email: req.body.email });
     if (!user) {
       return res.status(400).json({ message: "The user doesn't exist" });
     }
+
+
     let InGroup = false;
     const deletedTrx = await transactions.find({ username: user.username });
     let numDeletedTrx = deletedTrx.length;
 
     const group = (await Group.find()).filter((ans) => ans.members.some((member) => member.email===user.email));
 
-    // How can i call the removeFromGroup method to delete this user from the group?
+    // How can I call the removeFromGroup method to delete this user from the group?
+
+    await User.deleteOne(user);
+
     return res.status(200).json({
       data:{
-        numDeletedTrx: numDeletedTrx,
+        numDeletedTrx: numDeletedTrx,/**/
         deletedTransaction: deletedTrx,
         deletedFromGroup: InGroup
       }
