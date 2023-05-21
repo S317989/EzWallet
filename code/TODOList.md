@@ -33,7 +33,7 @@ Pre-Conditions to be checked:
   - [x] getGroups
   - [x] getGroup
   - [x] addToGroup
-  - [ ] removeFromGroup
+  - [x] removeFromGroup
   - [ ] deleteUser
   - [x] deleteGroup
 - [x] Utils

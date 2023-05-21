@@ -193,7 +193,6 @@ export const getGroup = async (req, res) => {//Check if a NON-Admin user can onl
 
     const groupName = req.params.name;
     const groupInfo = await Group.findOne({ name: groupName });
-    console.log(groupInfo);
     if (!groupInfo) return res.status(400).json(`${groupName} doesn't exist !`);
 
     return res.status(200).json({
@@ -328,6 +327,24 @@ export const removeFromGroup = async (req, res) => { //Add the cookies check + r
  */
 export const deleteUser = async (req, res) => {
   try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(400).json({ message: "The user doesn't exist" });
+    }
+    let InGroup = false;
+    const deletedTrx = await transactions.find({ username: user.username });
+    let numDeletedTrx = deletedTrx.length;
+
+    const group = (await Group.find()).filter((ans) => ans.members.some((member) => member.email===user.email));
+
+    // How can i call the removeFromGroup method to delete this user from the group?
+    return res.status(200).json({
+      data:{
+        numDeletedTrx: numDeletedTrx,
+        deletedTransaction: deletedTrx,
+        deletedFromGroup: InGroup
+      }
+    });
   } catch (err) {
     res.status(500).json(err.message);
   }
