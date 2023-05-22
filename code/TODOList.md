@@ -33,8 +33,8 @@ Pre-Conditions to be checked:
   - [x] getGroups
   - [x] getGroup
   - [x] addToGroup
-  - [ ] removeFromGroup
-  - [ ] deleteUser
+  - [x] removeFromGroup
+  - [x] deleteUser
   - [x] deleteGroup
 - [x] Utils
   - [x] handleDataFilterParams

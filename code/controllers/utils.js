@@ -176,7 +176,7 @@ const checkRolesPermissions = (
 ) => {
   console.log(decodedRefreshToken);
 
-  switch (info.authType) {
+  switch (info.authType) {//check to probably error here !!!
     case "Admin":
       if (
         decodedAccessToken.role !== "Admin" ||
