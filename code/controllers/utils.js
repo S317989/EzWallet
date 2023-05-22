@@ -174,6 +174,8 @@ const checkRolesPermissions = (
   decodedRefreshToken,
   info
 ) => {
+  console.log(decodedRefreshToken);
+
   switch (info.authType) {
     case "Admin":
       if (
@@ -189,9 +191,9 @@ const checkRolesPermissions = (
       break;
     case "User":
       if (
-        decodedAccessToken.username !== "User" ||
-        decodedRefreshToken.username !== "User" ||
-        (!decodedAccessToken && decodedRefreshToken.username !== "User")
+        decodedAccessToken.role !== "Regular" ||
+        decodedRefreshToken.role !== "Regular" ||
+        (!decodedAccessToken && decodedRefreshToken.role !== "Regular")
       ) {
         return { authorized: false, message: "Mismatched users" };
       }

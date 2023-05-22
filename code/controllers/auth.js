@@ -37,7 +37,7 @@ export const register = async (req, res) => {
     });
     res
       .status(200)
-      .json({ data: [], message: `User ${username} added succesfully` });
+      .json({ data: { message: `User ${username} added succesfully` } });
   } catch (err) {
     res.status(500).json(err);
   }
@@ -76,7 +76,7 @@ export const registerAdmin = async (req, res) => {
 
     res
       .status(200)
-      .json({ data: [], message: `Admin ${username} added succesfully` });
+      .json({ data: { message: `Admin ${username} added succesfully` } });
   } catch (err) {
     res.status(500).json(err);
   }
@@ -181,7 +181,11 @@ export const logout = async (req, res) => {
       secure: true,
     });
     const savedUser = await user.save();
-    res.status(200).json("logged out");
+    res.status(200).json({
+      data: {
+        message: "You are logged out",
+      },
+    });
   } catch (error) {
     res.status(500).json(error);
   }
