@@ -174,8 +174,6 @@ const checkRolesPermissions = (
   decodedRefreshToken,
   info
 ) => {
-  console.log(decodedRefreshToken);
-
   switch (
     info.authType //check to probably error here !!!
   ) {
