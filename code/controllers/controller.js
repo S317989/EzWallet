@@ -50,16 +50,16 @@ export const updateCategory = async (req, res) => {
 
     // Check if transaction have oldCategoryType
     if (!(await categories.findOne({ type: oldCategoryType })))
-      return res
-        .status(400)
-        .json({ message: `Category ${oldCategoryType} doesn't exists` });
+      return res.status(400).json({
+        data: { message: `Category ${oldCategoryType} doesn't exists` },
+      });
 
     const { type, color } = req.body;
 
     if (!(await categories.findOne({ type: type })))
       return res
         .status(400)
-        .json({ message: `Category ${type} doesn't exists` });
+        .json({ data: { message: `Category ${type} doesn't exists` } });
 
     const updatedCategory = await categories.findOneAndUpdate(
       { type: oldCategoryType },
@@ -67,11 +67,12 @@ export const updateCategory = async (req, res) => {
     );
 
     return res.status(200).json({
-      data: [],
-      message: "Category updated successfully",
-      count: await transactions.countDocuments({
-        type: oldCategoryType,
-      }),
+      data: {
+        message: "Category updated successfully",
+        count: await transactions.countDocuments({
+          type: oldCategoryType,
+        }),
+      },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -99,11 +100,12 @@ export const deleteCategory = async (req, res) => {
     }
 
     return res.status(200).json({
-      data: [],
-      message: `Category ${categoryToDelete} successfully deleted !`,
-      count: transactions.countDocuments({
-        type: categoryToDelete,
-      }),
+      data: {
+        message: `Category ${categoryToDelete} successfully deleted !`,
+        count: transactions.countDocuments({
+          type: categoryToDelete,
+        }),
+      },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -151,9 +153,9 @@ export const createTransaction = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
 
     const cookie = req.cookies;
-    if (!cookie.accessToken) {
+    if (!cookie.accessToken)
       return res.status(401).json({ message: "Unauthorized" }); // unauthorized
-    }
+
     let username = req.params.username;
     const { usernameBody, amount, type } = req.body;
 
@@ -167,7 +169,9 @@ export const createTransaction = async (req, res) => {
       !(await categories.findOne({ type: type }))
     )
       return res.status(400).json({
-        message: `Username ${username} or category ${type} doesn't exist`,
+        data: {
+          message: `Username ${username} or category ${type} doesn't exist`,
+        },
       });
 
     const new_transactions = new transactions({ username, amount, type });
@@ -536,8 +540,7 @@ export const deleteTransaction = async (req, res) => {
     }
     let data = await transactions.deleteOne({ _id: req.body._id });
     return res.status(200).json({
-      data: [],
-      message: `Transaction ${req.body._id} successfully deleted`,
+      data: { message: `Transaction ${req.body._id} successfully deleted` },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -560,16 +563,16 @@ export const deleteTransactions = async (req, res) => {
 
     if (!(await transactions.findOne({ _id: { $in: transactionIds } })))
       return res.status(400).json({
-        data: [],
-        message:
-          "At least one of the _ids does not have a corresponding transaction",
+        data: {
+          message:
+            "At least one of the _ids does not have a corresponding transaction",
+        },
       });
 
     await transactions.deleteMany({ _id: { $in: transactionIds } });
 
     return res.status(200).json({
-      data: [],
-      message: `Transactions ${req.body._ids} successfully deleted`,
+      data: { message: `Transactions ${req.body._ids} successfully deleted` },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

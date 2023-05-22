@@ -64,6 +64,7 @@ export const getUser = async (req, res) => {
 
       if (adminAuth.authorized) {
         //Admin auth successful
+
         const user = await User.findOne({ username: req.params.username });
         if (!user) return res.status(401).json({ message: "User not found" });
 
