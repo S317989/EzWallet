@@ -202,21 +202,21 @@ export const getGroup = async (req, res) => {
 
     const groupName = req.params.name;
     const groupInfo = await Group.findOne({ name: groupName });
-    /**
-     * If the user associated with those accessToken & refreshToken IS NOT in the group &&
-     * IS NOT an Admin,
-     * then reply with Unauthorized !! */
+    
     if (!groupInfo) return res.status(400).json(`${groupName} doesn't exist !`);
-
-    if (!verifyAuth(req, res, { authType: "Admin" }).authorized) {
-      const user = await User.findOne({
-        refreshToken: req.cookies.refreshToken,
-      });
-      if (!user) {
+    
+    /**
+     * If he IS NOT an Admin &&
+     * the user associated with those accessToken & refreshToken IS NOT in the group,
+     * then reply with Unauthorized !! 
+     * */
+    if (!verifyAuth(req, res, { authType: "Admin" }).authorized){
+      const user = await User.findOne({refreshToken: req.cookies.refreshToken})
+      if(!user){
         return res.status(401).json({ message: "Unauthorized" });
       }
     }
-
+    
     return res.status(200).json({
       data: {
         name: groupName,
@@ -245,6 +245,18 @@ export const addToGroup = async (req, res) => {
     const existingGroup = await Group.findOne({ name: req.params.name });
     if (!existingGroup)
       return res.status(400).json({ message: "Group does not exist" });
+
+    /**
+     * If he IS NOT an Admin &&
+     * the user associated with those accessToken & refreshToken IS NOT in the group,
+     * then reply with Unauthorized !! 
+     * */
+    if (!verifyAuth(req, res, { authType: "Admin" }).authorized){
+      const user = await existingGroup.findOne({refreshToken: req.cookies.refreshToken})
+      if(!user){
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
 
     const oldMemberList = [...existingGroup.members];
     const memberEmails = req.body.newMembers;
@@ -302,7 +314,18 @@ export const removeFromGroup = async (req, res) => {
     if (!modifiedGroup) {
       return res.status(400).json({ message: "Group does not exist" });
     }
-
+    
+    /**
+     * If he IS NOT an Admin &&
+     * the user associated with those accessToken & refreshToken IS NOT in the group,
+     * then reply with Unauthorized !! 
+     * */
+    if (!verifyAuth(req, res, { authType: "Admin" }).authorized){
+      const user = await existingGroup.findOne({refreshToken: req.cookies.refreshToken})
+      if(!user){
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
     const removingEmails = req.body.users;
     const notInGroup = [];
     const usersNotFound = [];
