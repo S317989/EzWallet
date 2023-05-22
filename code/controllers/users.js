@@ -392,20 +392,22 @@ export const deleteUser = async (req, res) => {
 
     /* Removing User from the group -> cover the case that the user is in multiple group (extreme) */
     let InGroup = false;
-    const groupslist = (await Group.find()).filter(
-      (ans) => ans.members.some(
-        (member) => member.email === user.email
-      )
-    );
-    for(let group of groupslist){
-      InGroup = true;
-      group.members.forEach((m)=>{
-        m.email === user.email ? group.members.remove(m) : null;
+    const groupslist = (await Group.find())
+      .filter(
+        (ans) => ans.members.some(
+          (member) => member.email === user.email
+        )
+      ).forEach(async (group)=>{
+        InGroup = true;
+        group.members.forEach((m)=>{
+          m.email === user.email ? group.members.remove(m) : null;
+        });
+        await group.save();
       });
-      await group.save();
-    }
 
-    await User.deleteOne(user); /*Last part -> Effective user removing*/
+      
+    /*Last part -> Effective user removing*/
+    await User.deleteOne(user);
 
     return res.status(200).json({
       data: {
