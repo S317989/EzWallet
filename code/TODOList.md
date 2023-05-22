@@ -41,6 +41,8 @@ Pre-Conditions to be checked:
   - [x] handleAmountFilterParams
 
 To be checked:
-  - [] Check the request specifically for the createGroup -> All his special cases !!!
-  - [] Admin checks, on the methods that can be performed only by ADMIN !!
-  - [] Cookies checks, on the methods that can performed only by authenticated users !!
+  - [x] Check the request specifically for the createGroup -> All his special cases !!!
+  - [x] Admin checks, on the methods that can be performed only by ADMIN !!
+  - [x] Cookies checks, on the methods that can performed only by authenticated users !!
+
+- Methods testing by Postman
