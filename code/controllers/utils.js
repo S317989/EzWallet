@@ -174,7 +174,9 @@ const checkRolesPermissions = (
   decodedRefreshToken,
   info
 ) => {
-  switch (info.authType) {//check to probably error here !!!
+  switch (
+    info.authType //check to probably error here !!!
+  ) {
     case "Admin":
       if (
         decodedAccessToken.role !== "Admin" ||
@@ -187,11 +189,11 @@ const checkRolesPermissions = (
     case "Simple":
       return { authorized: true, message: "Authorized" };
       break;
-    case "User"://check to probably error here !!!
+    case "User":
       if (
-        decodedAccessToken.username !== "User" ||
-        decodedRefreshToken.username !== "User" ||
-        (!decodedAccessToken && decodedRefreshToken.username !== "User")
+        decodedAccessToken.role !== "Regular" ||
+        decodedRefreshToken.role !== "Regular" ||
+        (!decodedAccessToken && decodedRefreshToken.role !== "Regular")
       ) {
         return { authorized: false, message: "Mismatched users" };
       }

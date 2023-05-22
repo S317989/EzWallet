@@ -9,16 +9,20 @@ import { verifyAuth } from "./utils.js";
   - Optional behavior:
     - empty array is returned if there are no users
  */
-export const getUsers = async (req, res) => { //Check if the MAP functions works properly also with an empty array !!
+export const getUsers = async (req, res) => {
+  //Check if the MAP functions works properly also with an empty array !!
   try {
     if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
       return res.status(401).json({ message: "Unauthorized" });
 
-    const users = (await User.find()).map((user)=>{     //-> Use MAP functions to obtain only the information that are necessary
-      return {username: user.username,                  //-> Without it's the more general cases, usefull to program and see all
-        email: user.email,                              //-> the info related to all users !!
-        role: user.role}
-    });/**/
+    const users = (await User.find()).map((user) => {
+      //-> Use MAP functions to obtain only the information that are necessary
+      return {
+        username: user.username, //-> Without it's the more general cases, usefull to program and see all
+        email: user.email, //-> the info related to all users !!
+        role: user.role,
+      };
+    }); /**/
     res.status(200).json({ data: users });
   } catch (error) {
     res.status(500).json(error.message);
@@ -32,7 +36,7 @@ export const getUsers = async (req, res) => { //Check if the MAP functions works
   - Optional behavior:
     - error 400 is returned if the user is not found in the system
  */
-export const getUser = async (req, res) => { //Error while doing authentication here due to multiple cases
+export const getUser = async (req, res) => {
   try {
     const userAuth = verifyAuth(req, res, {
       authType: "User",
@@ -48,27 +52,27 @@ export const getUser = async (req, res) => { //Error while doing authentication 
 
       if (!user) return res.status(400).json({ message: "User not found" });
 
-      return res.status(200).json({ 
-        data:{
+      return res.status(200).json({
+        data: {
           username: user.username,
           email: user.email,
-          role: user.role
-        }
+          role: user.role,
+        },
       });
     } else {
       const adminAuth = verifyAuth(req, res, { authType: "Admin" });
+
       if (adminAuth.authorized) {
         //Admin auth successful
-
-        const user = await User.findOne({ refreshToken: cookie.refreshToken });
+        const user = await User.findOne({ username: req.params.username });
         if (!user) return res.status(401).json({ message: "User not found" });
 
         return res.status(200).json({
-          data:{
+          data: {
             username: user.username,
             email: user.email,
-            role: user.role
-          }
+            role: user.role,
+          },
         });
       } else {
         return res.status(401).json({ error: adminAuth.message });
@@ -91,7 +95,8 @@ export const getUser = async (req, res) => { //Error while doing authentication 
     - error 400 is returned if all the `memberEmails` either do not exist or are already in a group
  */
 export const createGroup = async (req, res) => {
-  try {   /* TO TEST IT -> use as body parameter: "name"  &  "memberEmails" ! (as written in the upper comment)*/
+  try {
+    /* TO TEST IT -> use as body parameter: "name"  &  "memberEmails" ! (as written in the upper comment)*/
     if (!verifyAuth(req, res, { authType: "Simple" }).authorized)
       return res.status(401).json({ message: "Unauthorized" });
 
@@ -164,11 +169,11 @@ export const getGroups = async (req, res) => {
     if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
       return res.status(401).json({ message: "Unauthorized" });
 
-    const groups = (await Group.find()).map((group)=>{
+    const groups = (await Group.find()).map((group) => {
       return {
         name: group.name,
-        members: group.members
-      }
+        members: group.members,
+      };
     });
     res.status(200).json({ data: groups });
   } catch (err) {
@@ -184,7 +189,8 @@ export const getGroups = async (req, res) => {
   - Optional behavior:
     - error 400 is returned if the group does not exist
  */
-export const getGroup = async (req, res) => {//Add the cookies check + role check !! -> different behavior between User & Admin !!
+export const getGroup = async (req, res) => {
+  //Add the cookies check + role check !! -> different behavior between User & Admin !!
   try {
     const cookie = req.cookies;
     console.log(cookie);
@@ -232,7 +238,8 @@ export const getGroup = async (req, res) => {//Add the cookies check + role chec
     - error 400 is returned if the group does not exist
     - error 400 is returned if all the `memberEmails` either do not exist or are already in a group
  */
-export const addToGroup = async (req, res) => { //Add the cookies check + role check !!->different behavior between User & Admin !!
+export const addToGroup = async (req, res) => {
+  //Add the cookies check + role check !!->different behavior between User & Admin !!
   try {
     const existingGroup = await Group.findOne({ name: req.params.name });
     if (!existingGroup)
@@ -278,7 +285,7 @@ export const addToGroup = async (req, res) => { //Add the cookies check + role c
       data: {
         group: {
           name: existingGroup.name,
-          members: existingGroup.members
+          members: existingGroup.members,
         },
         alreadyInGroup,
         membersNotFound,
@@ -299,7 +306,8 @@ export const addToGroup = async (req, res) => { //Add the cookies check + role c
     - error 400 is returned if the group does not exist
     - error 400 is returned if all the `memberEmails` either do not exist or are not in the group
  */
-export const removeFromGroup = async (req, res) => { //Add the cookies check + role check !! -> different behavior between User & Admin !!
+export const removeFromGroup = async (req, res) => {
+  //Add the cookies check + role check !! -> different behavior between User & Admin !!
   try {
     const modifiedGroup = await Group.findOne({ name: req.params.name });
     if (!modifiedGroup) {
@@ -343,7 +351,7 @@ export const removeFromGroup = async (req, res) => { //Add the cookies check + r
       data: {
         group: {
           name: modifiedGroup.name,
-          members: modifiedGroup.members
+          members: modifiedGroup.members,
         },
         notInGroup: notInGroup,
         membersNotFound: usersNotFound,
@@ -373,23 +381,24 @@ export const deleteUser = async (req, res) => {
       return res.status(400).json({ message: "The user doesn't exist" });
     }
 
-
     let InGroup = false;
     const deletedTrx = await transactions.find({ username: user.username });
     let numDeletedTrx = deletedTrx.length;
 
-    const group = (await Group.find()).filter((ans) => ans.members.some((member) => member.email===user.email));
+    const group = (await Group.find()).filter((ans) =>
+      ans.members.some((member) => member.email === user.email)
+    );
 
     // How can I call the removeFromGroup method to delete this user from the group?
 
     await User.deleteOne(user);
 
     return res.status(200).json({
-      data:{
-        numDeletedTrx: numDeletedTrx,/**/
+      data: {
+        numDeletedTrx: numDeletedTrx /**/,
         deletedTransaction: deletedTrx,
-        deletedFromGroup: InGroup
-      }
+        deletedFromGroup: InGroup,
+      },
     });
   } catch (err) {
     res.status(500).json(err.message);
