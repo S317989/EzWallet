@@ -676,7 +676,6 @@ const getTransactionsDetails = async (req, res, filter) => {
     Object.assign(
       {},
       {
-        id: v._id,
         username: v.username,
         amount: v.amount,
         type: v.type,
