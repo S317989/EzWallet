@@ -22,6 +22,7 @@ export const createCategory = (req, res) => {
     }
     const { type, color } = req.body;
     const new_categories = new categories({ type, color });
+
     new_categories
       .save()
       .then((result) =>
