@@ -586,22 +586,43 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
   - Request Body Content: The `_id` of the transaction to be deleted
   - Response `data` Content: A string indicating successful deletion of the transaction
   - Optional behavior:
-    - error 401 is returned if the user or the transaction does not exist
+    - error 40 is returned if the user or the transaction does not exist
  */
 export const deleteTransaction = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, { authType: "Simple" }).authorized)
-      return res.status(401).json({ message: "Unauthorized" });
-
-    if (!cookie.accessToken) {
-      return res.status(401).json({ message: "Unauthorized" }); // unauthorized
-    }
-
-    await transactions.deleteOne({ _id: req.body._id });
-
-    return res.status(200).json({
-      data: { message: `Transaction ${req.body._id} successfully deleted` },
+    // Check if the transaction exists
+    let transactionToBeDeleted = await transactions.findOne({
+      _id: req.body._id,
     });
+
+    if (!transactionToBeDeleted)
+      return res
+        .status(400)
+        .json({ message: `Transaction ${req.body._id} not found` });
+
+    if (verifyAuth(req, res, { authType: "Admin" }).authorized) {
+      // Delete the transaction where id = req.body._id and username = req.params.username
+      await transactions.deleteOne({ _id: req.body._id });
+
+      return res.status(200).json({
+        data: { message: `Transaction ${req.body._id} successfully deleted` },
+      });
+    } else if (verifyAuth(req, res, { authType: "User" }).authorized) {
+      const user = await User.findOne({ username: req.params.username });
+
+      // Check if the user is the owner of the transaction
+      if (
+        user.refreshToken !== req.cookies.refreshToken ||
+        transactionToBeDeleted.username !== req.params.username
+      )
+        return res.status(401).json({ message: "Unauthorized" });
+
+      await transactions.deleteOne({ _id: req.body._id });
+
+      return res.status(200).json({
+        data: { message: `Transaction ${req.body._id} successfully deleted` },
+      });
+    } else return res.status(401).json({ message: "Unauthorized" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -677,6 +698,7 @@ const getTransactionsDetails = async (req, res, filter) => {
     Object.assign(
       {},
       {
+        id: v._id,
         username: v.username,
         amount: v.amount,
         type: v.type,

@@ -382,31 +382,30 @@ export const deleteUser = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
 
     const user = await User.findOne({ email: req.body.email });
-    if (!user) {
+
+    if (!user)
       return res.status(400).json({ message: "The user doesn't exist" });
-    }
 
     /* Removing transaction related to the user */
-    const deletedTrx = await transactions.deleteMany({ username: user.username });
-    
+    const deletedTrx = await transactions.deleteMany({
+      username: user.username,
+    });
 
     /* Removing User from the group -> cover the case that the user is in multiple group (extreme) */
     let InGroup = false;
     const groupslist = (await Group.find())
-      .filter(
-        (ans) => ans.members.some(
-          (member) => member.email === user.email
-        )
-      ).forEach(async (group)=>{
+      .filter((ans) =>
+        ans.members.some((member) => member.email === user.email)
+      )
+      .forEach(async (group) => {
         InGroup = true;
-        group.members.forEach((m)=>{
+        group.members.forEach((m) => {
           m.email === user.email ? group.members.remove(m) : null;
         });
         await group.save();
       });
 
-      
-    /*Last part -> Effective user removing*/
+    /** Effective user removing */
     await User.deleteOne(user);
 
     return res.status(200).json({
