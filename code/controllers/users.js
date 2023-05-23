@@ -12,7 +12,7 @@ import { verifyAuth } from "./utils.js";
 export const getUsers = async (req, res) => {
   try {
     if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ error: "Unauthorized" });
 
     const users = (await User.find()).map((user) => {
       return {
@@ -46,9 +46,9 @@ export const getUser = async (req, res) => {
       const user = await User.findOne({ username: req.params.username });
 
       if (user.refreshToken !== req.cookies.refreshToken)
-        return res.status(401).json({ message: "Unauthorized" });
+        return res.status(401).json({ error: "Unauthorized" });
 
-      if (!user) return res.status(400).json({ message: "User not found" });
+      if (!user) return res.status(400).json({ error: "User not found" });
 
       return res.status(200).json({
         data: {
@@ -64,7 +64,7 @@ export const getUser = async (req, res) => {
         //Admin auth successful
 
         const user = await User.findOne({ username: req.params.username });
-        if (!user) return res.status(401).json({ message: "User not found" });
+        if (!user) return res.status(401).json({ error: "User not found" });
 
         return res.status(200).json({
           data: {
@@ -74,7 +74,7 @@ export const getUser = async (req, res) => {
           },
         });
       } else {
-        return res.status(401).json({ error: adminAuth.message });
+        return res.status(400).json({ error: adminAuth.message });
       }
     }
   } catch (error) {
@@ -96,13 +96,13 @@ export const getUser = async (req, res) => {
 export const createGroup = async (req, res) => {
   try {
     if (!verifyAuth(req, res, { authType: "Simple" }).authorized)
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ error: "Unauthorized" });
 
     const groupName = req.body.name;
 
     // if the group already exists
     if (await Group.findOne({ groupName }))
-      return res.status(400).json({ message: "Group already exists" });
+      return res.status(400).json({ error: "Group already exists" });
 
     let usersNotFound = [],
       alreadyInGroup = [],
@@ -129,7 +129,7 @@ export const createGroup = async (req, res) => {
     if (newGroupMembers.length === 0)
       return res.status(400).json({
         data: {
-          message: `All the users [${membersList}] either don't exist or are already in a group!`,
+          error: `All the users [${membersList}] either don't exist or are already in a group!`,
         },
       });
 
@@ -161,7 +161,7 @@ export const createGroup = async (req, res) => {
 export const getGroups = async (req, res) => {
   try {
     if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ error: "Unauthorized" });
 
     const groups = (await Group.find()).map((group) => {
       return {
@@ -190,7 +190,7 @@ export const getGroup = async (req, res) => {
 
     if (!groupInfo)
       return res.status(400).json({
-        data: { message: `The group '${req.params.name}' doesn't exist!` },
+        data: { error: `The group '${req.params.name}' doesn't exist!` },
       });
 
     if (verifyAuth(req, res, { authType: "Admin" }).authorized)
@@ -205,13 +205,13 @@ export const getGroup = async (req, res) => {
         refreshToken: req.cookies.refreshToken,
       });
 
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
 
       let isInGroup = groupInfo.members.find(
         (member) => member.email === user.username
       );
 
-      if (!isInGroup) return res.status(401).json({ message: "Unauthorized" });
+      if (!isInGroup) return res.status(401).json({ error: "Unauthorized" });
 
       return res.status(200).json({
         data: {
@@ -241,7 +241,7 @@ export const addToGroup = async (req, res) => {
     const searchedGroup = await Group.findOne({ name: req.params.name });
 
     if (!searchedGroup)
-      return res.status(400).json({ message: "Group does not exist" });
+      return res.status(400).json({ error: "Group does not exist" });
 
     // if the user is not an admin, it means that he is a regular user, so we need to check if he is in the group
     if (!verifyAuth(req, res, { authType: "Admin" }).authorized) {
@@ -254,7 +254,7 @@ export const addToGroup = async (req, res) => {
       );
 
       if (!userInfo || !isInGroup)
-        return res.status(401).json({ message: "Unauthorized" });
+        return res.status(401).json({ error: "Unauthorized" });
     }
 
     // Either the user is an admin or a regular user, he is authorized to add members to the group
@@ -276,7 +276,7 @@ export const addToGroup = async (req, res) => {
     if (searchedGroup.members.every((user) => oldMemberList.includes(user)))
       return res.status(400).json({
         data: {
-          message: `The specified [${oldMemberList}] members either do not exist or are already in a group`,
+          error: `The specified [${oldMemberList}] members either do not exist or are already in a group`,
         },
       });
 
@@ -312,7 +312,7 @@ export const removeFromGroup = async (req, res) => {
     const searchedGroup = await Group.findOne({ name: req.params.name });
 
     if (!searchedGroup)
-      return res.status(400).json({ message: "Group does not exist" });
+      return res.status(400).json({ error: "Group does not exist" });
 
     // if the user is not an admin, it means that he is a regular user, so we need to check if he is in the group
     if (!verifyAuth(req, res, { authType: "Admin" }).authorized) {
@@ -325,7 +325,7 @@ export const removeFromGroup = async (req, res) => {
       );
 
       if (!userInfo || !isInGroup)
-        return res.status(401).json({ message: "Unauthorized" });
+        return res.status(401).json({ error: "Unauthorized" });
     }
 
     // Either the user is an admin or a regular user, he is authorized to add members to the group
@@ -347,7 +347,7 @@ export const removeFromGroup = async (req, res) => {
 
     if (oldMemberList.every((member) => searchedGroup.members.includes(member)))
       return res.status(400).json({
-        message: `The specified [${oldMemberList}] members either do not exist or are not in the specified group!`,
+        error: `The specified [${oldMemberList}] members either do not exist or are not in the specified group!`,
       });
 
     await searchedGroup.save();
@@ -379,12 +379,11 @@ export const removeFromGroup = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ error: "Unauthorized" });
 
     const user = await User.findOne({ email: req.body.email });
 
-    if (!user)
-      return res.status(400).json({ message: "The user doesn't exist" });
+    if (!user) return res.status(400).json({ error: "The user doesn't exist" });
 
     /* Removing transaction related to the user */
     const deletedTrx = await transactions.deleteMany({
@@ -429,7 +428,7 @@ export const deleteUser = async (req, res) => {
 export const deleteGroup = async (req, res) => {
   try {
     if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ error: "Unauthorized" });
 
     const groupName = req.body.name;
     const groupDeleted = await Group.findOne({ name: groupName });
@@ -437,12 +436,12 @@ export const deleteGroup = async (req, res) => {
     if (!groupDeleted)
       return res
         .status(400)
-        .json({ message: `The group ${groupName} doesn't exist!` });
+        .json({ error: `The group ${groupName} doesn't exist!` });
 
     await Group.deleteOne(groupDeleted);
 
     return res.status(200).json({
-      data: { message: `Group ${groupName} cancelled with success!` },
+      data: { error: `Group ${groupName} cancelled with success!` },
     });
   } catch (err) {
     res.status(500).json(err.message);

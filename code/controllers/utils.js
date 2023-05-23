@@ -182,9 +182,9 @@ const checkRolesPermissions = (
         decodedAccessToken.role !== "Admin" ||
         decodedRefreshToken.role !== "Admin" ||
         (!decodedAccessToken && decodedRefreshToken.role !== "Admin")
-      ) {
+      )
         return { authorized: false, message: "Mismatched users" };
-      }
+
       break;
     case "Simple":
       return { authorized: true, message: "Authorized" };
@@ -194,9 +194,9 @@ const checkRolesPermissions = (
         decodedAccessToken.role !== "Regular" ||
         decodedRefreshToken.role !== "Regular" ||
         (!decodedAccessToken && decodedRefreshToken.role !== "Regular")
-      ) {
+      )
         return { authorized: false, message: "Mismatched users" };
-      }
+
       break;
     case "Group":
       if (!info.emails.includes(decodedAccessToken.email))

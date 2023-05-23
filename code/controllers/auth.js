@@ -21,7 +21,7 @@ export const register = async (req, res) => {
     const { username, email, password } = req.body;
 
     if (!validateEmail(email))
-      return res.status(400).json({ message: "Invalid email" });
+      return res.status(400).json({ error: "Invalid email" });
 
     const existingEmail = await User.findOne({ email: req.body.email });
     const existingUsername = await User.findOne({ email: req.body.username });
@@ -53,12 +53,12 @@ export const register = async (req, res) => {
 export const registerAdmin = async (req, res) => {
   try {
     if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ error: "Unauthorized" });
 
     const { username, email, password } = req.body;
 
     if (!validateEmail(email))
-      return res.status(400).json({ message: "Invalid email" });
+      return res.status(400).json({ error: "Invalid email" });
 
     const existingEmail = await User.findOne({ email: req.body.email });
     const existingUsername = await User.findOne({ email: req.body.username });
@@ -94,10 +94,11 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
   const cookie = req.cookies;
   const existingUser = await User.findOne({ email: email });
-  if (!existingUser) return res.status(400).json("please you need to register");
+  if (!existingUser)
+    return res.status(400).json({ error: "please you need to register" });
   try {
     const match = await bcrypt.compare(password, existingUser.password);
-    if (!match) return res.status(400).json("wrong credentials");
+    if (!match) return res.status(400).json({ error: "wrong credentials" });
     //CREATE ACCESSTOKEN
     const accessToken = jwt.sign(
       {
@@ -158,12 +159,12 @@ export const login = async (req, res) => {
  */
 export const logout = async (req, res) => {
   if (!verifyAuth(req, res, { authType: "Simple" }))
-    return res.status(200).json("you are already logged out");
+    return res.status(200).json({ error: "you are already logged out" });
   const refreshToken = req.cookies.refreshToken;
 
   console.log(refreshToken);
   const user = await User.findOne({ refreshToken: refreshToken });
-  if (!user) return res.status(400).json("user not found");
+  if (!user) return res.status(400).json({ error: "user not found" });
   try {
     user.refreshToken = null;
     res.cookie("accessToken", "", {
