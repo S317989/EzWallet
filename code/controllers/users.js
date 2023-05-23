@@ -101,7 +101,7 @@ export const createGroup = async (req, res) => {
     const groupName = req.body.name;
 
     // if the group already exists
-    if (await Group.findOne({ groupName }))
+    if (await Group.findOne({ name: groupName }))
       return res.status(400).json({ error: "Group already exists" });
 
     let usersNotFound = [],
@@ -110,6 +110,13 @@ export const createGroup = async (req, res) => {
       membersList = req.body.memberEmails,
       user,
       checkInGroup = false;
+
+    const userCaller = await User.findOne({
+      refreshToken: req.body.refreshToken,
+    });
+
+    if (!membersList.includes(userCaller.email))
+      membersList.push(userCaller.email);
 
     for (let member of membersList) {
       user = await User.findOne({ email: member });
@@ -136,7 +143,9 @@ export const createGroup = async (req, res) => {
     const newGroup = await Group.create({
       name: groupName,
       members: newGroupMembers,
-    }).save();
+    });
+
+    await newGroup.save();
 
     res.status(200).json({
       data: {
@@ -314,6 +323,16 @@ export const removeFromGroup = async (req, res) => {
     if (!searchedGroup)
       return res.status(400).json({ error: "Group does not exist" });
 
+    if (req.params.name !== req.body.name)
+      return res.status(400).json({ error: "Group name does not match" });
+
+    const oldMemberList = [...searchedGroup.members];
+
+    if (oldMemberList.length === 1)
+      return res
+        .status(400)
+        .json({ error: "You cannot remove all the members from a group" });
+
     // if the user is not an admin, it means that he is a regular user, so we need to check if he is in the group
     if (!verifyAuth(req, res, { authType: "Admin" }).authorized) {
       const userInfo = await User.findOne({
@@ -329,26 +348,46 @@ export const removeFromGroup = async (req, res) => {
     }
 
     // Either the user is an admin or a regular user, he is authorized to add members to the group
-    const removingEmails = req.body.users,
-      notInGroup = [],
-      usersNotFound = [],
-      oldMemberList = [...searchedGroup.members];
+    let remainingEmails = req.body.members;
+
+    const notInGroup = [],
+      usersNotFound = [];
 
     let user;
+
+    // Add into notInGroup the emails that are not in the group but are into remainingEmails
+    const oldEmails = oldMemberList.map((member) => member.email);
+
+    remainingEmails.forEach((email) => {
+      if (!oldEmails.includes(email)) {
+        notInGroup.push(email);
+      }
+    });
+
+    // Delete the emails from notInGroup from remainingEmails
+    remainingEmails = remainingEmails.filter(
+      (email) => !notInGroup.includes(email)
+    );
+
+    if (oldMemberList.length - remainingEmails.length === 0) {
+      remainingEmails = remainingEmails.filter(
+        (email) => email === oldMemberList[0].email
+      );
+    }
+
+    let removingEmails = oldEmails.filter(
+      (email) => !remainingEmails.includes(email)
+    );
 
     for (let email of removingEmails) {
       user = await User.findOne({ email });
 
       if (!user) usersNotFound.push(email);
-      else if (!searchedGroup.members.some((member) => member.email === email))
-        notInGroup.push(email);
-      else searchedGroup.members.remove(user);
-    }
 
-    if (oldMemberList.every((member) => searchedGroup.members.includes(member)))
-      return res.status(400).json({
-        error: `The specified [${oldMemberList}] members either do not exist or are not in the specified group!`,
-      });
+      searchedGroup.members = searchedGroup.members.filter(
+        (member) => !removingEmails.includes(member.email)
+      );
+    }
 
     await searchedGroup.save();
 
@@ -401,8 +440,16 @@ export const deleteUser = async (req, res) => {
         group.members.forEach((m) => {
           m.email === user.email ? group.members.remove(m) : null;
         });
-        await group.save();
+        console.log(group.members.length);
+
+        if (group.members.length === 0) {
+          let groupToDelete = await Group.findOne({ name: group.name });
+
+          await Group.deleteOne(groupToDelete);
+        } else await group.save();
       });
+
+    /** If the user is the last member of a group, we delete the group */
 
     /** Effective user removing */
     await User.deleteOne(user);

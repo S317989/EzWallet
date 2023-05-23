@@ -101,6 +101,11 @@ export const deleteCategory = async (req, res) => {
 
     const categoriesToDelete = req.body.types;
 
+    let categoriesList = await categories.find();
+
+    if (categoriesList.length == 1)
+      return res.status(400).json({ error: "No categories can be deleted" });
+
     let result = await categories.find({
       type: { $in: categoriesToDelete },
     });
@@ -112,7 +117,7 @@ export const deleteCategory = async (req, res) => {
         },
       });
 
-    const foundCat = result.map((cat) => cat.type);
+    let foundCat = result.map((cat) => cat.type);
 
     const notFoundCat = categoriesToDelete.filter(
       (cat) => !foundCat.includes(cat)
@@ -125,7 +130,18 @@ export const deleteCategory = async (req, res) => {
         },
       });
 
+    if (categoriesToDelete.length === categoriesList.length)
+      foundCat = foundCat.filter(
+        (cat) => !cat.includes(categoriesList[0].type)
+      );
+
     await categories.deleteMany({ type: { $in: foundCat } });
+
+    // Update transaction where type is in foundCat and set type to categoriesList[0].type
+    await transactions.updateMany(
+      { type: { $in: foundCat } },
+      { $set: { type: categoriesList[0].type } }
+    );
 
     return res.status(200).json({
       data: {
