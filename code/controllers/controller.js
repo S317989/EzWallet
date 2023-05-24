@@ -31,6 +31,7 @@ export const createCategory = (req, res) => {
             type: result.type,
             color: result.color,
           },
+          message: res.locals.refreshedTokenMessage,
         })
       )
       .catch((err) => {
@@ -65,9 +66,10 @@ export const updateCategory = async (req, res) => {
     const { type, color } = req.body;
 
     if (!(await categories.findOne({ type: type })))
-      return res
-        .status(400)
-        .json({ data: { error: `Category ${type} doesn't exists` } });
+      return res.status(400).json({
+        data: { error: `Category ${type} doesn't exists` },
+        message: res.locals.refreshedTokenMessage,
+      });
 
     let newCategory = await categories.findOneAndUpdate(
       { type: oldCategoryType },
@@ -81,6 +83,7 @@ export const updateCategory = async (req, res) => {
           type: oldCategoryType,
         }),
       },
+      message: res.locals.refreshedTokenMessage,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -126,7 +129,7 @@ export const deleteCategory = async (req, res) => {
     if (notFoundCat.length > 0)
       return res.status(400).json({
         data: {
-          error: `Categories ${notFoundCat} don't exist, cannot procede with deletion`,
+          error: `Categories [${notFoundCat}] don't exist, cannot procede with deletion`,
         },
       });
 
@@ -150,6 +153,7 @@ export const deleteCategory = async (req, res) => {
           type: { $in: foundCat },
         }),
       },
+      message: res.locals.refreshedTokenMessage,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -174,7 +178,9 @@ export const getCategories = async (req, res) => {
       Object.assign({}, { type: v.type, color: v.color })
     );
 
-    return res.status(200).json({ data: catList });
+    return res
+      .status(200)
+      .json({ data: catList, message: res.locals.refreshedTokenMessage });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -221,6 +227,7 @@ export const createTransaction = async (req, res) => {
             amount: result.amount,
             data: result.date,
           },
+          message: res.locals.refreshedTokenMessage,
         })
       )
       .catch((err) => {
@@ -243,9 +250,10 @@ export const getAllTransactions = async (req, res) => {
     if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
       return res.status(401).json({ error: "Unauthorized" });
 
-    return res
-      .status(200)
-      .json({ data: await getTransactionsDetails(req, res, null) });
+    return res.status(200).json({
+      data: await getTransactionsDetails(req, res, null),
+      message: res.locals.refreshedTokenMessage,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -288,9 +296,10 @@ export const getTransactionsByUser = async (req, res) => {
           if (req.params.username)
             filter = { $and: [{ username: req.params.username }] };
 
-          return res
-            .status(200)
-            .json({ data: await getTransactionsDetails(req, res, filter) });
+          return res.status(200).json({
+            data: await getTransactionsDetails(req, res, filter),
+            message: res.locals.refreshedTokenMessage,
+          });
         })()
       : (async () => {
           if (
@@ -336,9 +345,10 @@ export const getTransactionsByUser = async (req, res) => {
           // Remove the null element
           filter.$and = filter.$and.filter((condition) => condition !== null);
 
-          return res
-            .status(200)
-            .json({ data: await getTransactionsDetails(req, res, filter) });
+          return res.status(200).json({
+            data: await getTransactionsDetails(req, res, filter),
+            message: res.locals.refreshedTokenMessage,
+          });
         })();
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -372,9 +382,10 @@ export const getTransactionsByUserByCategory = async (req, res) => {
           // Remove the null element
           filter.$and = filter.$and.filter((condition) => condition !== null);
 
-          return res
-            .status(200)
-            .json({ data: await getTransactionsDetails(req, res, filter) });
+          return res.status(200).json({
+            data: await getTransactionsDetails(req, res, filter),
+            message: res.locals.refreshedTokenMessage,
+          });
         })()
       : (async () => {
           let user = await User.findOne({ username: req.params.username });
@@ -398,9 +409,10 @@ export const getTransactionsByUserByCategory = async (req, res) => {
           // Remove the null element
           filter.$and = filter.$and.filter((condition) => condition !== null);
 
-          return res
-            .status(200)
-            .json({ data: await getTransactionsDetails(req, res, filter) });
+          return res.status(200).json({
+            data: await getTransactionsDetails(req, res, filter),
+            message: res.locals.refreshedTokenMessage,
+          });
         })();
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -440,6 +452,7 @@ export const getTransactionsByGroup = async (req, res) => {
 
           return res.status(200).json({
             data: await getTransactionsDetails(req, res, filter),
+            message: res.locals.refreshedTokenMessage,
           });
         })()
       : (async () => {
@@ -469,6 +482,7 @@ export const getTransactionsByGroup = async (req, res) => {
 
           return res.status(200).json({
             data: await getTransactionsDetails(req, res, filter),
+            message: res.locals.refreshedTokenMessage,
           });
         })();
   } catch (error) {
@@ -512,9 +526,10 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
             ],
           };
 
-          return res
-            .status(200)
-            .json({ data: await getTransactionsDetails(req, res, filter) });
+          return res.status(200).json({
+            data: await getTransactionsDetails(req, res, filter),
+            message: res.locals.refreshedTokenMessage,
+          });
         })()
       : (async () => {
           let groupSearched = await Group.findOne({ name: req.params.name });
@@ -553,9 +568,10 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
             ],
           };
 
-          return res
-            .status(200)
-            .json({ data: await getTransactionsDetails(req, res, filter) });
+          return res.status(200).json({
+            data: await getTransactionsDetails(req, res, filter),
+            message: res.locals.refreshedTokenMessage,
+          });
         })();
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -602,6 +618,7 @@ export const deleteTransaction = async (req, res) => {
 
       return res.status(200).json({
         data: { message: `Transaction ${req.body._id} successfully deleted` },
+        message: res.locals.refreshedTokenMessage,
       });
     } else return res.status(401).json({ error: "Unauthorized" });
   } catch (error) {
@@ -640,15 +657,20 @@ export const deleteTransactions = async (req, res) => {
       (transaction) => !foundTrans.includes(transaction)
     );
 
+    if (notFoundTrans.length > 0)
+      return res.status(400).json({
+        data: {
+          error: `Transactions [${notFoundTrans}] don't exist, cannot procede with deletion`,
+        },
+      });
+
     await transactions.deleteMany({ _id: { $in: foundTrans } });
 
     return res.status(200).json({
       data: {
-        message:
-          notFoundTrans.length === 0
-            ? `Transactions ${foundTrans} successfully deleted`
-            : `Transactions ${foundTrans} successfully deleted! Transactions ${notFoundTrans} not found!`,
+        message: `Transactions ${foundTrans} successfully deleted`,
       },
+      message: res.locals.refreshedTokenMessage,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

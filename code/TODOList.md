@@ -57,8 +57,8 @@ To be checked:
   - [x] Return error if the function is called when the group contains only one user.
   - [x] The error messages must be inside "Error" attribute and not "Message"
   - [x] If a user is deleted, all his transactions must be deleted.
-  - [ ] DeleteCategories and DeleteTransactions body must be ad object with an array inside (id for transaction and type for categries).
-  - [ ] If at least one element in the array is not present, must return error and no element is deleted.
+  - [x] DeleteCategories and DeleteTransactions body must be ad object with an array inside (id for transaction and type for categries).
+  - [x] If at least one element in the array is not present, must return error and no element is deleted.
   
 Method testing: 
 - [ ] General

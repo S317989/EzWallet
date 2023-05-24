@@ -21,7 +21,9 @@ export const getUsers = async (req, res) => {
         role: user.role,
       };
     });
-    res.status(200).json({ data: users });
+    res
+      .status(200)
+      .json({ data: users, message: res.locals.refreshedTokenMessage });
   } catch (error) {
     res.status(500).json(error.message);
   }
@@ -56,6 +58,7 @@ export const getUser = async (req, res) => {
           email: user.email,
           role: user.role,
         },
+        message: res.locals.refreshedTokenMessage,
       });
     } else {
       const adminAuth = verifyAuth(req, res, { authType: "Admin" });
@@ -72,6 +75,7 @@ export const getUser = async (req, res) => {
             email: user.email,
             role: user.role,
           },
+          message: res.locals.refreshedTokenMessage,
         });
       } else {
         return res.status(400).json({ error: adminAuth.message });
@@ -153,6 +157,7 @@ export const createGroup = async (req, res) => {
         alreadyInGroup: alreadyInGroup,
         membersNotFound: usersNotFound,
       },
+      message: res.locals.refreshedTokenMessage,
     });
   } catch (err) {
     res.status(500).json(err.message);
@@ -179,7 +184,9 @@ export const getGroups = async (req, res) => {
       };
     });
 
-    res.status(200).json({ data: groups });
+    res
+      .status(200)
+      .json({ data: groups, message: res.locals.refreshedTokenMessage });
   } catch (err) {
     res.status(500).json(err.message);
   }
@@ -208,6 +215,7 @@ export const getGroup = async (req, res) => {
           name: groupInfo.name,
           members: groupInfo.members,
         },
+        message: res.locals.refreshedTokenMessage,
       });
     else {
       const user = await User.findOne({
@@ -227,6 +235,7 @@ export const getGroup = async (req, res) => {
           name: groupInfo.name,
           members: groupInfo.members,
         },
+        message: res.locals.refreshedTokenMessage,
       });
     }
   } catch (err) {
@@ -300,6 +309,7 @@ export const addToGroup = async (req, res) => {
         alreadyInGroup: alreadyInGroup,
         membersNotFound: membersNotFound,
       },
+      message: res.locals.refreshedTokenMessage,
     });
   } catch (err) {
     res.status(500).json(err.message);
@@ -369,12 +379,14 @@ export const removeFromGroup = async (req, res) => {
       (email) => !notInGroup.includes(email)
     );
 
+    // If no elements will be present, keep the first one in DB
     if (oldMemberList.length - remainingEmails.length === 0) {
       remainingEmails = remainingEmails.filter(
         (email) => email === oldMemberList[0].email
       );
     }
 
+    // From the emails that need to be present, retrieve the other emails
     let removingEmails = oldEmails.filter(
       (email) => !remainingEmails.includes(email)
     );
@@ -400,6 +412,7 @@ export const removeFromGroup = async (req, res) => {
         notInGroup: notInGroup,
         membersNotFound: usersNotFound,
       },
+      message: res.locals.refreshedTokenMessage,
     });
   } catch (err) {
     res.status(500).json(err.message);
@@ -440,16 +453,14 @@ export const deleteUser = async (req, res) => {
         group.members.forEach((m) => {
           m.email === user.email ? group.members.remove(m) : null;
         });
-        console.log(group.members.length);
 
+        /** If the user is the last member of a group, we delete the group */
         if (group.members.length === 0) {
           let groupToDelete = await Group.findOne({ name: group.name });
 
           await Group.deleteOne(groupToDelete);
         } else await group.save();
       });
-
-    /** If the user is the last member of a group, we delete the group */
 
     /** Effective user removing */
     await User.deleteOne(user);
@@ -459,6 +470,7 @@ export const deleteUser = async (req, res) => {
         deletedTransactions: deletedTrx.deletedCount,
         deletedFromGroup: InGroup,
       },
+      message: res.locals.refreshedTokenMessage,
     });
   } catch (err) {
     res.status(500).json(err.message);
@@ -489,6 +501,7 @@ export const deleteGroup = async (req, res) => {
 
     return res.status(200).json({
       data: { error: `Group ${groupName} cancelled with success!` },
+      message: res.locals.refreshedTokenMessage,
     });
   } catch (err) {
     res.status(500).json(err.message);

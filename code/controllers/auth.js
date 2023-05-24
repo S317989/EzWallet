@@ -35,9 +35,9 @@ export const register = async (req, res) => {
       email,
       password: hashedPassword,
     });
-    res
-      .status(200)
-      .json({ data: { message: `User ${username} added succesfully` } });
+    res.status(200).json({
+      data: { message: `User ${username} added succesfully` },
+    });
   } catch (err) {
     res.status(500).json(err);
   }
@@ -162,7 +162,6 @@ export const logout = async (req, res) => {
     return res.status(200).json({ error: "you are already logged out" });
   const refreshToken = req.cookies.refreshToken;
 
-  console.log(refreshToken);
   const user = await User.findOne({ refreshToken: refreshToken });
   if (!user) return res.status(400).json({ error: "user not found" });
   try {
