@@ -36,7 +36,7 @@ export const register = async (req, res) => {
       password: hashedPassword,
     });
     res.status(200).json({
-      data: { message: `User ${username} added succesfully` },
+      data: { message: `User ${newUser.username} added succesfully` },
     });
   } catch (err) {
     res.status(500).json(err);
@@ -74,9 +74,9 @@ export const registerAdmin = async (req, res) => {
       role: "Admin",
     });
 
-    res
-      .status(200)
-      .json({ data: { message: `Admin ${username} added succesfully` } });
+    res.status(200).json({
+      data: { message: `Admin ${newUser.username} added succesfully` },
+    });
   } catch (err) {
     res.status(500).json(err);
   }
@@ -158,12 +158,15 @@ export const login = async (req, res) => {
     - success 200 is returned if the user is already logged out
  */
 export const logout = async (req, res) => {
-  if (!verifyAuth(req, res, { authType: "Simple" }))
-    return res.status(200).json({ error: "you are already logged out" });
+  if (!verifyAuth(req, res, { authType: "Simple" }).authorized)
+    return res.status(400).json({ error: "you are already logged out" });
+
   const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) return res.status(400).json({ error: "user not found" });
 
   const user = await User.findOne({ refreshToken: refreshToken });
   if (!user) return res.status(400).json({ error: "user not found" });
+
   try {
     user.refreshToken = null;
     res.cookie("accessToken", "", {
@@ -181,12 +184,8 @@ export const logout = async (req, res) => {
       secure: true,
     });
     const savedUser = await user.save();
-    res.status(200).json({
-      data: {
-        message: "You are logged out",
-      },
-    });
+    res.status(200).json({ data: { message: "logged out" } });
   } catch (error) {
-    res.status(500).json(error);
+    res.status(400).json(error);
   }
 };

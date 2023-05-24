@@ -1,138 +1,276 @@
 import request from "supertest";
 import { app } from "../app";
 import { User } from "../models/User.js";
-import jwt from "jsonwebtoken";
-import { register, registerAdmin, login } from "../controllers/auth";
+import * as authMethods from "../controllers/auth.js";
+import * as verifyAuth from "../controllers/utils.js";
+
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 jest.mock("bcryptjs");
 jest.mock("../models/User.js");
 
+beforAll(() => {});
+
 describe("register", () => {
-  test("Registration - Done", async () => {
-    const newUser = {
-      username: "test",
-      email: "test@test.com",
-      password: "test",
+  let mockRequest;
+  let mockResponse;
+  let user;
+
+  beforeEach(() => {
+    user = {
+      username: "Test1",
+      email: "test1@test1.com",
+      password: "Test1",
+      save: jest.fn().mockResolvedValue({}),
     };
 
-    const mockRequest = { body: newUser };
-    const mockResponse = {
+    jest.spyOn(User, "findOne").mockResolvedValue(user);
+    jest.spyOn(User, "create").mockResolvedValue(user);
+
+    mockRequest = { body: user };
+
+    mockResponse = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
+      cookie: jest.fn(),
     };
-
-    await register(mockRequest, mockResponse);
-
-    expect(mockResponse.status).toHaveBeenCalledWith(200);
-    expect(mockResponse.json).toHaveBeenCalledWith("user added succesfully");
   });
 
-  test("Registration Fails - Exists", async () => {
-    // Create an existing user
-    const existingUser = {
-      username: "Prova1",
-      email: "Prova1",
-      password: "Prova1",
-    };
+  test("Registration - Done", async () => {
+    jest.spyOn(User, "findOne").mockResolvedValue(false);
 
-    // Mock the User.findOne method to return a mock user object - Similar to spyOn method
-    User.findOne.mockResolvedValueOnce(existingUser);
+    await authMethods.register(mockRequest, mockResponse);
 
-    const mockRequest = { body: existingUser };
-    const mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
-    };
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: {
+        message: expect.stringContaining(
+          `User ${user.username} added succesfully`
+        ),
+      },
+    });
+  });
 
-    await register(mockRequest, mockResponse);
+  test("Registration - Exists", async () => {
+    await authMethods.register(mockRequest, mockResponse);
 
     expect(mockResponse.status).toHaveBeenCalledWith(400);
     expect(mockResponse.json).toHaveBeenCalledWith({
       message: "you are already registered",
+    });
+  });
+
+  test("Registration - Invalid Email", async () => {
+    // Create an existing user
+    mockRequest.body.email = "Test1";
+
+    await authMethods.register(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: "Invalid email",
     });
   });
 });
 
 describe("registerAdmin", () => {
-  test("Registration Admin - Done", async () => {
-    const newAdmin = {
-      username: "test",
-      email: "test@test.com",
-      password: "test",
+  let mockRequest;
+  let mockResponse;
+  let admin;
+
+  beforeEach(() => {
+    admin = {
+      username: "TestAdmin",
+      email: "testadmin@testadmin.com",
+      password: "TestAdmin",
+      save: jest.fn().mockResolvedValue({}),
     };
 
-    const mockRequest = { body: newAdmin };
-    const mockResponse = {
+    // jest.spyOn on verifyAuth method
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      authorized: true,
+      user: { role: "Admin" },
+    });
+    jest.spyOn(User, "findOne").mockResolvedValue(admin);
+    jest.spyOn(User, "create").mockResolvedValue(admin);
+
+    mockRequest = { body: admin };
+
+    mockResponse = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
+      cookie: jest.fn(),
     };
-
-    await registerAdmin(mockRequest, mockResponse);
-
-    expect(mockResponse.status).toHaveBeenCalledWith(200);
-    expect(mockResponse.json).toHaveBeenCalledWith("admin added succesfully");
   });
 
-  test("Registration Admin - Exists", async () => {
-    // Create an existing user
-    const existingAdmin = {
-      username: "Prova1",
-      email: "Prova1",
-      password: "Prova1",
-    };
+  test("Registration Admin - Done", async () => {
+    jest.spyOn(User, "findOne").mockResolvedValue(null);
 
-    // Mock the User.findOne method to return a mock user object - Similar to spyOn method
-    User.findOne.mockResolvedValueOnce(existingAdmin);
+    await authMethods.registerAdmin(mockRequest, mockResponse);
 
-    const mockRequest = { body: existingAdmin };
-    const mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
-    };
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        message: expect.stringContaining(
+          `Admin ${admin.username} added succesfully`
+        ),
+      }),
+    });
+  });
 
-    await registerAdmin(mockRequest, mockResponse);
+  test("Registration Admin - Already Registered", async () => {
+    await authMethods.registerAdmin(mockRequest, mockResponse);
 
     expect(mockResponse.status).toHaveBeenCalledWith(400);
     expect(mockResponse.json).toHaveBeenCalledWith({
-      message: "you are already registered",
+      error: expect.stringContaining("you are already registered"),
+    });
+  });
+
+  test("Registration Admin - Invalid Email", async () => {
+    mockRequest.body.email = "TestAdmin";
+
+    await authMethods.registerAdmin(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringContaining("Invalid email"),
     });
   });
 });
 
 describe("login", () => {
-  test("Login - Done", async () => {
+  let mockRequest;
+  let mockResponse;
+
+  beforeEach(() => {
     const user = {
-      email: "Prova1",
-      password: "Prova1",
+      email: "test1@test1.com",
+      password: "Test1",
+      save: jest.fn().mockResolvedValue({}),
     };
 
-    
-    const response = await request(app)
-    .get('/api/login')
-    .set('Cookie', ['accessToken=tokenValue; refreshToken=tokenValue']);
+    jest.spyOn(User, "findOne").mockResolvedValue(user);
+    jest.spyOn(bcrypt, "compare").mockResolvedValue(true);
+    jest.spyOn(jwt, "sign").mockReturnValue("");
 
-    const mockRequest = { body: user };
-    const mockResponse = {
+    mockRequest = { body: user };
+
+    mockResponse = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
+      cookie: jest.fn(),
     };
-    
-    await login(mockRequest, mockResponse);
+  });
+
+  test("Login - Done", async () => {
+    await authMethods.login(mockRequest, mockResponse);
 
     expect(mockResponse.status).toHaveBeenCalledWith(200);
-    expect(mockResponse.json).toHaveBeenCalledWith("user logged in");
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        accessToken: expect.any(String),
+        refreshToken: expect.any(String),
+      }),
+    });
   });
-  test("Login - Wrong", () => {
-    expect(true).toBe(true);
+
+  test("Login - Wrong Credentials", async () => {
+    // Modifica solo i dati specifici necessari per questo test
+    mockRequest.body.password = "Prova2";
+
+    jest.spyOn(bcrypt, "compare").mockResolvedValue(false);
+
+    await authMethods.login(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: "wrong credentials",
+    });
   });
-  test("Login - Already logged", () => {
-    expect(true).toBe(true);
+
+  test("Login - User Not Registered", async () => {
+    // Modifica solo i dati specifici necessari per questo test
+    mockRequest.body.email = "notregisterd@notregisterd.com";
+    mockRequest.body.password = "notregisterd";
+
+    jest.spyOn(User, "findOne").mockResolvedValue(null);
+
+    await authMethods.login(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: "please you need to register",
+    });
   });
 });
 
 describe("logout", () => {
-  test("Dummy test, change it", () => {
-    expect(true).toBe(true);
+  let mockRequest;
+  let mockResponse;
+  let user;
+
+  beforeEach(() => {
+    user = {
+      email: "test1@test1.com",
+      password: "Test1",
+      save: jest.fn().mockResolvedValue({}),
+    };
+
+    jest.spyOn(verifyAuth, "verifyAuth").mockImplementation(() => ({
+      authorized: true,
+      user: { role: "Simple" },
+    }));
+    jest.spyOn(User, "findOne").mockResolvedValue(user);
+
+    mockRequest = {
+      body: user,
+      cookies: {
+        refreshToken: "mockedRefreshToken",
+      },
+    };
+
+    mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      cookie: jest.fn(),
+    };
+  });
+
+  test("Logout - Done", async () => {
+    await authMethods.logout(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        message: expect.stringContaining("logged out"),
+      }),
+    });
+  });
+
+  test("Logout - Already logged out", async () => {
+    jest.spyOn(verifyAuth, "verifyAuth").mockImplementation(() => ({
+      authorized: false,
+      user: { role: "Simple" },
+    }));
+
+    await authMethods.logout(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringContaining("you are already logged out"),
+    });
+  });
+
+  test("Logout - User not found", async () => {
+    mockRequest.cookies.refreshToken = null;
+
+    await authMethods.logout(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringContaining("user not found"),
+    });
   });
 });

@@ -61,35 +61,35 @@ To be checked:
   - [x] If at least one element in the array is not present, must return error and no element is deleted.
   
 Method testing: 
-- [ ] General
-  - [ ] Register
-  - [ ] RegisterAdmin
-  - [ ] Login
-- [ ] User
-  - [ ] GetCategories
-  - [ ] GetUser
-  - [ ] CreateTransaction
-  - [ ] GetTransactionByUser
-  - [ ] DeleteTransaction
-  - [ ] GetTransactionByUserByCategory
-  - [ ] CreateGroup
-  - [ ] GetGroup
-  - [ ] GetTransactionByGroup
-  - [ ] GetTransactionByGroupByCategory
-  - [ ] AddToGroup
-  - [ ] RemoveFromGroup
-- [ ] Admin
-  - [ ] CreateCategory
-  - [ ] UpdateCategory
-  - [ ] DeleteCategory
-  - [ ] GetAllTransactions
-  - [ ] DeleteTransactions
-  - [ ] GetTransactionsByUser
-  - [ ] GetTransactionsByUserByCategory
-  - [ ] GetTransactionsByGroup
-  - [ ] GetTransactionsByGroupByCategory
-  - [ ] GetUsers
-  - [ ] DeleteGroup
-  - [ ] AddToGroup
-  - [ ] RemoveFromG
+- [x] General
+  - [x] Register
+  - [x] RegisterAdmin
+  - [x] Login
+- [x] User
+  - [x] GetCategories
+  - [x] GetUser
+  - [x] CreateTransaction
+  - [x] GetTransactionByUser
+  - [x] DeleteTransaction
+  - [x] GetTransactionByUserByCategory
+  - [x] CreateGroup
+  - [x] GetGroup
+  - [x] GetTransactionByGroup
+  - [x] GetTransactionByGroupByCategory
+  - [x] AddToGroup
+  - [x] RemoveFromGroup
+- [x] Admin
+  - [x] CreateCategory
+  - [x] UpdateCategory
+  - [x] DeleteCategory
+  - [x] GetAllTransactions
+  - [x] DeleteTransactions
+  - [x] GetTransactionsByUser
+  - [x] GetTransactionsByUserByCategory
+  - [x] GetTransactionsByGroup
+  - [x] GetTransactionsByGroupByCategory
+  - [x] GetUsers
+  - [x] DeleteGroup
+  - [x] AddToGroup
+  - [x] RemoveFromG
  
