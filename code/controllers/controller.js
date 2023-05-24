@@ -16,10 +16,6 @@ export const createCategory = (req, res) => {
     if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
       return res.status(401).json({ error: "Unauthorized" });
 
-    const cookie = req.cookies;
-    if (!cookie.accessToken) {
-      return res.status(401).json({ error: "Unauthorized" }); // unauthorized
-    }
     const { type, color } = req.body;
     const new_categories = new categories({ type, color });
 
@@ -38,7 +34,10 @@ export const createCategory = (req, res) => {
         throw err;
       });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+      message: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -60,14 +59,15 @@ export const updateCategory = async (req, res) => {
     // Check if transaction have oldCategoryType
     if (!(await categories.findOne({ type: oldCategoryType })))
       return res.status(400).json({
-        data: { error: `Category ${oldCategoryType} doesn't exists` },
+        error: `Category ${oldCategoryType} doesn't exists`,
+        message: res.locals.refreshedTokenMessage,
       });
 
     const { type, color } = req.body;
 
     if (!(await categories.findOne({ type: type })))
       return res.status(400).json({
-        data: { error: `Category ${type} doesn't exists` },
+        error: `Category ${type} doesn't exists`,
         message: res.locals.refreshedTokenMessage,
       });
 
@@ -86,7 +86,10 @@ export const updateCategory = async (req, res) => {
       message: res.locals.refreshedTokenMessage,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+      message: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -107,7 +110,10 @@ export const deleteCategory = async (req, res) => {
     let categoriesList = await categories.find();
 
     if (categoriesList.length == 1)
-      return res.status(400).json({ error: "No categories can be deleted" });
+      return res.status(400).json({
+        error: "No categories can be deleted",
+        message: res.locals.refreshedTokenMessage,
+      });
 
     let result = await categories.find({
       type: { $in: categoriesToDelete },
@@ -115,9 +121,8 @@ export const deleteCategory = async (req, res) => {
 
     if (!result)
       return res.status(400).json({
-        data: {
-          error: `Categories ${categoriesToDelete} don't exist`,
-        },
+        error: `Categories ${categoriesToDelete} don't exist`,
+        message: res.locals.refreshedTokenMessage,
       });
 
     let foundCat = result.map((cat) => cat.type);
@@ -128,9 +133,8 @@ export const deleteCategory = async (req, res) => {
 
     if (notFoundCat.length > 0)
       return res.status(400).json({
-        data: {
-          error: `Categories [${notFoundCat}] don't exist, cannot procede with deletion`,
-        },
+        error: `Categories [${notFoundCat}] don't exist, cannot procede with deletion`,
+        message: res.locals.refreshedTokenMessage,
       });
 
     if (categoriesToDelete.length === categoriesList.length)
@@ -156,7 +160,10 @@ export const deleteCategory = async (req, res) => {
       message: res.locals.refreshedTokenMessage,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+      message: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -182,7 +189,10 @@ export const getCategories = async (req, res) => {
       .status(200)
       .json({ data: catList, message: res.locals.refreshedTokenMessage });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+      message: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -202,18 +212,18 @@ export const createTransaction = async (req, res) => {
     const { username, amount, type } = req.body;
 
     if (usernameParam !== username)
-      return res
-        .status(400)
-        .json({ error: "Username values are not equivalent" });
+      return res.status(400).json({
+        error: "Username values are not equivalent",
+        message: res.locals.refreshedTokenMessage,
+      });
 
     if (
       !(await User.findOne({ username: username })) ||
       !(await categories.findOne({ type: type }))
     )
       return res.status(400).json({
-        data: {
-          error: `Username ${username} or category ${type} doesn't exist`,
-        },
+        error: `Username ${username} or category ${type} doesn't exist`,
+        message: res.locals.refreshedTokenMessage,
       });
 
     const new_transactions = new transactions({ username, amount, type });
@@ -234,7 +244,10 @@ export const createTransaction = async (req, res) => {
         throw err;
       });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+      message: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -255,7 +268,10 @@ export const getAllTransactions = async (req, res) => {
       message: res.locals.refreshedTokenMessage,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+      message: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -291,7 +307,10 @@ export const getTransactionsByUser = async (req, res) => {
 
           /** If user not found */
           if (username === null)
-            return res.status(400).json({ error: "User not found" });
+            return res.status(400).json({
+              error: "User not found",
+              message: res.locals.refreshedTokenMessage,
+            });
 
           if (req.params.username)
             filter = { $and: [{ username: req.params.username }] };
@@ -319,7 +338,10 @@ export const getTransactionsByUser = async (req, res) => {
 
           /** If user not found */
           if (username === null)
-            return res.status(400).json({ error: "User not found" });
+            return res.status(400).json({
+              error: "User not found",
+              message: res.locals.refreshedTokenMessage,
+            });
 
           const dateIncludes = ["date", "from", "upTo"];
 
@@ -351,7 +373,10 @@ export const getTransactionsByUser = async (req, res) => {
           });
         })();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+      message: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -415,7 +440,10 @@ export const getTransactionsByUserByCategory = async (req, res) => {
           });
         })();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+      message: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -438,7 +466,11 @@ export const getTransactionsByGroup = async (req, res) => {
           // Trova il gruppo desiderato
           const group = await Group.findOne({ name: req.params.name });
 
-          if (!group) return res.status(400).json({ error: "Group not found" });
+          if (!group)
+            return res.status(400).json({
+              error: "Group not found",
+              message: res.locals.refreshedTokenMessage,
+            });
 
           // Estrai gli ID degli utenti associati ai membri del gruppo
           const memberUserIds = group.members.map((member) => member.email);
@@ -459,7 +491,10 @@ export const getTransactionsByGroup = async (req, res) => {
           let groupSearched = await Group.findOne({ name: req.params.name });
 
           if (!groupSearched)
-            return res.status(400).json({ error: "Group not found" });
+            return res.status(400).json({
+              error: "Group not found",
+              message: res.locals.refreshedTokenMessage,
+            });
 
           let membersEmail = groupSearched.members.map(
             (member) => member.email
@@ -486,7 +521,10 @@ export const getTransactionsByGroup = async (req, res) => {
           });
         })();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+      message: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -508,14 +546,21 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
 
           const group = await Group.findOne({ name: req.params.name });
 
-          if (!group) return res.status(400).json({ error: "Group not found" });
+          if (!group)
+            return res.status(400).json({
+              error: "Group not found",
+              message: res.locals.refreshedTokenMessage,
+            });
 
           const category = await categories.findOne({
             type: req.params.category,
           });
 
           if (!category)
-            return res.status(400).json({ error: "Category not found" });
+            return res.status(400).json({
+              error: "Category not found",
+              message: res.locals.refreshedTokenMessage,
+            });
 
           const memberUserIds = group.members.map((member) => member.email);
 
@@ -535,14 +580,20 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
           let groupSearched = await Group.findOne({ name: req.params.name });
 
           if (!groupSearched)
-            return res.status(400).json({ error: "Group not found" });
+            return res.status(400).json({
+              error: "Group not found",
+              message: res.locals.refreshedTokenMessage,
+            });
 
           const category = await categories.findOne({
             type: req.params.category,
           });
 
           if (!category)
-            return res.status(400).json({ error: "Category not found" });
+            return res.status(400).json({
+              error: "Category not found",
+              message: res.locals.refreshedTokenMessage,
+            });
 
           let membersEmail = groupSearched.members.map(
             (member) => member.email
@@ -574,7 +625,10 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
           });
         })();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+      message: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -593,36 +647,50 @@ export const deleteTransaction = async (req, res) => {
     });
 
     if (!transactionToBeDeleted)
-      return res
-        .status(400)
-        .json({ error: `Transaction ${req.body._id} not found` });
-
-    if (verifyAuth(req, res, { authType: "Admin" }).authorized) {
-      // Delete the transaction where id = req.body._id and username = req.params.username
-      await transactions.deleteOne({ _id: req.body._id });
-
-      return res.status(200).json({
-        data: { message: `Transaction ${req.body._id} successfully deleted` },
+      return res.status(400).json({
+        error: `Transaction ${req.body._id} not found`,
+        message: res.locals.refreshedTokenMessage,
       });
-    } else if (verifyAuth(req, res, { authType: "User" }).authorized) {
-      const user = await User.findOne({ username: req.params.username });
 
-      // Check if the user is the owner of the transaction
-      if (
-        user.refreshToken !== req.cookies.refreshToken ||
-        transactionToBeDeleted.username !== req.params.username
-      )
-        return res.status(401).json({ error: "Unauthorized" });
+    const adminAuth = verifyAuth(req, res, { authType: "Admin" });
 
+    if (adminAuth.authorized) {
+      // Delete the transaction where id = req.body._id and username = req.params.username
       await transactions.deleteOne({ _id: req.body._id });
 
       return res.status(200).json({
         data: { message: `Transaction ${req.body._id} successfully deleted` },
         message: res.locals.refreshedTokenMessage,
       });
-    } else return res.status(401).json({ error: "Unauthorized" });
+    } else {
+      const userAuth = verifyAuth(req, res, { authType: "User" });
+
+      if (userAuth.authorized) {
+        const user = await User.findOne({ username: req.params.username });
+
+        // Check if the user is the owner of the transaction
+        if (
+          user.refreshToken !== req.cookies.refreshToken ||
+          transactionToBeDeleted.username !== req.params.username
+        )
+          return res.status(400).json({
+            error: "The user is not the owner",
+            message: res.locals.refreshedTokenMessage,
+          });
+
+        await transactions.deleteOne({ _id: req.body._id });
+
+        return res.status(200).json({
+          data: { message: `Transaction ${req.body._id} successfully deleted` },
+          message: res.locals.refreshedTokenMessage,
+        });
+      } else return res.status(401).json({ error: userAuth.message });
+    }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+      message: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -646,9 +714,8 @@ export const deleteTransactions = async (req, res) => {
 
     if (!result)
       return res.status(400).json({
-        data: {
-          error: `Transaction ${transactionIds} don't exist`,
-        },
+        error: `Transaction ${transactionIds} don't exist`,
+        message: res.locals.refreshedTokenMessage,
       });
 
     const foundTrans = result.map((transaction) => transaction._id.toString());
@@ -659,9 +726,8 @@ export const deleteTransactions = async (req, res) => {
 
     if (notFoundTrans.length > 0)
       return res.status(400).json({
-        data: {
-          error: `Transactions [${notFoundTrans}] don't exist, cannot procede with deletion`,
-        },
+        error: `Transactions [${notFoundTrans}] don't exist, cannot procede with deletion`,
+        message: res.locals.refreshedTokenMessage,
       });
 
     await transactions.deleteMany({ _id: { $in: foundTrans } });
@@ -673,7 +739,10 @@ export const deleteTransactions = async (req, res) => {
       message: res.locals.refreshedTokenMessage,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+      message: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
