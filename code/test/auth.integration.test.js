@@ -1,8 +1,6 @@
 import request from "supertest";
 import { app } from "../app";
 import { User } from "../models/User.js";
-import jwt from "jsonwebtoken";
-const bcrypt = require("bcryptjs");
 import mongoose, { Model } from "mongoose";
 import dotenv from "dotenv";
 
@@ -23,7 +21,35 @@ afterAll(async () => {
   await mongoose.connection.close();
 });
 
-describe("register", () => {});
+describe("register", () => {
+  beforeEach(async () => {
+    await User.deleteMany({});
+  });
+
+  test("Registration - Done", (done) => {
+    const user = {
+      username: "Test1",
+      email: "test1@test1.com",
+      password: "Test1",
+    };
+
+    request(app)
+      .post("/api/register")
+      .send(user)
+      .then((response) => {
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({
+          data: {
+            message: expect.stringContaining(
+              `User ${user.username} added succesfully`
+            ),
+          },
+        });
+        done();
+      })
+      .catch((err) => done(err));
+  });
+});
 
 describe("registerAdmin", () => {
   test("Dummy test, change it", () => {

@@ -1,5 +1,3 @@
-import request from "supertest";
-import { app } from "../app";
 import { User } from "../models/User.js";
 import * as authMethods from "../controllers/auth.js";
 import * as verifyAuth from "../controllers/utils.js";
@@ -10,7 +8,6 @@ const jwt = require("jsonwebtoken");
 jest.mock("bcryptjs");
 jest.mock("../models/User.js");
 
-beforAll(() => {});
 
 describe("register", () => {
   let mockRequest;
