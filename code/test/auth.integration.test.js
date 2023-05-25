@@ -49,6 +49,48 @@ describe("register", () => {
       })
       .catch((err) => done(err));
   });
+
+  test("Registration - Invalid Email", (done) => {
+    const user = {
+      username: "Test1",
+      email: "test1",
+      password: "Test1",
+    };
+
+    request(app)
+      .post("/api/register")
+      .send(user)
+      .then((response) => {
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+          error: expect.stringContaining(`Invalid email`),
+        });
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Registration - Already Registered", (done) => {
+    const user = {
+      username: "Test1",
+      email: "test1@test1.com",
+      password: "Test1",
+    };
+
+    User.create(user).then(() => {
+      request(app)
+        .post("/api/register")
+        .send(user)
+        .then((response) => {
+          expect(response.status).toBe(400);
+          expect(response.body).toEqual({
+            message: expect.stringContaining(`you are already registered`),
+          });
+          done();
+        })
+        .catch((err) => done(err));
+    });
+  });
 });
 
 describe("registerAdmin", () => {
