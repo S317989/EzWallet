@@ -86,7 +86,7 @@ describe("registerAdmin", () => {
 
     // jest.spyOn on verifyAuth method
     jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
-      authorized: true,
+      flag: true,
       user: { role: "Admin" },
     });
     jest.spyOn(User, "findOne").mockResolvedValue(admin);
@@ -121,7 +121,7 @@ describe("registerAdmin", () => {
 
     expect(mockResponse.status).toHaveBeenCalledWith(400);
     expect(mockResponse.json).toHaveBeenCalledWith({
-      error: expect.stringContaining("you are already registered"),
+      message: expect.stringContaining("you are already registered"),
     });
   });
 
@@ -216,7 +216,7 @@ describe("logout", () => {
     };
 
     jest.spyOn(verifyAuth, "verifyAuth").mockImplementation(() => ({
-      authorized: true,
+      flag: true,
       user: { role: "Simple" },
     }));
     jest.spyOn(User, "findOne").mockResolvedValue(user);
@@ -248,7 +248,7 @@ describe("logout", () => {
 
   test("Logout - Already logged out", async () => {
     jest.spyOn(verifyAuth, "verifyAuth").mockImplementation(() => ({
-      authorized: false,
+      flag: false,
       user: { role: "Simple" },
     }));
 
