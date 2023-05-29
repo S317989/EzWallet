@@ -4,6 +4,8 @@ import { categories, transactions } from "../models/model";
 import mongoose, { Model } from "mongoose";
 import dotenv from "dotenv";
 import { User } from "../models/User";
+import createTransaction from "../controllers/controller";
+import dayjs from "dayjs";
 
 dotenv.config();
 
@@ -449,10 +451,34 @@ describe("createTransaction", () => {
 });
 
 describe("getAllTransactions", () => {
-  beforeAll(async ()=>{
-
+  beforeEach(async ()=>{
+    await transactions.deleteMany({});
   })
-  test("Get All Transaction ", () => {
+  
+  test("Get All Transaction ", async () => {
+    const today = dayjs();
+
+    const transaction1 = {
+      username: "User1",
+      type: "Type1",
+      amount: 100,
+      date: today,
+    }
+    const transaction2 = {
+      username: "Admin",
+      type: "Type2",
+      amount: 3,
+      date: today,
+    }
+    const transaction3 = {
+      username: "User2",
+      type: "Type1",
+      amount: 17,
+      date: today,
+    }
+    
+    await transactions.insertMany([transaction1, transaction2, transaction3]);
+
     request(app)
       .get("api/transactions")
       .send()
