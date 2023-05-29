@@ -449,8 +449,54 @@ describe("createTransaction", () => {
 });
 
 describe("getAllTransactions", () => {
-  test("Dummy test, change it", () => {
-    expect(true).toBe(true);
+  beforeAll(async ()=>{
+
+  })
+  test("Get All Transaction ", () => {
+    request(app)
+      .get("api/transactions")
+      .send()
+      .then((response) => {
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("data");
+        expect(response.body.data).toBeInstanceOf(Array);
+        expect(response.body.data[0]).toContain("username");
+        expect(response.body.data[0]).toContain("type");
+        expect(response.body.data[0]).toContain("amount");
+        expect(response.body.data[0]).toContain("date");
+        expect(response.body.data[0]).toContain("color");
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Get All Transaction - No Transaction", () => {
+    request(app)
+      .get("api/transactions")
+      .send()
+      .then((response) => {
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.data).toBeInstanceOf(Array);
+        expect(response.body.data).toBeDefined();
+        expect(response.body.data[0]).toBeFalsy();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Get All Transaction - Not an Admin", () => {
+    request(app)
+      .get("api/transactions")
+      .send()
+      .then((response) => {
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.data).toHaveProperty("message");
+        expect(response.body.error).toContain("unauthorized");
+        done();
+      })
+      .catch((err) => done(err));
   });
 });
 
