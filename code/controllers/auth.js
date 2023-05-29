@@ -1,13 +1,7 @@
 import bcrypt from "bcryptjs";
 import { User } from "../models/User.js";
 import jwt from "jsonwebtoken";
-import { verifyAuth } from "./utils.js";
-
-const validateEmail = (email) => {
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  return emailPattern.test(email);
-};
+import { verifyAuth, validateEmail } from "./utils.js";
 
 /**
  * Register a new user in the system
@@ -19,6 +13,9 @@ const validateEmail = (email) => {
 export const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
+
+    if (!username || !email || !password)
+      return res.status(400).json({ error: "Missing or Empty fields" });
 
     if (!validateEmail(email))
       return res.status(400).json({ error: "Invalid email" });
@@ -59,6 +56,9 @@ export const registerAdmin = async (req, res) => {
 
     const { username, email, password } = req.body;
 
+    if (!username || !email || !password)
+      return res.status(400).json({ error: "Missing or Empty fields" });
+
     if (!validateEmail(email))
       return res.status(400).json({ error: "Invalid email" });
 
@@ -95,9 +95,14 @@ export const registerAdmin = async (req, res) => {
 export const login = async (req, res) => {
   const { email, password } = req.body;
   const cookie = req.cookies;
+
+  if (!email || !password)
+    return res.status(400).json({ error: "Missing or Empty fields" });
+
   const existingUser = await User.findOne({ email: email });
   if (!existingUser)
     return res.status(400).json({ error: "please you need to register" });
+
   try {
     const match = await bcrypt.compare(password, existingUser.password);
     if (!match) return res.status(400).json({ error: "wrong credentials" });

@@ -4,6 +4,7 @@ import {
   handleDateFilterParams,
   handleAmountFilterParams,
   verifyAuth,
+  validateEmail
 } from "./utils.js";
 
 /**
@@ -11,12 +12,21 @@ import {
   - Request Body Content: An object having attributes `type` and `color`
   - Response `data` Content: An object having attributes `type` and `color`
  */
-export const createCategory = (req, res) => {
+export const createCategory = async (req, res) => {
   try {
     if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
       return res.status(401).json({ error: "Unauthorized" });
 
     const { type, color } = req.body;
+
+    if (!type || !color)
+      return res.status(400).json({ error: "Missing or empty parameters" });
+
+    const alreadyExists = await categories.findOne({ type });
+
+    if (alreadyExists)
+      return res.status(400).json({ error: "Category already exists" });
+
     const new_categories = new categories({ type, color });
 
     new_categories
@@ -65,11 +75,11 @@ export const updateCategory = async (req, res) => {
 
     const { type, color } = req.body;
 
-    if (!(await categories.findOne({ type: type })))
-      return res.status(400).json({
-        error: `Category ${type} doesn't exists`,
-        message: res.locals.refreshedTokenMessage,
-      });
+    if (!type || !color)
+      return res.status(400).json({ error: "Missing or empty parameters" });
+
+    if (type != oldCategoryType && (await categories.findOne({ type: type })))
+      return res.status(400).json({ error: `Category ${type} already exists` });
 
     let newCategory = await categories.findOneAndUpdate(
       { type: oldCategoryType },
@@ -78,7 +88,7 @@ export const updateCategory = async (req, res) => {
 
     return res.status(200).json({
       data: {
-        message: `Category ${oldCategoryType} updated to ${newCategory} successfully`,
+        message: `Category ${oldCategoryType} updated to [${type}, ${newCategory.color}] successfully`,
         count: await transactions.countDocuments({
           type: oldCategoryType,
         }),
@@ -106,6 +116,12 @@ export const deleteCategory = async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
 
     const categoriesToDelete = req.body.types;
+
+    if (!categoriesToDelete || categoriesToDelete.length == 0)
+      return res.status(400).json({ error: "Missing or empty parameters" });
+
+    if (categoriesToDelete.some((cat) => cat === ""))
+      return res.status(400).json({ error: "Empty string in types array" });
 
     let categoriesList = await categories.find();
 
@@ -210,6 +226,12 @@ export const createTransaction = async (req, res) => {
 
     let usernameParam = req.params.username;
     const { username, amount, type } = req.body;
+
+    if (!username || !amount || !type)
+      return res.status(400).json({ error: "Missing or empty parameters" });
+
+    if (isNaN(parseFloat(amount)))
+      return res.status(400).json({ error: "Amount is not a number" });
 
     if (usernameParam !== username)
       return res.status(400).json({
@@ -321,11 +343,14 @@ export const getTransactionsByUser = async (req, res) => {
           });
         })()
       : (async () => {
+          const user = await User.findOne({ username: req.params.username });
+
           if (
             !verifyAuth(req, res, {
               authType: "User",
               username: req.params.username,
-            }).authorized
+            }).authorized ||
+            user.refreshToken !== req.cookies.refreshToken
           )
             return res.status(401).json({ error: "Unauthorized" });
 
@@ -391,6 +416,12 @@ export const getTransactionsByUser = async (req, res) => {
 export const getTransactionsByUserByCategory = async (req, res) => {
   try {
     let filter;
+
+    if (!(await User.findOne({ username: req.params.username })))
+      return res.status(400).json({ error: "User not found" });
+
+    if (!(await categories.findOne({ type: req.params.category })))
+      return res.status(400).json({ error: "Category not found" });
 
     req.url.includes("/transactions/users/")
       ? (async () => {
@@ -539,6 +570,7 @@ export const getTransactionsByGroup = async (req, res) => {
 export const getTransactionsByGroupByCategory = async (req, res) => {
   try {
     let filter;
+
     req.url.includes("/transactions/groups")
       ? (async () => {
           if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
@@ -641,6 +673,8 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
  */
 export const deleteTransaction = async (req, res) => {
   try {
+    if (!req.body._id) return res.status(400).json({ error: "Missing _ids" });
+
     // Check if the transaction exists
     let transactionToBeDeleted = await transactions.findOne({
       _id: req.body._id,
@@ -667,6 +701,8 @@ export const deleteTransaction = async (req, res) => {
 
       if (userAuth.authorized) {
         const user = await User.findOne({ username: req.params.username });
+
+        if (!user) return res.status(400).json({ error: "User not found" });
 
         // Check if the user is the owner of the transaction
         if (
@@ -707,6 +743,12 @@ export const deleteTransactions = async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
 
     let transactionIds = req.body._ids;
+
+    if (!transactionIds || transactionIds.length === 0)
+      return res.status(400).json({ error: "Missing _ids" });
+
+    if (transactionIds.some((id) => id === ""))
+      return res.status(400).json({ error: "Empty _ids" });
 
     let result = await transactions.find({
       _id: { $in: transactionIds },
