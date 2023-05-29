@@ -4,7 +4,7 @@ import {
   handleDateFilterParams,
   handleAmountFilterParams,
   verifyAuth,
-  validateEmail
+  validateEmail,
 } from "./utils.js";
 
 /**
@@ -203,7 +203,10 @@ export const getCategories = async (req, res) => {
 
     return res
       .status(200)
-      .json({ data: catList, refreshedTokenMessage: res.locals.refreshedTokenMessage });
+      .json({
+        data: catList,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
   } catch (error) {
     res.status(500).json({
       error: error.message,
