@@ -17,9 +17,6 @@ export const register = async (req, res) => {
     if (!username || !email || !password)
       return res.status(400).json({ error: "Missing or Empty fields" });
 
-    const errorMessage = emptyAndAttributesChecking(email, req.body);
-    if (errorMessage) return res.status(400).json({ error: errorMessage });
-
     if (!validateEmail(email))
       return res.status(400).json({ error: "Invalid email" });
 
