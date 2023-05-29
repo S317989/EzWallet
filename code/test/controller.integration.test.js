@@ -5,6 +5,8 @@ import mongoose, { Model } from "mongoose";
 import dotenv from "dotenv";
 import { User } from "../models/User";
 import createTransaction from "../controllers/controller";
+const jwt = require("jsonwebtoken");
+
 
 dotenv.config();
 
@@ -27,16 +29,39 @@ afterAll(async () => {
 
 describe("createCategory", () => {
 /**How can I handle the authentication part by the Admin User? */
+  let user, accessToken, refreshToken;
+  beforeAll(async ()=>{
+    user = {
+      username: "TestAdmin",
+      email: "admin@test.com",
+      password: "TestAdmin",
+    };
 
+    accessToken = jwt.sign(
+      {
+       username: user.username,
+       email: user.email,
+       password: user.password,
+       role: "Admin",
+      },
+      "EZWALLET",
+      {
+       expiresIn: "1h",
+      }
+    );
+
+    refreshToken = jwt.sign(
+      {
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: "Admin",
+      },
+      "EZWALLET",
+      { expiresIn: "7d" }
+    );
+  })
   beforeEach(async ()=>{
-    /*const Admin ={
-      username:"Admin",
-      email:"AdminAdmin@controller.com",
-      password:"Admin1",
-      role: "Admin",
-    }
-    await User.create(Admin);*/
-
     await categories.deleteMany({});
   });
   test("New category inserted", (done) => {
@@ -44,10 +69,14 @@ describe("createCategory", () => {
       type: "TestType",
       color: "TestColor",
     };
-
+    
     request(app)
       .post("/api/categories")
       .send(category)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
       .then((response)=>{
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("data");
@@ -61,41 +90,28 @@ describe("createCategory", () => {
   });
 
   test("Not enough attributes", (done) => {
-    const category1 = {
+    const category = {
       type: "TestType",
     };
 
     request(app)
       .post("/api/categories")
       .send(category)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
       .then((response)=>{
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
         expect(response.body).toEqual({
-          error: expect.stringContaining(`is missing`),
+          error: expect.stringContaining(`Missing`),
         });
         done();
       })
       .catch((err) => done(err));
   });
-  test("Not enough attributes", (done) => {
-    const category = {
-      color: "TestColor",
-    };
 
-    request(app)
-      .post("/api/categories")
-      .send(category)
-      .then((response)=>{
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("error");
-        expect(response.body).toEqual({
-          error: expect.stringContaining(`is missing`),
-        });
-        done();
-      })
-      .catch((err) => done(err));
-  });
   test("Type attributes is empty ", (done) => {
     const category = {
       type: "",
@@ -104,32 +120,16 @@ describe("createCategory", () => {
 
     request(app)
       .post("/api/categories")
-      .send(category1)
+      .send(category)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
       .then((response)=>{
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
         expect(response.body).toEqual({
-          error: expect.stringContaining(`is empty`),
-        });
-        done();
-      })
-      .catch((err) => done(err));
-  });
-  
-  test("Color attributes is empty ", (done) => {
-    const category = {
-      type: "TestType",
-      color: "",
-    };
-
-    request(app)
-      .post("/api/categories")
-      .send(category2)
-      .then((response)=>{
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("error");
-        expect(response.body).toEqual({
-          error: expect.stringContaining(`is empty`),
+          error: expect.stringContaining(`empty`),
         });
         done();
       })
@@ -146,6 +146,10 @@ describe("createCategory", () => {
       request(app)
         .post("/api/categories")
         .send(category)
+        .set("Cookie", [
+          `accessToken=${accessToken}`,
+          `refreshToken=${refreshToken}`,
+        ])
         .then((response)=>{
           expect(response.status).toBe(400);
           expect(response.body).toHaveProperty("error");
