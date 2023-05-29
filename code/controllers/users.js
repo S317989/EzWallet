@@ -21,12 +21,10 @@ export const getUsers = async (req, res) => {
         role: user.role,
       };
     });
-    res
-      .status(200)
-      .json({
-        data: users,
-        refreshedTokenMessage: res.locals.refreshedTokenMessage,
-      });
+    res.status(200).json({
+      data: users,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
+    });
   } catch (error) {
     res.status(500).json({
       error: error.message,
@@ -195,12 +193,10 @@ export const createGroup = async (req, res) => {
       refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        error: err.message,
-        refreshedTokenMessage: res.locals.refreshedTokenMessage,
-      });
+    res.status(500).json({
+      error: err.message,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -224,19 +220,15 @@ export const getGroups = async (req, res) => {
       };
     });
 
-    res
-      .status(200)
-      .json({
-        data: groups,
-        refreshedTokenMessage: res.locals.refreshedTokenMessage,
-      });
+    res.status(200).json({
+      data: groups,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
+    });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        error: err.message,
-        refreshedTokenMessage: res.locals.refreshedTokenMessage,
-      });
+    res.status(500).json({
+      error: err.message,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -301,12 +293,10 @@ export const getGroup = async (req, res) => {
       }
     }
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        error: err.message,
-        refreshedTokenMessage: res.locals.refreshedTokenMessage,
-      });
+    res.status(500).json({
+      error: err.message,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -402,12 +392,10 @@ export const addToGroup = async (req, res) => {
       return res.status(401).json({ error: userAuth.message });
     }
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        error: err.message,
-        refreshedTokenMessage: res.locals.refreshedTokenMessage,
-      });
+    res.status(500).json({
+      error: err.message,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -554,12 +542,10 @@ export const removeFromGroup = async (req, res) => {
       return res.status(401).json({ error: userAuth.message });
     }
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        error: err.message,
-        refreshedTokenMessage: res.locals.refreshedTokenMessage,
-      });
+    res.status(500).json({
+      error: err.message,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -627,12 +613,10 @@ export const deleteUser = async (req, res) => {
       refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        error: err.message,
-        refreshedTokenMessage: res.locals.refreshedTokenMessage,
-      });
+    res.status(500).json({
+      error: err.message,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
+    });
   }
 };
 
@@ -667,11 +651,9 @@ export const deleteGroup = async (req, res) => {
       refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        error: err.message,
-        refreshedTokenMessage: res.locals.refreshedTokenMessage,
-      });
+    res.status(500).json({
+      error: err.message,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
+    });
   }
 };
