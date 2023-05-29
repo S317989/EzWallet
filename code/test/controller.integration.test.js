@@ -184,29 +184,67 @@ describe("createCategory", () => {
 });
 
 describe("updateCategory", () => {
-  beforeAll(async () =>{
-    const standardValue ={
+  let user, accessToken, refreshToken;
+  const standardValue ={
       type:"TestType",
       color:"TestColor",
-    }
+  }
+  beforeAll(async ()=>{
+    user = {
+      username: "TestAdmin",
+      email: "admin@test.com",
+      password: "TestAdmin",
+    };
+
+    accessToken = jwt.sign(
+      {
+       username: user.username,
+       email: user.email,
+       password: user.password,
+       role: "Admin",
+      },
+      "EZWALLET",
+      {
+       expiresIn: "1h",
+      }
+    );
+
+    refreshToken = jwt.sign(
+      {
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: "Admin",
+      },
+      "EZWALLET",
+      { expiresIn: "7d" }
+    );
+  })
+  
+  beforeEach(async () =>{
+    
     await categories.deleteMany({});
     await categories.create(standardValue);
   });
 
-  test("Category update - Success", (done) => {
+  test("Success", (done) => {
     const newValue ={
       type:"NewType",
       color: "NewColor",
     }
 
     request(app)
-      .patch("api/categories/:type")
+      .patch("api/categories/:type".replace(":type", standardValue.type))
       .send(newValue)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
       .then((response) => {
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("data");
         expect(response.body.data).toHaveProperty("message");
-        expect(response.body.data.message).toContain("updated to");
+        expect(response.body.data.message).toContain("successfully");
         expect(response.body.data).toHaveProperty("count");
         expect(response.body.data.count).toBeGreaterThanOrEqual(0);
         done();
@@ -215,64 +253,108 @@ describe("updateCategory", () => {
 
   });
 
-  test("Category update - Category doesn't exist", (done) => {
+  test("Invalid Parameters", (done) => {
     const newValue ={
       type:"NewType",
-      color: "NewColor",
     }
 
     request(app)
-      .patch("api/categories/:type")
+      .patch("api/categories/:type".replace(":type", standardValue.type))
       .send(newValue)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
       .then((response) => {
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("data");
-        expect(response.body.data).toHaveProperty("message");
-        expect(response.body.data.message).toContain("updated to");
-        expect(response.body.data).toHaveProperty("count");
-        expect(response.body.data.count).toBeGreaterThanOrEqual(0);
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.error).toContain("Missing");
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Empty Parameters", (done) => {
+    const newValue ={
+      type:"",
+      color: "NewColor"
+    }
+
+    request(app)
+      .patch("api/categories/:type".replace(":type", standardValue.type))
+      .send(newValue)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
+      .then((response) => {
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.error).toContain("empty");
         done();
       })
       .catch((err) => done(err));
   });
   
-  test("Category update - Invalid Values", (done) => {
+  test("Category doesn't exist", (done) => {
     const newValue ={
       type:"NewType",
       color: "NewColor",
     }
 
     request(app)
-      .patch("api/categories/:type")
+      .patch("api/categories/:type".replace(":type","Type"))
       .send(newValue)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
       .then((response) => {
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("data");
-        expect(response.body.data).toHaveProperty("message");
-        expect(response.body.data.message).toContain("updated to");
-        expect(response.body.data).toHaveProperty("count");
-        expect(response.body.data.count).toBeGreaterThanOrEqual(0);
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.error).toContain("doesn't exists");
         done();
       })
       .catch((err) => done(err));
   });
+
+  test("New Category already exist", (done) => {
+    const newValue ={
+      type:"NewType",
+      color: "NewColor",
+    }
+
+    categories.create(newValue).then(()=>{
+      request(app)
+        .patch("api/categories/:type".replace(":type",standardValue.type))
+        .send(newValue)
+        .set("Cookie", [
+          `accessToken=${accessToken}`,
+          `refreshToken=${refreshToken}`,
+        ])
+        .then((response) => {
+          expect(response.status).toBe(400);
+          expect(response.body).toHaveProperty("error");
+          expect(response.body.error).toContain("already exists");
+          done();
+        })
+        .catch((err) => done(err));
+    });
+  });
   
-  test("Category update - Not an Admin", (done) => {
+  test("Not an Admin", (done) => {
     const newValue ={
       type:"NewType",
       color: "NewColor",
     }
 
     request(app)
-      .patch("api/categories/:type")
+      .patch("api/categories/:type".replace(":type",standardValue.type))
       .send(newValue)
       .then((response) => {
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("data");
-        expect(response.body.data).toHaveProperty("message");
-        expect(response.body.data.message).toContain("updated to");
-        expect(response.body.data).toHaveProperty("count");
-        expect(response.body.data.count).toBeGreaterThanOrEqual(0);
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.error).toContain("Unauthorized");
         done();
       })
       .catch((err) => done(err));
