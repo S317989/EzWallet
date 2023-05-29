@@ -50,10 +50,16 @@ export const handleAmountFilterParams = (req, data) => {
     amount: {},
   };
 
-  if (minAmount) filter.amount.$gte = parseInt(minAmount);
+  if (minAmount) {
+    if (isNaN(minAmount)) throw new Error("Min amount must be a number");
 
-  if (maxAmount) filter.amount.$lte = parseInt(maxAmount);
+    filter.amount.$gte = parseInt(minAmount);
+  }
+  if (maxAmount) {
+    if (isNaN(maxAmount)) throw new Error("Max amount must be a number");
 
+    filter.amount.$lte = parseInt(maxAmount);
+  }
   return filter;
 };
 
@@ -69,7 +75,7 @@ export const handleAmountFilterParams = (req, data) => {
 export const verifyAuth = (req, res, info) => {
   const cookie = req.cookies;
   if (!cookie.accessToken || !cookie.refreshToken) {
-    return { authorized: false, message: "Unauthorized" };
+    return { flag: false, cause: "Unauthorized" };
   }
   try {
     const decodedAccessToken = jwt.verify(
@@ -86,21 +92,21 @@ export const verifyAuth = (req, res, info) => {
       !decodedAccessToken.email ||
       !decodedAccessToken.role
     ) {
-      return { authorized: false, message: "Token is missing information" };
+      return { flag: false, cause: "Token is missing information" };
     }
     if (
       !decodedRefreshToken.username ||
       !decodedRefreshToken.email ||
       !decodedRefreshToken.role
     ) {
-      return { authorized: false, message: "Token is missing information" };
+      return { flag: false, cause: "Token is missing information" };
     }
     if (
       decodedAccessToken.username !== decodedRefreshToken.username ||
       decodedAccessToken.email !== decodedRefreshToken.email ||
       decodedAccessToken.role !== decodedRefreshToken.role
     ) {
-      return { authorized: false, message: "Mismatched users" };
+      return { flag: false, cause: "Mismatched users" };
     }
 
     return checkRolesPermissions(decodedAccessToken, decodedRefreshToken, info);
@@ -139,13 +145,13 @@ export const verifyAuth = (req, res, info) => {
         return checkRolesPermissions(newDecodedAccessToken, refreshToken, info);
       } catch (err) {
         if (err.name === "TokenExpiredError") {
-          return { authorized: false, cause: "Perform login again" };
+          return { flag: false, cause: "Perform login again" };
         } else {
-          return { authorized: false, cause: err.name };
+          return { flag: false, cause: err.name };
         }
       }
     } else {
-      return { authorized: false, cause: err.name };
+      return { flag: false, cause: err.name };
     }
   }
 };
@@ -183,11 +189,11 @@ const checkRolesPermissions = (
         decodedRefreshToken.role !== "Admin" ||
         (!decodedAccessToken && decodedRefreshToken.role !== "Admin")
       )
-        return { authorized: false, message: "Mismatched users" };
+        return { flag: false, cause: "Mismatched users" };
 
       break;
     case "Simple":
-      return { authorized: true, message: "Authorized" };
+      return { flag: true, cause: "Authorized" };
       break;
     case "User":
       if (
@@ -195,18 +201,18 @@ const checkRolesPermissions = (
         decodedRefreshToken.role !== "Regular" ||
         (!decodedAccessToken && decodedRefreshToken.role !== "Regular")
       )
-        return { authorized: false, message: "Mismatched users" };
+        return { flag: false, cause: "Mismatched users" };
 
       break;
     case "Group":
       if (!info.emails.includes(decodedAccessToken.email))
-        return { authorized: false, message: "User not in group" };
+        return { flag: false, cause: "User not in group" };
       break;
     default:
-      return { authorized: true, message: "Authorized" };
+      return { flag: true, cause: "Authorized" };
   }
 
-  return { authorized: true, message: "Authorized" };
+  return { flag: true, cause: "Authorized" };
 };
 
 export const validateEmail = (email) => {

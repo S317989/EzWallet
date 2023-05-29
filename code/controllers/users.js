@@ -1,6 +1,6 @@
 import { Group, User } from "../models/User.js";
 import { transactions } from "../models/model.js";
-import { verifyAuth } from "./utils.js";
+import { verifyAuth, validateEmail } from "./utils.js";
 
 /**
  * Return all the users
@@ -11,7 +11,7 @@ import { verifyAuth } from "./utils.js";
  */
 export const getUsers = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+    if (!verifyAuth(req, res, { authType: "Admin" }).flag)
       return res.status(401).json({ error: "Unauthorized" });
 
     const users = (await User.find()).map((user) => {
@@ -23,11 +23,14 @@ export const getUsers = async (req, res) => {
     });
     res
       .status(200)
-      .json({ data: users, message: res.locals.refreshedTokenMessage });
+      .json({
+        data: users,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
   } catch (error) {
     res.status(500).json({
       error: error.message,
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   }
 };
@@ -46,20 +49,20 @@ export const getUser = async (req, res) => {
       username: req.params.username,
     });
 
-    if (userAuth.authorized) {
+    if (userAuth.flag) {
       //User auth successful
       const user = await User.findOne({ username: req.params.username });
 
       if (user.refreshToken !== req.cookies.refreshToken)
         return res.status(400).json({
           error: "Unauthorized",
-          message: res.locals.refreshedTokenMessage,
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
         });
 
       if (!user)
         return res.status(400).json({
           error: "User not found",
-          message: res.locals.refreshedTokenMessage,
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
         });
 
       return res.status(200).json({
@@ -68,19 +71,19 @@ export const getUser = async (req, res) => {
           email: user.email,
           role: user.role,
         },
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
     } else {
       const adminAuth = verifyAuth(req, res, { authType: "Admin" });
 
-      if (adminAuth.authorized) {
+      if (adminAuth.flag) {
         //Admin auth successful
 
         const user = await User.findOne({ username: req.params.username });
         if (!user)
           return res.status(400).json({
             error: "User not found",
-            message: res.locals.refreshedTokenMessage,
+            refreshedTokenMessage: res.locals.refreshedTokenMessage,
           });
 
         return res.status(200).json({
@@ -89,7 +92,7 @@ export const getUser = async (req, res) => {
             email: user.email,
             role: user.role,
           },
-          message: res.locals.refreshedTokenMessage,
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
         });
       } else {
         return res.status(401).json({ error: adminAuth.message });
@@ -98,7 +101,7 @@ export const getUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       error: error.message,
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   }
 };
@@ -116,16 +119,19 @@ export const getUser = async (req, res) => {
  */
 export const createGroup = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, { authType: "Simple" }).authorized)
+    if (!verifyAuth(req, res, { authType: "Simple" }).flag)
       return res.status(401).json({ error: "Unauthorized" });
 
     const groupName = req.body.name;
+
+    if (!req.body.name || !req.body.memberEmails)
+      return res.status(400).json({ error: "Missing parameters" });
 
     // if the group already exists
     if (await Group.findOne({ name: groupName }))
       return res.status(400).json({
         error: "Group already exists",
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
     let usersNotFound = [],
@@ -139,8 +145,18 @@ export const createGroup = async (req, res) => {
       refreshToken: req.body.refreshToken,
     });
 
+    if (
+      await Group.findOne({
+        members: { $elemMatch: { email: userCaller.email } },
+      })
+    )
+      return res.status(400).json({ error: "User already in a group" });
+
     if (!membersList.includes(userCaller.email))
       membersList.push(userCaller.email);
+
+    if (!membersList.every((member) => validateEmail(member)))
+      return res.status(400).json({ error: "Invalid email format" });
 
     for (let member of membersList) {
       user = await User.findOne({ email: member });
@@ -160,7 +176,7 @@ export const createGroup = async (req, res) => {
     if (newGroupMembers.length === 0)
       return res.status(400).json({
         error: `All the users [${membersList}] either don't exist or are already in a group!`,
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
     const newGroup = await Group.create({
@@ -176,12 +192,15 @@ export const createGroup = async (req, res) => {
         alreadyInGroup: alreadyInGroup,
         membersNotFound: usersNotFound,
       },
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   } catch (err) {
     res
       .status(500)
-      .json({ error: err.message, message: res.locals.refreshedTokenMessage });
+      .json({
+        error: err.message,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
   }
 };
 
@@ -195,7 +214,7 @@ export const createGroup = async (req, res) => {
  */
 export const getGroups = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+    if (!verifyAuth(req, res, { authType: "Admin" }).flag)
       return res.status(401).json({ error: "Unauthorized" });
 
     const groups = (await Group.find()).map((group) => {
@@ -207,11 +226,17 @@ export const getGroups = async (req, res) => {
 
     res
       .status(200)
-      .json({ data: groups, message: res.locals.refreshedTokenMessage });
+      .json({
+        data: groups,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
   } catch (err) {
     res
       .status(500)
-      .json({ error: err.message, message: res.locals.refreshedTokenMessage });
+      .json({
+        error: err.message,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
   }
 };
 
@@ -230,20 +255,20 @@ export const getGroup = async (req, res) => {
     if (!groupInfo)
       return res.status(400).json({
         error: `The group '${req.params.name}' doesn't exist!`,
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
-    if (verifyAuth(req, res, { authType: "Admin" }).authorized)
+    if (verifyAuth(req, res, { authType: "Admin" }).flag)
       return res.status(200).json({
         data: {
           name: groupInfo.name,
           members: groupInfo.members,
         },
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
     else {
       const userAuth = verifyAuth(req, res, { authType: "User" });
-      if (userAuth.authorized) {
+      if (userAuth.flag) {
         const user = await User.findOne({
           refreshToken: req.cookies.refreshToken,
         });
@@ -251,7 +276,7 @@ export const getGroup = async (req, res) => {
         if (!user)
           return res.status(400).json({
             error: "User not found",
-            message: res.locals.refreshedTokenMessage,
+            refreshedTokenMessage: res.locals.refreshedTokenMessage,
           });
 
         let isInGroup = groupInfo.members.find(
@@ -261,7 +286,7 @@ export const getGroup = async (req, res) => {
         if (!isInGroup)
           return res.status(400).json({
             error: "User not in the specified group",
-            message: res.locals.refreshedTokenMessage,
+            refreshedTokenMessage: res.locals.refreshedTokenMessage,
           });
 
         return res.status(200).json({
@@ -269,7 +294,7 @@ export const getGroup = async (req, res) => {
             name: groupInfo.name,
             members: groupInfo.members,
           },
-          message: res.locals.refreshedTokenMessage,
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
         });
       } else {
         return res.status(401).json({ error: userAuth.message });
@@ -278,7 +303,10 @@ export const getGroup = async (req, res) => {
   } catch (err) {
     res
       .status(500)
-      .json({ error: err.message, message: res.locals.refreshedTokenMessage });
+      .json({
+        error: err.message,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
   }
 };
 
@@ -300,11 +328,14 @@ export const addToGroup = async (req, res) => {
     if (!searchedGroup)
       return res.status(400).json({
         error: "Group does not exist",
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
+    if (!req.body.emails)
+      return res.status(400).json({ error: "No emails provided" });
+
     // if the user is not an admin, it means that he is a regular user, so we need to check if he is in the group
-    if (verifyAuth(req, res, { authType: "User" }).authorized) {
+    if (verifyAuth(req, res, { authType: "User" }).flag) {
       const userInfo = await User.findOne({
         refreshToken: req.cookies.refreshToken,
       });
@@ -316,13 +347,13 @@ export const addToGroup = async (req, res) => {
       if (!userInfo || !isInGroup)
         return res.status(400).json({
           error: "User doesn't exists or not in group",
-          message: res.locals.refreshedTokenMessage,
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
         });
     }
 
     let userAuth = verifyAuth(req, res, { authType: "Simple" });
 
-    if (userAuth.authorized) {
+    if (userAuth.flag) {
       // Either the user is an admin or a regular user, he is authorized to add members to the group
       const oldMemberList = [...searchedGroup.members],
         memberEmails = req.body.emails,
@@ -331,18 +362,27 @@ export const addToGroup = async (req, res) => {
 
       let user;
 
+      if (!memberEmails.every((email) => validateEmail(email)))
+        return res.status(400).json({ error: "Invalid email format" });
+
       for (let email of memberEmails) {
         user = await User.findOne({ email });
+
         if (!user) membersNotFound.push(email);
-        else if (searchedGroup.members.some((member) => member.email === email))
-          alreadyInGroup.push(email);
-        else searchedGroup.members.push(user);
+        else {
+          let groupToCheck = await Group.findOne({
+            members: { $elemMatch: { email: email } },
+          });
+
+          if (groupToCheck) alreadyInGroup.push(email);
+          else searchedGroup.members.push(user);
+        }
       }
 
       if (searchedGroup.members.every((user) => oldMemberList.includes(user)))
         return res.status(400).json({
           error: `The specified [${oldMemberList}] members either do not exist or are already in a group`,
-          message: res.locals.refreshedTokenMessage,
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
         });
 
       await searchedGroup.save();
@@ -356,7 +396,7 @@ export const addToGroup = async (req, res) => {
           alreadyInGroup: alreadyInGroup,
           membersNotFound: membersNotFound,
         },
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
     } else {
       return res.status(401).json({ error: userAuth.message });
@@ -364,7 +404,10 @@ export const addToGroup = async (req, res) => {
   } catch (err) {
     res
       .status(500)
-      .json({ error: err.message, message: res.locals.refreshedTokenMessage });
+      .json({
+        error: err.message,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
   }
 };
 
@@ -380,18 +423,23 @@ export const addToGroup = async (req, res) => {
  */
 export const removeFromGroup = async (req, res) => {
   try {
+    if (!req.body.name || !req.body.members)
+      return res
+        .status(400)
+        .json({ error: "No group name or members provided" });
+
     const searchedGroup = await Group.findOne({ name: req.params.name });
 
     if (!searchedGroup)
       return res.status(400).json({
         error: "Group does not exist",
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
     if (req.params.name !== req.body.name)
       return res.status(400).json({
         error: "Group name does not match",
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
     const oldMemberList = [...searchedGroup.members];
@@ -399,11 +447,11 @@ export const removeFromGroup = async (req, res) => {
     if (oldMemberList.length === 1)
       return res.status(400).json({
         error: "You cannot remove all the members from a group",
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
     // if the user is not an admin, it means that he is a regular user, so we need to check if he is in the group
-    if (verifyAuth(req, res, { authType: "User" }).authorized) {
+    if (verifyAuth(req, res, { authType: "User" }).flag) {
       const userInfo = await User.findOne({
         refreshToken: req.cookies.refreshToken,
       });
@@ -415,13 +463,13 @@ export const removeFromGroup = async (req, res) => {
       if (!userInfo || !isInGroup)
         return res.status(400).json({
           error: "User doesn't exists or not in group",
-          message: res.locals.refreshedTokenMessage,
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
         });
     }
 
     const userAuth = verifyAuth(req, res, { authType: "Simple" });
 
-    if (userAuth.authorized) {
+    if (userAuth.flag) {
       // Either the user is an admin or a regular user, he is authorized to add members to the group
       let remainingEmails = req.body.members;
 
@@ -429,6 +477,29 @@ export const removeFromGroup = async (req, res) => {
         usersNotFound = [];
 
       let user;
+
+      if (!remainingEmails.every((email) => validateEmail(email)))
+        return res.status(400).json({ error: "Invalid email format" });
+
+      // Verifica se tutte le email corrispondono a utenti esistenti nel database
+      const existingUsers = await User.find({
+        email: { $in: remainingEmails },
+      });
+
+      if (existingUsers.length !== remainingEmails.length) {
+        return res
+          .status(400)
+          .json({ error: "Invalid or non-existing emails" });
+      }
+
+      if (
+        searchedGroup.members.every(
+          (user) => !remainingEmails.includes(user.email)
+        )
+      )
+        return res
+          .status(400)
+          .json({ error: "All the members are not in the group" });
 
       // Add into notInGroup the emails that are not in the group but are into remainingEmails
       const oldEmails = oldMemberList.map((member) => member.email);
@@ -477,7 +548,7 @@ export const removeFromGroup = async (req, res) => {
           notInGroup: notInGroup,
           membersNotFound: usersNotFound,
         },
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
     } else {
       return res.status(401).json({ error: userAuth.message });
@@ -485,7 +556,10 @@ export const removeFromGroup = async (req, res) => {
   } catch (err) {
     res
       .status(500)
-      .json({ error: err.message, message: res.locals.refreshedTokenMessage });
+      .json({
+        error: err.message,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
   }
 };
 
@@ -500,15 +574,21 @@ export const removeFromGroup = async (req, res) => {
  */
 export const deleteUser = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+    if (!verifyAuth(req, res, { authType: "Admin" }).flag)
       return res.status(401).json({ error: "Unauthorized" });
+
+    if (!req.body.email)
+      return res.status(400).json({ error: "No email provided" });
+
+    if (!validateEmail(req.body.email))
+      return res.status(400).json({ error: "Invalid email format" });
 
     const user = await User.findOne({ email: req.body.email });
 
     if (!user)
       return res.status(400).json({
         error: "The user doesn't exist",
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
     /* Removing transaction related to the user */
@@ -544,12 +624,15 @@ export const deleteUser = async (req, res) => {
         deletedTransactions: deletedTrx.deletedCount,
         deletedFromGroup: InGroup,
       },
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   } catch (err) {
     res
       .status(500)
-      .json({ error: err.message, message: res.locals.refreshedTokenMessage });
+      .json({
+        error: err.message,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
   }
 };
 
@@ -562,8 +645,11 @@ export const deleteUser = async (req, res) => {
  */
 export const deleteGroup = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+    if (!verifyAuth(req, res, { authType: "Admin" }).flag)
       return res.status(401).json({ error: "Unauthorized" });
+
+    if (!req.body.name)
+      return res.status(400).json({ error: "No group name provided" });
 
     const groupName = req.body.name;
     const groupDeleted = await Group.findOne({ name: groupName });
@@ -571,18 +657,21 @@ export const deleteGroup = async (req, res) => {
     if (!groupDeleted)
       return res.status(400).json({
         error: `The group ${groupName} doesn't exist!`,
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
     await Group.deleteOne(groupDeleted);
 
     return res.status(200).json({
       data: { message: `Group ${groupName} cancelled with success!` },
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   } catch (err) {
     res
       .status(500)
-      .json({ error: err.message, message: res.locals.refreshedTokenMessage });
+      .json({
+        error: err.message,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
   }
 };

@@ -14,7 +14,7 @@ import {
  */
 export const createCategory = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+    if (!verifyAuth(req, res, { authType: "Admin" }).flag)
       return res.status(401).json({ error: "Unauthorized" });
 
     const { type, color } = req.body;
@@ -37,7 +37,7 @@ export const createCategory = async (req, res) => {
             type: result.type,
             color: result.color,
           },
-          message: res.locals.refreshedTokenMessage,
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
         })
       )
       .catch((err) => {
@@ -46,7 +46,7 @@ export const createCategory = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       error: error.message,
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   }
 };
@@ -61,7 +61,7 @@ export const createCategory = async (req, res) => {
  */
 export const updateCategory = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+    if (!verifyAuth(req, res, { authType: "Admin" }).flag)
       return res.status(401).json({ error: "Unauthorized" });
 
     const oldCategoryType = req.params.type;
@@ -70,7 +70,7 @@ export const updateCategory = async (req, res) => {
     if (!(await categories.findOne({ type: oldCategoryType })))
       return res.status(400).json({
         error: `Category ${oldCategoryType} doesn't exists`,
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
     const { type, color } = req.body;
@@ -93,12 +93,12 @@ export const updateCategory = async (req, res) => {
           type: oldCategoryType,
         }),
       },
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   } catch (error) {
     res.status(500).json({
       error: error.message,
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   }
 };
@@ -112,7 +112,7 @@ export const updateCategory = async (req, res) => {
  */
 export const deleteCategory = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+    if (!verifyAuth(req, res, { authType: "Admin" }).flag)
       return res.status(401).json({ error: "Unauthorized" });
 
     const categoriesToDelete = req.body.types;
@@ -128,7 +128,7 @@ export const deleteCategory = async (req, res) => {
     if (categoriesList.length == 1)
       return res.status(400).json({
         error: "No categories can be deleted",
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
     let result = await categories.find({
@@ -138,7 +138,7 @@ export const deleteCategory = async (req, res) => {
     if (!result)
       return res.status(400).json({
         error: `Categories ${categoriesToDelete} don't exist`,
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
     let foundCat = result.map((cat) => cat.type);
@@ -150,7 +150,7 @@ export const deleteCategory = async (req, res) => {
     if (notFoundCat.length > 0)
       return res.status(400).json({
         error: `Categories [${notFoundCat}] don't exist, cannot procede with deletion`,
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
     if (categoriesToDelete.length === categoriesList.length)
@@ -173,12 +173,12 @@ export const deleteCategory = async (req, res) => {
           type: { $in: foundCat },
         }),
       },
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   } catch (error) {
     res.status(500).json({
       error: error.message,
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   }
 };
@@ -192,7 +192,7 @@ export const deleteCategory = async (req, res) => {
  */
 export const getCategories = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, { authType: "Simple" }).authorized)
+    if (!verifyAuth(req, res, { authType: "Simple" }).flag)
       return res.status(401).json({ error: "Unauthorized" });
 
     let data = await categories.find({});
@@ -203,11 +203,11 @@ export const getCategories = async (req, res) => {
 
     return res
       .status(200)
-      .json({ data: catList, message: res.locals.refreshedTokenMessage });
+      .json({ data: catList, refreshedTokenMessage: res.locals.refreshedTokenMessage });
   } catch (error) {
     res.status(500).json({
       error: error.message,
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   }
 };
@@ -221,7 +221,7 @@ export const getCategories = async (req, res) => {
  */
 export const createTransaction = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, { authType: "Simple" }).authorized)
+    if (!verifyAuth(req, res, { authType: "Simple" }).flag)
       return res.status(401).json({ error: "Unauthorized" });
 
     let usernameParam = req.params.username;
@@ -236,7 +236,7 @@ export const createTransaction = async (req, res) => {
     if (usernameParam !== username)
       return res.status(400).json({
         error: "Username values are not equivalent",
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
     if (
@@ -245,7 +245,7 @@ export const createTransaction = async (req, res) => {
     )
       return res.status(400).json({
         error: `Username ${username} or category ${type} doesn't exist`,
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
     const new_transactions = new transactions({ username, amount, type });
@@ -259,7 +259,7 @@ export const createTransaction = async (req, res) => {
             amount: result.amount,
             data: result.date,
           },
-          message: res.locals.refreshedTokenMessage,
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
         })
       )
       .catch((err) => {
@@ -268,7 +268,7 @@ export const createTransaction = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       error: error.message,
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   }
 };
@@ -282,17 +282,17 @@ export const createTransaction = async (req, res) => {
  */
 export const getAllTransactions = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+    if (!verifyAuth(req, res, { authType: "Admin" }).flag)
       return res.status(401).json({ error: "Unauthorized" });
 
     return res.status(200).json({
       data: await getTransactionsDetails(req, res, null),
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   } catch (error) {
     res.status(500).json({
       error: error.message,
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   }
 };
@@ -314,7 +314,7 @@ export const getTransactionsByUser = async (req, res) => {
     /** Using of ternary condition, equals to if() else () */
     req.url.includes("/transactions/users/")
       ? (async () => {
-          if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+          if (!verifyAuth(req, res, { authType: "Admin" }).flag)
             return res.status(401).json({ error: "Unauthorized" });
 
           /** If url contains username param  */
@@ -331,7 +331,7 @@ export const getTransactionsByUser = async (req, res) => {
           if (username === null)
             return res.status(400).json({
               error: "User not found",
-              message: res.locals.refreshedTokenMessage,
+              refreshedTokenMessage: res.locals.refreshedTokenMessage,
             });
 
           if (req.params.username)
@@ -339,7 +339,7 @@ export const getTransactionsByUser = async (req, res) => {
 
           return res.status(200).json({
             data: await getTransactionsDetails(req, res, filter),
-            message: res.locals.refreshedTokenMessage,
+            refreshedTokenMessage: res.locals.refreshedTokenMessage,
           });
         })()
       : (async () => {
@@ -349,7 +349,7 @@ export const getTransactionsByUser = async (req, res) => {
             !verifyAuth(req, res, {
               authType: "User",
               username: req.params.username,
-            }).authorized ||
+            }).flag ||
             user.refreshToken !== req.cookies.refreshToken
           )
             return res.status(401).json({ error: "Unauthorized" });
@@ -365,7 +365,7 @@ export const getTransactionsByUser = async (req, res) => {
           if (username === null)
             return res.status(400).json({
               error: "User not found",
-              message: res.locals.refreshedTokenMessage,
+              refreshedTokenMessage: res.locals.refreshedTokenMessage,
             });
 
           const dateIncludes = ["date", "from", "upTo"];
@@ -394,13 +394,13 @@ export const getTransactionsByUser = async (req, res) => {
 
           return res.status(200).json({
             data: await getTransactionsDetails(req, res, filter),
-            message: res.locals.refreshedTokenMessage,
+            refreshedTokenMessage: res.locals.refreshedTokenMessage,
           });
         })();
   } catch (error) {
     res.status(500).json({
       error: error.message,
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   }
 };
@@ -425,7 +425,7 @@ export const getTransactionsByUserByCategory = async (req, res) => {
 
     req.url.includes("/transactions/users/")
       ? (async () => {
-          if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+          if (!verifyAuth(req, res, { authType: "Admin" }).flag)
             return res.status(401).json({ error: "Unauthorized" });
 
           filter = {
@@ -440,7 +440,7 @@ export const getTransactionsByUserByCategory = async (req, res) => {
 
           return res.status(200).json({
             data: await getTransactionsDetails(req, res, filter),
-            message: res.locals.refreshedTokenMessage,
+            refreshedTokenMessage: res.locals.refreshedTokenMessage,
           });
         })()
       : (async () => {
@@ -450,7 +450,7 @@ export const getTransactionsByUserByCategory = async (req, res) => {
             !verifyAuth(req, res, {
               authType: "User",
               username: req.params.username,
-            }).authorized ||
+            }).flag ||
             user.refreshToken !== req.cookies.refreshToken
           )
             return res.status(401).json({ error: "Unauthorized" });
@@ -467,13 +467,13 @@ export const getTransactionsByUserByCategory = async (req, res) => {
 
           return res.status(200).json({
             data: await getTransactionsDetails(req, res, filter),
-            message: res.locals.refreshedTokenMessage,
+            refreshedTokenMessage: res.locals.refreshedTokenMessage,
           });
         })();
   } catch (error) {
     res.status(500).json({
       error: error.message,
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   }
 };
@@ -491,7 +491,7 @@ export const getTransactionsByGroup = async (req, res) => {
     let filter;
     req.url.includes("/transactions/groups")
       ? (async () => {
-          if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+          if (!verifyAuth(req, res, { authType: "Admin" }).flag)
             return res.status(401).json({ error: "Unauthorized" });
 
           // Trova il gruppo desiderato
@@ -500,7 +500,7 @@ export const getTransactionsByGroup = async (req, res) => {
           if (!group)
             return res.status(400).json({
               error: "Group not found",
-              message: res.locals.refreshedTokenMessage,
+              refreshedTokenMessage: res.locals.refreshedTokenMessage,
             });
 
           // Estrai gli ID degli utenti associati ai membri del gruppo
@@ -515,7 +515,7 @@ export const getTransactionsByGroup = async (req, res) => {
 
           return res.status(200).json({
             data: await getTransactionsDetails(req, res, filter),
-            message: res.locals.refreshedTokenMessage,
+            refreshedTokenMessage: res.locals.refreshedTokenMessage,
           });
         })()
       : (async () => {
@@ -524,7 +524,7 @@ export const getTransactionsByGroup = async (req, res) => {
           if (!groupSearched)
             return res.status(400).json({
               error: "Group not found",
-              message: res.locals.refreshedTokenMessage,
+              refreshedTokenMessage: res.locals.refreshedTokenMessage,
             });
 
           let membersEmail = groupSearched.members.map(
@@ -535,7 +535,7 @@ export const getTransactionsByGroup = async (req, res) => {
             !verifyAuth(req, res, {
               authType: "Group",
               emails: membersEmail,
-            }).authorized
+            }).flag
           )
             return res.status(401).json({ error: "Unauthorized" });
 
@@ -548,13 +548,13 @@ export const getTransactionsByGroup = async (req, res) => {
 
           return res.status(200).json({
             data: await getTransactionsDetails(req, res, filter),
-            message: res.locals.refreshedTokenMessage,
+            refreshedTokenMessage: res.locals.refreshedTokenMessage,
           });
         })();
   } catch (error) {
     res.status(500).json({
       error: error.message,
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   }
 };
@@ -573,7 +573,7 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
 
     req.url.includes("/transactions/groups")
       ? (async () => {
-          if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+          if (!verifyAuth(req, res, { authType: "Admin" }).flag)
             return res.status(401).json({ error: "Unauthorized" });
 
           const group = await Group.findOne({ name: req.params.name });
@@ -581,7 +581,7 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
           if (!group)
             return res.status(400).json({
               error: "Group not found",
-              message: res.locals.refreshedTokenMessage,
+              refreshedTokenMessage: res.locals.refreshedTokenMessage,
             });
 
           const category = await categories.findOne({
@@ -591,7 +591,7 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
           if (!category)
             return res.status(400).json({
               error: "Category not found",
-              message: res.locals.refreshedTokenMessage,
+              refreshedTokenMessage: res.locals.refreshedTokenMessage,
             });
 
           const memberUserIds = group.members.map((member) => member.email);
@@ -605,7 +605,7 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
 
           return res.status(200).json({
             data: await getTransactionsDetails(req, res, filter),
-            message: res.locals.refreshedTokenMessage,
+            refreshedTokenMessage: res.locals.refreshedTokenMessage,
           });
         })()
       : (async () => {
@@ -614,7 +614,7 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
           if (!groupSearched)
             return res.status(400).json({
               error: "Group not found",
-              message: res.locals.refreshedTokenMessage,
+              refreshedTokenMessage: res.locals.refreshedTokenMessage,
             });
 
           const category = await categories.findOne({
@@ -624,7 +624,7 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
           if (!category)
             return res.status(400).json({
               error: "Category not found",
-              message: res.locals.refreshedTokenMessage,
+              refreshedTokenMessage: res.locals.refreshedTokenMessage,
             });
 
           let membersEmail = groupSearched.members.map(
@@ -635,7 +635,7 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
             !verifyAuth(req, res, {
               authType: "Group",
               emails: membersEmail,
-            }).authorized
+            }).flag
           )
             return res.status(401).json({ error: "Unauthorized" });
 
@@ -653,13 +653,13 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
 
           return res.status(200).json({
             data: await getTransactionsDetails(req, res, filter),
-            message: res.locals.refreshedTokenMessage,
+            refreshedTokenMessage: res.locals.refreshedTokenMessage,
           });
         })();
   } catch (error) {
     res.status(500).json({
       error: error.message,
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   }
 };
@@ -683,23 +683,23 @@ export const deleteTransaction = async (req, res) => {
     if (!transactionToBeDeleted)
       return res.status(400).json({
         error: `Transaction ${req.body._id} not found`,
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
     const adminAuth = verifyAuth(req, res, { authType: "Admin" });
 
-    if (adminAuth.authorized) {
+    if (adminAuth.flag) {
       // Delete the transaction where id = req.body._id and username = req.params.username
       await transactions.deleteOne({ _id: req.body._id });
 
       return res.status(200).json({
         data: { message: `Transaction ${req.body._id} successfully deleted` },
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
     } else {
       const userAuth = verifyAuth(req, res, { authType: "User" });
 
-      if (userAuth.authorized) {
+      if (userAuth.flag) {
         const user = await User.findOne({ username: req.params.username });
 
         if (!user) return res.status(400).json({ error: "User not found" });
@@ -711,21 +711,21 @@ export const deleteTransaction = async (req, res) => {
         )
           return res.status(400).json({
             error: "The user is not the owner",
-            message: res.locals.refreshedTokenMessage,
+            refreshedTokenMessage: res.locals.refreshedTokenMessage,
           });
 
         await transactions.deleteOne({ _id: req.body._id });
 
         return res.status(200).json({
           data: { message: `Transaction ${req.body._id} successfully deleted` },
-          message: res.locals.refreshedTokenMessage,
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
         });
       } else return res.status(401).json({ error: userAuth.message });
     }
   } catch (error) {
     res.status(500).json({
       error: error.message,
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   }
 };
@@ -739,7 +739,7 @@ export const deleteTransaction = async (req, res) => {
  */
 export const deleteTransactions = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+    if (!verifyAuth(req, res, { authType: "Admin" }).flag)
       return res.status(401).json({ error: "Unauthorized" });
 
     let transactionIds = req.body._ids;
@@ -757,7 +757,7 @@ export const deleteTransactions = async (req, res) => {
     if (!result)
       return res.status(400).json({
         error: `Transaction ${transactionIds} don't exist`,
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
     const foundTrans = result.map((transaction) => transaction._id.toString());
@@ -769,7 +769,7 @@ export const deleteTransactions = async (req, res) => {
     if (notFoundTrans.length > 0)
       return res.status(400).json({
         error: `Transactions [${notFoundTrans}] don't exist, cannot procede with deletion`,
-        message: res.locals.refreshedTokenMessage,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
     await transactions.deleteMany({ _id: { $in: foundTrans } });
@@ -778,12 +778,12 @@ export const deleteTransactions = async (req, res) => {
       data: {
         message: `Transactions ${foundTrans} successfully deleted`,
       },
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   } catch (error) {
     res.status(500).json({
       error: error.message,
-      message: res.locals.refreshedTokenMessage,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
   }
 };

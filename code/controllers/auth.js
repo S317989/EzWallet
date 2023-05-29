@@ -51,7 +51,7 @@ export const register = async (req, res) => {
  */
 export const registerAdmin = async (req, res) => {
   try {
-    if (!verifyAuth(req, res, { authType: "Admin" }).authorized)
+    if (!verifyAuth(req, res, { authType: "Admin" }).flag)
       return res.status(401).json({ error: "Unauthorized" });
 
     const { username, email, password } = req.body;
@@ -165,7 +165,7 @@ export const login = async (req, res) => {
     - success 200 is returned if the user is already logged out
  */
 export const logout = async (req, res) => {
-  if (!verifyAuth(req, res, { authType: "Simple" }).authorized)
+  if (!verifyAuth(req, res, { authType: "Simple" }).flag)
     return res.status(400).json({ error: "you are already logged out" });
 
   const refreshToken = req.cookies.refreshToken;
