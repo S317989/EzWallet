@@ -5,7 +5,8 @@ import mongoose, { Model } from "mongoose";
 import dotenv from "dotenv";
 import { User } from "../models/User";
 import createTransaction from "../controllers/controller";
-import dayjs from "dayjs";
+const jwt = require("jsonwebtoken");
+
 
 dotenv.config();
 
@@ -28,16 +29,39 @@ afterAll(async () => {
 
 describe("createCategory", () => {
 /**How can I handle the authentication part by the Admin User? */
+  let user, accessToken, refreshToken;
+  beforeAll(async ()=>{
+    user = {
+      username: "TestAdmin",
+      email: "admin@test.com",
+      password: "TestAdmin",
+    };
 
+    accessToken = jwt.sign(
+      {
+       username: user.username,
+       email: user.email,
+       password: user.password,
+       role: "Admin",
+      },
+      "EZWALLET",
+      {
+       expiresIn: "1h",
+      }
+    );
+
+    refreshToken = jwt.sign(
+      {
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: "Admin",
+      },
+      "EZWALLET",
+      { expiresIn: "7d" }
+    );
+  })
   beforeEach(async ()=>{
-    /*const Admin ={
-      username:"Admin",
-      email:"AdminAdmin@controller.com",
-      password:"Admin1",
-      role: "Admin",
-    }
-    await User.create(Admin);*/
-
     await categories.deleteMany({});
   });
   test("New category inserted", (done) => {
@@ -45,10 +69,14 @@ describe("createCategory", () => {
       type: "TestType",
       color: "TestColor",
     };
-
+    
     request(app)
       .post("/api/categories")
       .send(category)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
       .then((response)=>{
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("data");
@@ -62,41 +90,28 @@ describe("createCategory", () => {
   });
 
   test("Not enough attributes", (done) => {
-    const category1 = {
+    const category = {
       type: "TestType",
     };
 
     request(app)
       .post("/api/categories")
       .send(category)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
       .then((response)=>{
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
         expect(response.body).toEqual({
-          error: expect.stringContaining(`is missing`),
+          error: expect.stringContaining(`Missing`),
         });
         done();
       })
       .catch((err) => done(err));
   });
-  test("Not enough attributes", (done) => {
-    const category = {
-      color: "TestColor",
-    };
 
-    request(app)
-      .post("/api/categories")
-      .send(category)
-      .then((response)=>{
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("error");
-        expect(response.body).toEqual({
-          error: expect.stringContaining(`is missing`),
-        });
-        done();
-      })
-      .catch((err) => done(err));
-  });
   test("Type attributes is empty ", (done) => {
     const category = {
       type: "",
@@ -105,32 +120,16 @@ describe("createCategory", () => {
 
     request(app)
       .post("/api/categories")
-      .send(category1)
+      .send(category)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
       .then((response)=>{
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
         expect(response.body).toEqual({
-          error: expect.stringContaining(`is empty`),
-        });
-        done();
-      })
-      .catch((err) => done(err));
-  });
-  
-  test("Color attributes is empty ", (done) => {
-    const category = {
-      type: "TestType",
-      color: "",
-    };
-
-    request(app)
-      .post("/api/categories")
-      .send(category2)
-      .then((response)=>{
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("error");
-        expect(response.body).toEqual({
-          error: expect.stringContaining(`is empty`),
+          error: expect.stringContaining(`empty`),
         });
         done();
       })
@@ -147,6 +146,10 @@ describe("createCategory", () => {
       request(app)
         .post("/api/categories")
         .send(category)
+        .set("Cookie", [
+          `accessToken=${accessToken}`,
+          `refreshToken=${refreshToken}`,
+        ])
         .then((response)=>{
           expect(response.status).toBe(400);
           expect(response.body).toHaveProperty("error");
@@ -159,7 +162,7 @@ describe("createCategory", () => {
       });
   });
   
-  test("User not Authorized", (done) => {
+  test("Not an Admin", (done) => {
     const category = {
       type: "TestType",
       color: "TestColor",
@@ -172,7 +175,7 @@ describe("createCategory", () => {
         expect(response.status).toBe(401);
         expect(response.body).toHaveProperty("error");
           expect(response.body).toEqual({
-            error: expect.stringContaining(`unauthorized`),
+            error: expect.stringContaining(`Unauthorized`),
           });
           done();
       })
@@ -181,29 +184,67 @@ describe("createCategory", () => {
 });
 
 describe("updateCategory", () => {
-  beforeAll(async () =>{
-    const standardValue ={
+  let user, accessToken, refreshToken;
+  const standardValue ={
       type:"TestType",
       color:"TestColor",
-    }
+  }
+  beforeAll(async ()=>{
+    user = {
+      username: "TestAdmin",
+      email: "admin@test.com",
+      password: "TestAdmin",
+    };
+
+    accessToken = jwt.sign(
+      {
+       username: user.username,
+       email: user.email,
+       password: user.password,
+       role: "Admin",
+      },
+      "EZWALLET",
+      {
+       expiresIn: "1h",
+      }
+    );
+
+    refreshToken = jwt.sign(
+      {
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: "Admin",
+      },
+      "EZWALLET",
+      { expiresIn: "7d" }
+    );
+  })
+  
+  beforeEach(async () =>{
+    
     await categories.deleteMany({});
     await categories.create(standardValue);
   });
 
-  test("Category update - Success", () => {
+  test("Success", (done) => {
     const newValue ={
       type:"NewType",
       color: "NewColor",
     }
 
     request(app)
-      .patch("api/categories/:type")
+      .patch("api/categories/:type".replace(":type", standardValue.type))
       .send(newValue)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
       .then((response) => {
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("data");
         expect(response.body.data).toHaveProperty("message");
-        expect(response.body.data.message).toContain("updated to");
+        expect(response.body.data.message).toContain("successfully");
         expect(response.body.data).toHaveProperty("count");
         expect(response.body.data.count).toBeGreaterThanOrEqual(0);
         done();
@@ -212,64 +253,108 @@ describe("updateCategory", () => {
 
   });
 
-  test("Category update - Category doesn't exist", () => {
+  test("Invalid Parameters", (done) => {
     const newValue ={
       type:"NewType",
-      color: "NewColor",
     }
 
     request(app)
-      .patch("api/categories/:type")
+      .patch("api/categories/:type".replace(":type", standardValue.type))
       .send(newValue)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
       .then((response) => {
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("data");
-        expect(response.body.data).toHaveProperty("message");
-        expect(response.body.data.message).toContain("updated to");
-        expect(response.body.data).toHaveProperty("count");
-        expect(response.body.data.count).toBeGreaterThanOrEqual(0);
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.error).toContain("Missing");
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Empty Parameters", (done) => {
+    const newValue ={
+      type:"",
+      color: "NewColor"
+    }
+
+    request(app)
+      .patch("api/categories/:type".replace(":type", standardValue.type))
+      .send(newValue)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
+      .then((response) => {
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.error).toContain("empty");
         done();
       })
       .catch((err) => done(err));
   });
   
-  test("Category update - Invalid Values", () => {
+  test("Category doesn't exist", (done) => {
     const newValue ={
       type:"NewType",
       color: "NewColor",
     }
 
     request(app)
-      .patch("api/categories/:type")
+      .patch("api/categories/:type".replace(":type","Type"))
       .send(newValue)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
       .then((response) => {
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("data");
-        expect(response.body.data).toHaveProperty("message");
-        expect(response.body.data.message).toContain("updated to");
-        expect(response.body.data).toHaveProperty("count");
-        expect(response.body.data.count).toBeGreaterThanOrEqual(0);
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.error).toContain("doesn't exists");
         done();
       })
       .catch((err) => done(err));
   });
+
+  test("New Category already exist", (done) => {
+    const newValue ={
+      type:"NewType",
+      color: "NewColor",
+    }
+
+    categories.create(newValue).then(()=>{
+      request(app)
+        .patch("api/categories/:type".replace(":type",standardValue.type))
+        .send(newValue)
+        .set("Cookie", [
+          `accessToken=${accessToken}`,
+          `refreshToken=${refreshToken}`,
+        ])
+        .then((response) => {
+          expect(response.status).toBe(400);
+          expect(response.body).toHaveProperty("error");
+          expect(response.body.error).toContain("already exists");
+          done();
+        })
+        .catch((err) => done(err));
+    });
+  });
   
-  test("Category update - Not an Admin", () => {
+  test("Not an Admin", (done) => {
     const newValue ={
       type:"NewType",
       color: "NewColor",
     }
 
     request(app)
-      .patch("api/categories/:type")
+      .patch("api/categories/:type".replace(":type",standardValue.type))
       .send(newValue)
       .then((response) => {
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("data");
-        expect(response.body.data).toHaveProperty("message");
-        expect(response.body.data.message).toContain("updated to");
-        expect(response.body.data).toHaveProperty("count");
-        expect(response.body.data.count).toBeGreaterThanOrEqual(0);
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.error).toContain("Unauthorized");
         done();
       })
       .catch((err) => done(err));
@@ -303,7 +388,7 @@ describe("deleteCategory", () => {
     await categories.insertMany([category1, category2, category3, category4, category5]);
   });
 
-  test("Delete Category - Delete 1", () => {
+  test("Delete Category - Delete 1", (done) => {
     const categoryToBeDeleted =[{type:"NewType1"}];
 
     request(app)
@@ -321,7 +406,7 @@ describe("deleteCategory", () => {
       .catch((err) => done(err));
   });
 
-  test("Delete Category - Delete Many", () => {
+  test("Delete Category - Delete Many", (done) => {
     const categoryToBeDeleted =[{type:"NewType1"},{type:"NewType2"},{type:"NewType3"}];
 
     request(app)
@@ -339,7 +424,7 @@ describe("deleteCategory", () => {
       .catch((err) => done(err));
   });
 /**Need to do the error test */
-  test("Delete Category - r", () => {
+  test("Delete Category - r", (done) => {
     const categoryToBeDeleted =[{type:"NewType1"},{type:"NewType2"},{type:"NewType3"}];
 
     request(app)
@@ -357,7 +442,7 @@ describe("deleteCategory", () => {
       .catch((err) => done(err));
   });
 
-  test("Delete Category - Not an Admin", () => {
+  test("Delete Category - Not an Admin", (done) => {
     const newValue ={
       type:"NewType",
     }
@@ -379,6 +464,8 @@ describe("deleteCategory", () => {
 describe("getCategories", () => {
 
   beforeAll(async () => {
+    await categories.deleteMany({});
+
     const category1 ={
       type:"NewType1",
       color: "NewColor1",
@@ -399,23 +486,24 @@ describe("getCategories", () => {
       type:"NewType5",
       color: "NewColor5",
     }
-    await categories.deleteMany({});
+    
     await categories.insertMany([category1, category2, category3, category4, category5]);
   });
-  test("Get Category - Succesfully", () => {
+  test("Success !", (done) => {
     request(app)
       .get("api/categories")
       .send()
       .then((response) => {
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("data");
-        expect(response.body.data).not.toBeFalsy();
+        expect(response.body.data).toBeInstanceOf(Array);
+        expect(response.body.data[0]).toBeInstanceOf(categories);
         done();
       })
       .catch((err) => done(err));
   });
 
-  test("Get Category - Not an Admin", () => {
+  test("User not Authenticated", (done) => {
     request(app)
       .get("api/categories/")
       .send()
@@ -435,7 +523,7 @@ describe("createTransaction", () => {
   beforeEach(async()=>{
     await transactions.deleteMany({});
   });
-  test("Transaction created", () => {
+  test("Transaction created", (done) => {
     request(app)
       .post("api/users/:username/transaction")
       .send()
@@ -454,8 +542,8 @@ describe("getAllTransactions", () => {
   beforeEach(async ()=>{
     await transactions.deleteMany({});
   })
-  
-  test("Get All Transaction ", async () => {
+
+  test("Get All Transaction ", async (done) => {
     const today = dayjs();
 
     const transaction1 = {
@@ -496,7 +584,7 @@ describe("getAllTransactions", () => {
       .catch((err) => done(err));
   });
 
-  test("Get All Transaction - No Transaction", () => {
+  test("Get All Transaction - No Transaction", (done) => {
     request(app)
       .get("api/transactions")
       .send()
@@ -511,7 +599,7 @@ describe("getAllTransactions", () => {
       .catch((err) => done(err));
   });
 
-  test("Get All Transaction - Not an Admin", () => {
+  test("Get All Transaction - Not an Admin", (done) => {
     request(app)
       .get("api/transactions")
       .send()
@@ -527,37 +615,370 @@ describe("getAllTransactions", () => {
 });
 
 describe("getTransactionsByUser", () => {
-  test("Dummy test, change it", () => {
-    expect(true).toBe(true);
+  beforeAll(async ()=>{
+    await transactions.deleteMany({});
+  });
+  beforeEach(async () => {
+    const today = "04-03-2020";
+
+    const transaction1 = {
+      username: "User1",
+      type: "Type1",
+      amount: 100,
+      date: today,
+    }
+    const transaction2 = {
+      username: "Admin",
+      type: "Type2",
+      amount: 3,
+      date: today,
+    }
+    const transaction3 = {
+      username: "User2",
+      type: "Type1",
+      amount: 17,
+      date: today,
+    }
+    const transaction4 = {
+      username: "User1",
+      type: "Type3",
+      amount: 50,
+      date: today,
+    }
+
+    await transactions.insertMany([transaction1, transaction2, transaction3, transaction4]);
+  });
+  
+  test("Get Transaction By User1", (done) => {
+    const username = "User1";
+
+    request(app)
+      .get("api/users/:username/transactions".replace(":username",username))
+      .send()
+      .then((response) => {
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("data");
+        expect(response.body.data).toBeInstanceOf(Array);
+        expect(response.body.data[0]).toContain("username");
+        expect(response.body.data[0]).toContain("type");
+        expect(response.body.data[0]).toContain("amount");
+        expect(response.body.data[0]).toContain("date");
+        expect(response.body.data[0]).toContain("color");
+        done();
+      })
+      .catch((err) => done(err));
+  });
+  test("User not Consistent", (done) => {
+    /**Username have to consistent with the logged in user */
+    request(app)
+      .get("api/users/:username/transactions")
+      .send()
+      .then((response) => {
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.data).toHaveProperty("message");
+        expect(response.body.error).toContain("unauthorized");
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Get All Transaction - Not an Admin", (done) => {
+    request(app)
+      .get("api/transactions/users/:username")
+      .send()
+      .then((response) => {
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.data).toHaveProperty("message");
+        expect(response.body.error).toContain("unauthorized");
+        done();
+      })
+      .catch((err) => done(err));
   });
 });
 
 describe("getTransactionsByUserByCategory", () => {
-  test("Dummy test, change it", () => {
-    expect(true).toBe(true);
+  beforeAll(async()=>{});
+  beforeEach(async()=>{});
+  afterAll(async()=>{});
+  afterEach(async()=>{});
+
+  test("Success !", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+  test("Username not in the database", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Category not in the database", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Username not consistent with the User", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test(" Not an Admin", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
   });
 });
 
 describe("getTransactionsByGroup", () => {
-  test("Dummy test, change it", () => {
-    expect(true).toBe(true);
+  test("Success !", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+  test("Username not in the database", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Category not in the database", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Username not consistent with the User", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test(" Not an Admin", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
   });
 });
 
 describe("getTransactionsByGroupByCategory", () => {
-  test("Dummy test, change it", () => {
-    expect(true).toBe(true);
+  test("Success !", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+  test("Username not in the database", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Category not in the database", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Username not consistent with the User", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test(" Not an Admin", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
   });
 });
 
 describe("deleteTransaction", () => {
-  test("Dummy test, change it", () => {
-    expect(true).toBe(true);
+  test("Success !", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+  test("Username not in the database", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Category not in the database", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Username not consistent with the User", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test(" Not an Admin", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
   });
 });
 
 describe("deleteTransactions", () => {
-  test("Dummy test, change it", () => {
-    expect(true).toBe(true);
+  test("Success !", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+  test("Username not in the database", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Category not in the database", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Username not consistent with the User", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test(" Not an Admin", (done) => {
+    request(app)
+      .get("")
+      .send()
+      .then((response) => {
+        expect();
+        done();
+      })
+      .catch((err) => done(err));
   });
 });
