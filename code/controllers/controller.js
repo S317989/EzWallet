@@ -32,7 +32,7 @@ export const createCategory = async (req, res) => {
     new_categories
       .save()
       .then((result) =>
-        res.json({
+        res.status(200).json({
           data: {
             type: result.type,
             color: result.color,
