@@ -28,7 +28,6 @@ afterAll(async () => {
 });
 
 describe("createCategory", () => {
-/**How can I handle the authentication part by the Admin User? */
   let user, accessToken, refreshToken;
   beforeAll(async ()=>{
     user = {
@@ -363,24 +362,59 @@ describe("updateCategory", () => {
 });
 
 describe("deleteCategory", () => {
+  let user, accessToken, refreshToken;
+  let category1, category2, category3, category4, category5
+
+  beforeAll(async ()=>{
+    user = {
+      username: "TestAdmin",
+      email: "admin@test.com",
+      password: "TestAdmin",
+    };
+
+    accessToken = jwt.sign(
+      {
+       username: user.username,
+       email: user.email,
+       password: user.password,
+       role: "Admin",
+      },
+      "EZWALLET",
+      {
+       expiresIn: "1h",
+      }
+    );
+
+    refreshToken = jwt.sign(
+      {
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: "Admin",
+      },
+      "EZWALLET",
+      { expiresIn: "7d" }
+    );
+  });
+
   beforeEach(async () => {
-    const category1 ={
+    category1 ={
       type:"NewType1",
       color: "NewColor1",
     }
-    const category2 ={
+    category2 ={
       type:"NewType2",
       color: "NewColor2",
     }
-    const category3 ={
+    category3 ={
       type:"NewType3",
       color: "NewColor3",
     }
-    const category4 ={
+    category4 ={
       type:"NewType4",
       color: "NewColor4",
     }
-    const category5 ={
+    category5 ={
       type:"NewType5",
       color: "NewColor5",
     }
@@ -389,16 +423,22 @@ describe("deleteCategory", () => {
   });
 
   test("Delete Category - Delete 1", (done) => {
-    const categoryToBeDeleted =[{type:"NewType1"}];
+    const categoryToBeDeleted =["NewType1"];
 
     request(app)
       .delete("api/categories")
-      .send(categoryToBeDeleted)
+      .send({
+        types: categoryToBeDeleted
+      })
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
       .then((response) => {
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("data");
         expect(response.body.data).toHaveProperty("message");
-        expect(response.body.data.message).toContain("successfully deleted");
+        expect(response.body.data.message).toMatch('Category deleted');
         expect(response.body.data).toHaveProperty("count");
         expect(response.body.data.count).toBeGreaterThanOrEqual(0);
         done();
@@ -407,34 +447,22 @@ describe("deleteCategory", () => {
   });
 
   test("Delete Category - Delete Many", (done) => {
-    const categoryToBeDeleted =[{type:"NewType1"},{type:"NewType2"},{type:"NewType3"}];
+    const categoryToBeDeleted =["NewType1", "NewType2", "NewType3"];
 
     request(app)
       .delete("api/categories")
-      .send(categoryToBeDeleted)
-      .then((response) => {
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("data");
-        expect(response.body.data).toHaveProperty("message");
-        expect(response.body.data.message).toContain("successfully deleted");
-        expect(response.body.data).toHaveProperty("count");
-        expect(response.body.data.count).toBeGreaterThanOrEqual(0);
-        done();
+      .send({
+        types: categoryToBeDeleted
       })
-      .catch((err) => done(err));
-  });
-/**Need to do the error test */
-  test("Delete Category - r", (done) => {
-    const categoryToBeDeleted =[{type:"NewType1"},{type:"NewType2"},{type:"NewType3"}];
-
-    request(app)
-      .delete("api/categories")
-      .send(categoryToBeDeleted)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
       .then((response) => {
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("data");
         expect(response.body.data).toHaveProperty("message");
-        expect(response.body.data.message).toContain("successfully deleted");
+        expect(response.body.data.message).toMatch('Category deleted');
         expect(response.body.data).toHaveProperty("count");
         expect(response.body.data.count).toBeGreaterThanOrEqual(0);
         done();
@@ -442,19 +470,134 @@ describe("deleteCategory", () => {
       .catch((err) => done(err));
   });
 
-  test("Delete Category - Not an Admin", (done) => {
-    const newValue ={
-      type:"NewType",
-    }
+  test("Delete Category - Only 1 category in the DB", (done) => {
+    const categoryToBeDeleted =["NewType1", "NewType2", "NewType3"];
+
+    categories.deleteMany(category2, category3, category4, category5)
+    .then(() => {
+      request(app)
+        .delete("api/categories")
+        .send({
+          types: categoryToBeDeleted
+        })
+        .set("Cookie", [
+          `accessToken=${accessToken}`,
+          `refreshToken=${refreshToken}`,
+        ])
+        .then((response) => {
+          expect(response.status).toBe(400);
+          expect(response.body).toHaveProperty("error");
+          expect(response.body).toEqual({
+            error: expect.stringContaining(/No categories can be deleted/)
+          });
+          done();
+        })
+        .catch((err) => done(err));
+    });
+    
+  });
+
+  test("Delete Category - 1 type is empty in the input array", (done) => {
+    const categoryToBeDeleted =["", "NewType2", "NewType3"];
+
+    request(app)
+      .delete("api/categories")
+      .send({
+        types: categoryToBeDeleted
+      })
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
+      .then((response) => {
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body).toEqual({
+          error: expect.stringContaining(/Empty string/)
+        });
+        done();
+      })
+      .catch((err) => done(err));    
+  });
+
+  test("Delete Category - 1 type that doesn't exist in input array", (done) => {
+    const categoryToBeDeleted =["Type", "NewType2", "NewType3"];
+
+    request(app)
+      .delete("api/categories")
+      .send(categoryToBeDeleted)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
+      .then((response) => {
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body).toEqual({
+          error: expect.stringContaining(/don't exist/)
+        });
+        done();
+      })
+      .catch((err) => done(err));    
+  });
+
+  test("Delete Category - Body doesn't contain all ", (done) => {
+    const categoryToBeDeleted =["Type", "NewType2", "NewType3"];
+
+    request(app)
+      .delete("api/categories")
+      .send()
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
+      .then((response) => {
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body).toEqual({
+          error: expect.stringContaining(/don't exist/)
+        });
+        done();
+      })
+      .catch((err) => done(err));    
+  });
+
+  test("Delete Category - Not Authenticated", (done) => {
+    const categoryToBeDeleted =["NewType1", "NewType2", "NewType3"];
 
     request(app)
       .get("api/categories")
-      .send()
+      .send({
+        types: categoryToBeDeleted
+      })
       .then((response) => {
         expect(response.status).toBe(401);
         expect(response.body).toHaveProperty("error");
-        expect(response.body.data).toHaveProperty("message");
-        expect(response.body.error).toContain("unauthorized");
+        expect(response.body).toEqual({
+          error: expect.stringContaining(/don't exist/)
+        });
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Delete Category - User Authenticated, not Admin", (done) => {
+    const categoryToBeDeleted =["NewType1", "NewType2", "NewType3"];
+
+    request(app)
+      .get("api/categories")
+      .send({
+        types: categoryToBeDeleted
+      }).set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
+      .then((response) => {
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body).toEqual({
+          error: expect.stringContaining(/don't exist/)
+        });
         done();
       })
       .catch((err) => done(err));
