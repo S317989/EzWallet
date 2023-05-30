@@ -8,7 +8,6 @@ const jwt = require("jsonwebtoken");
 jest.mock("bcryptjs");
 jest.mock("../models/User.js");
 
-
 describe("register", () => {
   let mockRequest;
   let mockResponse;
@@ -204,9 +203,7 @@ describe("login", () => {
 });
 
 describe("logout", () => {
-  let mockRequest;
-  let mockResponse;
-  let user;
+  let mockRequest, mockResponse, user;
 
   beforeEach(() => {
     user = {
