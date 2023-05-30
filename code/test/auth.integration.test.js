@@ -43,7 +43,7 @@ describe("register", () => {
         expect(response.status).toBe(200);
         expect(response.body).toEqual({
           data: {
-            message: expect.stringContaining(
+            message: expect.stringMatching(
               `User ${user.username} added succesfully`
             ),
           },
@@ -66,7 +66,7 @@ describe("register", () => {
       .then((response) => {
         expect(response.status).toBe(400);
         expect(response.body).toEqual({
-          error: expect.stringContaining(`Invalid email`),
+          error: expect.stringMatching(`Invalid email`),
         });
         done();
       })
@@ -87,7 +87,7 @@ describe("register", () => {
         .then((response) => {
           expect(response.status).toBe(400);
           expect(response.body).toEqual({
-            message: expect.stringContaining(`you are already registered`),
+            message: expect.stringMatching(`you are already registered`),
           });
           done();
         })
@@ -130,7 +130,7 @@ describe("registerAdmin", () => {
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
-      error: expect.stringContaining(`Missing or Empty fields`),
+      error: expect.stringMatching(`Missing or Empty fields`),
     });
   });
 
@@ -147,7 +147,7 @@ describe("registerAdmin", () => {
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
-      message: expect.stringContaining(`you are already registered`),
+      message: expect.stringMatching(`you are already registered`),
     });
   });
 });
@@ -198,7 +198,7 @@ describe("login", () => {
         .then((response) => {
           expect(response.status).toBe(400);
           expect(response.body).toEqual({
-            error: expect.stringContaining("Missing or Empty fields"),
+            error: expect.stringMatching("Missing or Empty fields"),
           });
           done();
         })
@@ -216,7 +216,7 @@ describe("login", () => {
       .then((response) => {
         expect(response.status).toBe(400);
         expect(response.body).toEqual({
-          error: expect.stringContaining("please you need to register"),
+          error: expect.stringMatching("please you need to register"),
         });
         done();
       })
@@ -234,7 +234,7 @@ describe("login", () => {
         .then((response) => {
           expect(response.status).toBe(400);
           expect(response.body).toEqual({
-            error: expect.stringContaining("wrong credentials"),
+            error: expect.stringMatching("wrong credentials"),
           });
           done();
         })

@@ -20,12 +20,18 @@ export const createCategory = async (req, res) => {
     const { type, color } = req.body;
 
     if (!type || !color)
-      return res.status(400).json({ error: "Missing or empty parameters" });
+      return res.status(400).json({
+        error: "Missing or empty parameters",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     const alreadyExists = await categories.findOne({ type });
 
     if (alreadyExists)
-      return res.status(400).json({ error: "Category already exists" });
+      return res.status(400).json({
+        error: "Category already exists",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     const new_categories = new categories({ type, color });
 
@@ -76,10 +82,16 @@ export const updateCategory = async (req, res) => {
     const { type, color } = req.body;
 
     if (!type || !color)
-      return res.status(400).json({ error: "Missing or empty parameters" });
+      return res.status(400).json({
+        error: "Missing or empty parameters",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     if (type != oldCategoryType && (await categories.findOne({ type: type })))
-      return res.status(400).json({ error: `Category ${type} already exists` });
+      return res.status(400).json({
+        error: `Category ${type} already exists`,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     let newCategory = await categories.findOneAndUpdate(
       { type: oldCategoryType },
@@ -118,10 +130,16 @@ export const deleteCategory = async (req, res) => {
     const categoriesToDelete = req.body.types;
 
     if (!categoriesToDelete || categoriesToDelete.length == 0)
-      return res.status(400).json({ error: "Missing or empty parameters" });
+      return res.status(400).json({
+        error: "Missing or empty parameters",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     if (categoriesToDelete.some((cat) => cat === ""))
-      return res.status(400).json({ error: "Empty string in types array" });
+      return res.status(400).json({
+        error: "Empty string in types array",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     let categoriesList = await categories.find();
 
@@ -201,12 +219,10 @@ export const getCategories = async (req, res) => {
       Object.assign({}, { type: v.type, color: v.color })
     );
 
-    return res
-      .status(200)
-      .json({
-        data: catList,
-        refreshedTokenMessage: res.locals.refreshedTokenMessage,
-      });
+    return res.status(200).json({
+      data: catList,
+      refreshedTokenMessage: res.locals.refreshedTokenMessage,
+    });
   } catch (error) {
     res.status(500).json({
       error: error.message,
@@ -231,10 +247,16 @@ export const createTransaction = async (req, res) => {
     const { username, amount, type } = req.body;
 
     if (!username || !amount || !type)
-      return res.status(400).json({ error: "Missing or empty parameters" });
+      return res.status(400).json({
+        error: "Missing or empty parameters",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     if (isNaN(parseFloat(amount)))
-      return res.status(400).json({ error: "Amount is not a number" });
+      return res.status(400).json({
+        error: "Amount is not a number",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     if (usernameParam !== username)
       return res.status(400).json({
@@ -421,10 +443,16 @@ export const getTransactionsByUserByCategory = async (req, res) => {
     let filter;
 
     if (!(await User.findOne({ username: req.params.username })))
-      return res.status(400).json({ error: "User not found" });
+      return res.status(400).json({
+        error: "User not found",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     if (!(await categories.findOne({ type: req.params.category })))
-      return res.status(400).json({ error: "Category not found" });
+      return res.status(400).json({
+        error: "Category not found",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     req.url.includes("/transactions/users/")
       ? (async () => {
@@ -676,7 +704,11 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
  */
 export const deleteTransaction = async (req, res) => {
   try {
-    if (!req.body._id) return res.status(400).json({ error: "Missing _ids" });
+    if (!req.body._id)
+      return res.status(400).json({
+        error: "Missing _ids",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     // Check if the transaction exists
     let transactionToBeDeleted = await transactions.findOne({
@@ -705,7 +737,13 @@ export const deleteTransaction = async (req, res) => {
       if (userAuth.flag) {
         const user = await User.findOne({ username: req.params.username });
 
-        if (!user) return res.status(400).json({ error: "User not found" });
+        if (!user)
+          return res
+            .status(400)
+            .json({
+              error: "User not found",
+              refreshedTokenMessage: res.locals.refreshedTokenMessage,
+            });
 
         // Check if the user is the owner of the transaction
         if (
@@ -748,10 +786,20 @@ export const deleteTransactions = async (req, res) => {
     let transactionIds = req.body._ids;
 
     if (!transactionIds || transactionIds.length === 0)
-      return res.status(400).json({ error: "Missing _ids" });
+      return res
+        .status(400)
+        .json({
+          error: "Missing _ids",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
     if (transactionIds.some((id) => id === ""))
-      return res.status(400).json({ error: "Empty _ids" });
+      return res
+        .status(400)
+        .json({
+          error: "Empty _ids",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
     let result = await transactions.find({
       _id: { $in: transactionIds },

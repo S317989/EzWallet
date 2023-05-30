@@ -123,7 +123,10 @@ export const createGroup = async (req, res) => {
     const groupName = req.body.name;
 
     if (!req.body.name || !req.body.memberEmails)
-      return res.status(400).json({ error: "Missing parameters" });
+      return res.status(400).json({
+        error: "Missing parameters",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     // if the group already exists
     if (await Group.findOne({ name: groupName }))
@@ -148,13 +151,19 @@ export const createGroup = async (req, res) => {
         members: { $elemMatch: { email: userCaller.email } },
       })
     )
-      return res.status(400).json({ error: "User already in a group" });
+      return res.status(400).json({
+        error: "User already in a group",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     if (!membersList.includes(userCaller.email))
       membersList.push(userCaller.email);
 
     if (!membersList.every((member) => validateEmail(member)))
-      return res.status(400).json({ error: "Invalid email format" });
+      return res.status(400).json({
+        error: "Invalid email format",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     for (let member of membersList) {
       user = await User.findOne({ email: member });
@@ -322,7 +331,10 @@ export const addToGroup = async (req, res) => {
       });
 
     if (!req.body.emails)
-      return res.status(400).json({ error: "No emails provided" });
+      return res.status(400).json({
+        error: "No emails provided",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     // if the user is not an admin, it means that he is a regular user, so we need to check if he is in the group
     if (verifyAuth(req, res, { authType: "User" }).flag) {
@@ -353,7 +365,10 @@ export const addToGroup = async (req, res) => {
       let user;
 
       if (!memberEmails.every((email) => validateEmail(email)))
-        return res.status(400).json({ error: "Invalid email format" });
+        return res.status(400).json({
+          error: "Invalid email format",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
       for (let email of memberEmails) {
         user = await User.findOne({ email });
@@ -412,9 +427,10 @@ export const addToGroup = async (req, res) => {
 export const removeFromGroup = async (req, res) => {
   try {
     if (!req.body.name || !req.body.members)
-      return res
-        .status(400)
-        .json({ error: "No group name or members provided" });
+      return res.status(400).json({
+        error: "No group name or members provided",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     const searchedGroup = await Group.findOne({ name: req.params.name });
 
@@ -467,7 +483,10 @@ export const removeFromGroup = async (req, res) => {
       let user;
 
       if (!remainingEmails.every((email) => validateEmail(email)))
-        return res.status(400).json({ error: "Invalid email format" });
+        return res.status(400).json({
+          error: "Invalid email format",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
       // Verifica se tutte le email corrispondono a utenti esistenti nel database
       const existingUsers = await User.find({
@@ -475,9 +494,10 @@ export const removeFromGroup = async (req, res) => {
       });
 
       if (existingUsers.length !== remainingEmails.length) {
-        return res
-          .status(400)
-          .json({ error: "Invalid or non-existing emails" });
+        return res.status(400).json({
+          error: "Invalid or non-existing emails",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
       }
 
       if (
@@ -485,9 +505,10 @@ export const removeFromGroup = async (req, res) => {
           (user) => !remainingEmails.includes(user.email)
         )
       )
-        return res
-          .status(400)
-          .json({ error: "All the members are not in the group" });
+        return res.status(400).json({
+          error: "All the members are not in the group",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
       // Add into notInGroup the emails that are not in the group but are into remainingEmails
       const oldEmails = oldMemberList.map((member) => member.email);
@@ -564,10 +585,16 @@ export const deleteUser = async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
 
     if (!req.body.email)
-      return res.status(400).json({ error: "No email provided" });
+      return res.status(400).json({
+        error: "No email provided",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     if (!validateEmail(req.body.email))
-      return res.status(400).json({ error: "Invalid email format" });
+      return res.status(400).json({
+        error: "Invalid email format",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     const user = await User.findOne({ email: req.body.email });
 
@@ -633,7 +660,10 @@ export const deleteGroup = async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
 
     if (!req.body.name)
-      return res.status(400).json({ error: "No group name provided" });
+      return res.status(400).json({
+        error: "No group name provided",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     const groupName = req.body.name;
     const groupDeleted = await Group.findOne({ name: groupName });
