@@ -209,7 +209,7 @@ const checkRolesPermissions = (
         decodedRefreshToken.role !== "Admin" ||
         (!decodedAccessToken && decodedRefreshToken.role !== "Admin")
       )
-        return res.status(401).json({ flag: false, cause: "Mismatched users" });
+        return { flag: false, cause: "Mismatched users" };
 
       break;
     case "Simple":
@@ -221,20 +221,24 @@ const checkRolesPermissions = (
         decodedRefreshToken.role !== "Regular" ||
         (!decodedAccessToken && decodedRefreshToken.role !== "Regular")
       )
-        return res.status(401).json({ flag: false, cause: "Mismatched users" });
+        return { flag: false, cause: "Mismatched users" };
 
       break;
     case "Group":
-      if (!info.emails.includes(decodedAccessToken.email))
-        return res
-          .status(401)
-          .json({ flag: false, cause: "User not in group" });
+      if (decodedAccessToken.role !== "Admin")
+        return { flag: true, cause: "Authorized" };
+      else if (
+        decodedAccessToken.role !== "Admin" &&
+        !info.emails.includes(decodedAccessToken.email)
+      )
+        return { flag: false, cause: "User not in group" };
+
       break;
     default:
-      return res.status(200).json({ flag: true, cause: "Authorized" });
+      return { flag: true, cause: "Authorized" };
   }
 
-  return res.status(200).json({ flag: true, cause: "Authorized" });
+  return { flag: true, cause: "Authorized" };
 };
 
 export const validateEmail = (email) => {

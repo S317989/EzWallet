@@ -330,17 +330,18 @@ export const addToGroup = async (req, res) => {
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
-    if (!req.body.emails)
+    const memberEmails = req.body.emails;
+
+    if (!memberEmails)
       return res.status(400).json({
         error: "No emails provided",
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
-    if (!verifyAuth(req, res, { authType: "Group" }).flag)
+    if (!verifyAuth(req, res, { authType: "Group", emails: memberEmails }).flag)
       return res.status(401).json({ error: "Unauthorized" });
 
     const oldMemberList = [...searchedGroup.members],
-      memberEmails = req.body.emails,
       membersNotFound = [],
       alreadyInGroup = [];
 
@@ -425,7 +426,11 @@ export const removeFromGroup = async (req, res) => {
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
-    if (!verifyAuth(req, res, { authType: "Group" }).flag)
+    let remainingEmails = req.body.members;
+
+    if (
+      !verifyAuth(req, res, { authType: "Group", emails: remainingEmails }).flag
+    )
       return res.status(401).json({ error: "Unauthorized" });
 
     const oldMemberList = [...searchedGroup.members];
@@ -435,8 +440,6 @@ export const removeFromGroup = async (req, res) => {
         error: "You cannot remove all the members from a group",
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
-
-    let remainingEmails = req.body.members;
 
     const notInGroup = [],
       usersNotFound = [];
