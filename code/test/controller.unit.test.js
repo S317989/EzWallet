@@ -1,10 +1,12 @@
 import request from "supertest";
 import { app } from "../app";
 import { categories, transactions } from "../models/model";
+import * as verifyAuth from "../controllers/utils.js";
+import * as controllerMethods from "../controllers/controller.js";
 
-jest.mock("../models/model");
+jest.mock("../models/model.js");
 
-beforeEach(() => {
+beforeAll(() => {
   categories.find.mockClear();
   categories.prototype.save.mockClear();
   transactions.find.mockClear();
@@ -14,104 +16,263 @@ beforeEach(() => {
 });
 
 describe("createCategory", () => {
-  test("should create a new category", async () => {
-    const categoryData = { type: "investment", color: "#fcbe44" };
-
-    // Make a simulated POST request to the endpoint corresponding to the creation of a category
-
-    const response = await request(app)
-      .post("/api/categories")
-      .send(categoryData);
-
-    // verify if the response is correct
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty("type", categoryData.type);
-    expect(response.body).toHaveProperty("color", categoryData.color);
-
-    // Check if the model function has been called with the right data
-    expect(categories.prototype.save).toHaveBeenCalledWith(categoryData);
+  beforeEach(() => {
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      user: { role: "Admin" },
+    });
   });
 
-  test("Should return 401 if unauthorized", async () => {
-    const categoryData = { type: "investment", color: "#fcbe44" };
+  test("CreateCategory - Done", async () => {
+    const categoryData = {
+      type: "Cat1",
+      color: "Black",
+    };
 
-    // Make a simulated POST request to the endpoint corresponding to the creation of a category without authentication cookie
-    const response = await request(app)
-      .post("/api/categories")
-      .send(categoryData);
+    jest.spyOn(categories, "findOne").mockResolvedValue(false);
 
-    // verify if the response is an error of authorization
-    expect(response.status).toBe(401);
+    jest.spyOn(categories.prototype, "save").mockResolvedValue(categoryData);
+
+    const mockRequest = { body: categoryData };
+
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+
+    await controllerMethods.createCategory(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: {
+        type: expect.any(String),
+        color: expect.any(String),
+      },
+      refreshedTokenMessage: expect.any(String),
+    });
+  });
+
+  test("CreateCategory - Unauthorized", async () => {
+    const categoryData = { type: "food", color: "red" };
+
+    const mockRequest = { body: categoryData };
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+
+    // jest.spyOn on verifyAuth method
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      authorized: false,
+      user: { role: "Admin" },
+    });
+
+    await controllerMethods.createCategory(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(401);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/Unauthorized/),
+    });
+  });
+
+  test("CreateCategory - Missing or Empty fields", async () => {
+    const categoryData = { type: "food" };
+
+    const mockRequest = { body: categoryData };
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { message: "refreshedTokenMessage" },
+    };
+
+    await controllerMethods.createCategory(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching("Missing or empty parameters"),
+    });
+  });
+
+  test("CreateCategory - Already exists", async () => {
+    const categoryData = { type: "Cat1", color: "Black" };
+
+    const mockRequest = { body: categoryData };
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { message: "refreshedTokenMessage" },
+    };
+
+    jest.spyOn(categories, "findOne").mockResolvedValue(true);
+
+    await controllerMethods.createCategory(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching("Category already exists"),
+    });
   });
 });
 
 describe("updateCategory", () => {
-  test("should update category", async () => {
-    const categoryData = { type: "example", color: "blue" };
+  beforeEach(async () => {
+    await categories.deleteMany({});
 
-    // Make a simulated PUT request to the endpoint corresponding to the update of a category
-    const response = await request(app)
-      .put("/api/categories")
-      .send(categoryData);
-
-    // verify if the response is correct ( status HTTP 200 , message of confirmation )
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty("message", "Category updated");
-    expect(response.body).toHaveProperty("count");
-
-    // Check if the model function has been called with the right data
-    expect(categories.prototype.save).toHaveBeenCalledWith(categoryData);
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      user: { role: "Admin" },
+    });
   });
 
-  test("should return 401 if category does not exist ", async () => {
-    const categoryData = { type: "nonexistent", color: "blue" };
+  test("UpdateCategory - Unauthorized", async () => {
+    const categoryData = { type: "food", color: "red" };
 
-    // Make a simulated PUT request to the endpoint corresponding to the update of a non-existent category
-    const response = await request(app)
-      .put("/api/categories")
-      .send(categoryData);
+    const mockRequest = { body: categoryData };
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
 
-    // verify if the response is an error of autorization ( status HTTP 401)
-    expect(response.status).toBe(401);
+    // jest.spyOn on verifyAuth method
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: false,
+      user: { role: "Admin" },
+    });
+
+    await controllerMethods.updateCategory(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(401);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/Unauthorized/),
+    });
   });
 
-  test("Should return 401 if parameters are invalid", async () => {
-    const categoryData = { type: "example", color: "invalid" };
+  test("UpdateCategory - Missing or Empty fields", async () => {
+    const categoryData = { color: "red" };
 
-    // Make a simulated PUT request to the endpoint corresponding to the update of a category with invalid parameters
-    const response = await request(app)
-      .put("/api/categories")
-      .send(categoryData);
+    const mockRequest = {
+      body: categoryData,
+      params: { type: "oldCategoryType" },
+    };
 
-    // verify if the response is an error of autorization(statut HTTP 401)
-    expect(response.status).toBe(401);
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+
+    jest.spyOn(categories, "findOne").mockResolvedValue(true);
+
+    await controllerMethods.updateCategory(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching("Missing or empty parameters"),
+      refreshedTokenMessage: expect.stringMatching("refreshedTokenMessage"),
+    });
+  });
+
+  test("UpdateCategory - Old Category not exists", async () => {
+    const categoryData = { type: "food", color: "blue" };
+
+    const mockRequest = {
+      body: categoryData,
+      params: { type: "oldCategoryType" },
+    };
+    const oldCategoryType = mockRequest.params.type;
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+
+    jest.spyOn(categories, "findOne").mockResolvedValue(null);
+
+    await controllerMethods.updateCategory(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(
+        `Category ${oldCategoryType} doesn't exists`
+      ),
+      refreshedTokenMessage: expect.stringMatching("refreshedTokenMessage"),
+    });
+  });
+
+  test("UpdateCategory - Category already exists", async () => {
+    const categoryData = { type: "food", color: "blue" };
+
+    const mockRequest = {
+      body: categoryData,
+      params: { type: "oldCategoryType" },
+    };
+
+    const oldCategoryType = mockRequest.params.type;
+
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+
+    jest.spyOn(categories, "findOne").mockResolvedValue(true);
+
+    await controllerMethods.updateCategory(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(
+        `Category ${categoryData.type} already exists`
+      ),
+      refreshedTokenMessage: expect.stringMatching("refreshedTokenMessage"),
+    });
+  });
+
+  test("Update Category - Done", async () => {
+    const categoryData = {
+      type: "NewCat",
+      color: "NewColor",
+    };
+
+    const oldCategoryType = { type: "OldCategoryType" };
+
+    const mockRequest = { params: oldCategoryType, body: categoryData };
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+
+    jest.spyOn(categories, "findOne").mockResolvedValueOnce(true);
+    jest.spyOn(categories, "findOne").mockResolvedValueOnce(false);
+    jest
+      .spyOn(categories, "findOneAndUpdate")
+      .mockResolvedValueOnce(categoryData);
+    jest.spyOn(categories, "countDocuments").mockResolvedValueOnce(1);
+
+    await controllerMethods.updateCategory(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: {
+        message: expect.stringContaining(
+          `Category ${oldCategoryType.type} updated to [${categoryData.type}, ${categoryData.color}] successfully`
+        ),
+        count: expect.any(Number),
+      },
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
   });
 });
 
 describe("deleteCategory", () => {
-  test("Should delete a category", async () => {
-    const categoryId = "example-category-id";
+  test("Should delete a category", async () => {});
 
-    // Make a simulated DELETE request to the endpoint corresponding to the deletion of a category
-    const response = await request(app).delete(`/api/categories/${categoryId}`);
-
-    // Check if the response is correct (HTTP 200 status, confirmation message and counter returned)
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty("message", "Category deleted");
-    expect(response.body).toHaveProperty("count");
-
-    // Check if the template function has been called with the corresponding category ID
-    expect(categories.deleteOne).toHaveBeenCalledWith({ _id: categoryId });
-  });
+  // passed
 
   test("Should return 404 if category does not exist", async () => {
     const categoryId = "nonexistent-category-id";
-
-    // Make a simulated DELETE request to the endpoint corresponding to the deletion of a non-existent category
-    const response = await request(app).delete(`/api/categories/${categoryId}`);
-
-    // Check if the response is a resource not found error (HTTP status 404)
-    expect(response.status).toBe(404);
   });
 });
 

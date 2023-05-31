@@ -8,6 +8,11 @@ const jwt = require("jsonwebtoken");
 jest.mock("bcryptjs");
 jest.mock("../models/User.js");
 
+beforeAll(() => {
+  // Clear all the used mocked methods
+  jest.clearAllMocks();
+});
+
 describe("register", () => {
   let mockRequest;
   let mockResponse;
@@ -41,7 +46,7 @@ describe("register", () => {
     expect(mockResponse.status).toHaveBeenCalledWith(200);
     expect(mockResponse.json).toHaveBeenCalledWith({
       data: {
-        message: expect.stringContaining(
+        message: expect.stringMatching(
           `User ${user.username} added succesfully`
         ),
       },
@@ -108,7 +113,7 @@ describe("registerAdmin", () => {
     expect(mockResponse.status).toHaveBeenCalledWith(200);
     expect(mockResponse.json).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        message: expect.stringContaining(
+        message: expect.stringMatching(
           `Admin ${admin.username} added succesfully`
         ),
       }),
@@ -120,7 +125,7 @@ describe("registerAdmin", () => {
 
     expect(mockResponse.status).toHaveBeenCalledWith(400);
     expect(mockResponse.json).toHaveBeenCalledWith({
-      message: expect.stringContaining("you are already registered"),
+      message: expect.stringMatching("you are already registered"),
     });
   });
 
@@ -131,7 +136,7 @@ describe("registerAdmin", () => {
 
     expect(mockResponse.status).toHaveBeenCalledWith(400);
     expect(mockResponse.json).toHaveBeenCalledWith({
-      error: expect.stringContaining("Invalid email"),
+      error: expect.stringMatching("Invalid email"),
     });
   });
 });
@@ -238,7 +243,7 @@ describe("logout", () => {
     expect(mockResponse.status).toHaveBeenCalledWith(200);
     expect(mockResponse.json).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        message: expect.stringContaining("logged out"),
+        message: expect.stringMatching("logged out"),
       }),
     });
   });
@@ -253,7 +258,7 @@ describe("logout", () => {
 
     expect(mockResponse.status).toHaveBeenCalledWith(400);
     expect(mockResponse.json).toHaveBeenCalledWith({
-      error: expect.stringContaining("you are already logged out"),
+      error: expect.stringMatching("you are already logged out"),
     });
   });
 
@@ -264,7 +269,7 @@ describe("logout", () => {
 
     expect(mockResponse.status).toHaveBeenCalledWith(400);
     expect(mockResponse.json).toHaveBeenCalledWith({
-      error: expect.stringContaining("user not found"),
+      error: expect.stringMatching("user not found"),
     });
   });
 });
