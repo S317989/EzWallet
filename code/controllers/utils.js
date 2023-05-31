@@ -122,7 +122,12 @@ export const verifyAuth = (req, res, info) => {
       return false;
     }
 
-    return checkRolesPermissions(decodedAccessToken, decodedRefreshToken, info);
+    return checkRolesPermissions(
+      res,
+      decodedAccessToken,
+      decodedRefreshToken,
+      info
+    );
   } catch (err) {
     if (err.name === "TokenExpiredError") {
       try {
@@ -151,6 +156,7 @@ export const verifyAuth = (req, res, info) => {
           "Access token has been refreshed. Remember to copy the new one in the headers of subsequent calls";
 
         return checkRolesPermissions(
+          res,
           decodedAccessToken,
           decodedRefreshToken,
           info
@@ -191,6 +197,7 @@ export const verifyAuth = (req, res, info) => {
  */
 
 const checkRolesPermissions = (
+  res,
   decodedAccessToken,
   decodedRefreshToken,
   info
@@ -202,7 +209,7 @@ const checkRolesPermissions = (
         decodedRefreshToken.role !== "Admin" ||
         (!decodedAccessToken && decodedRefreshToken.role !== "Admin")
       )
-        return { flag: false, cause: "Mismatched users" };
+        return res.status(401).json({ flag: false, cause: "Mismatched users" });
 
       break;
     case "Simple":
@@ -214,18 +221,20 @@ const checkRolesPermissions = (
         decodedRefreshToken.role !== "Regular" ||
         (!decodedAccessToken && decodedRefreshToken.role !== "Regular")
       )
-        return { flag: false, cause: "Mismatched users" };
+        return res.status(401).json({ flag: false, cause: "Mismatched users" });
 
       break;
     case "Group":
       if (!info.emails.includes(decodedAccessToken.email))
-        return { flag: false, cause: "User not in group" };
+        return res
+          .status(401)
+          .json({ flag: false, cause: "User not in group" });
       break;
     default:
-      return { flag: true, cause: "Authorized" };
+      return res.status(200).json({ flag: true, cause: "Authorized" });
   }
 
-  return { flag: true, cause: "Authorized" };
+  return res.status(200).json({ flag: true, cause: "Authorized" });
 };
 
 export const validateEmail = (email) => {
