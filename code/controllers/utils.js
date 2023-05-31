@@ -1,3 +1,4 @@
+import e from "express";
 import jwt from "jsonwebtoken";
 
 /**
@@ -79,8 +80,7 @@ export const handleAmountFilterParams = (req, data) => {
 export const verifyAuth = (req, res, info) => {
   const cookie = req.cookies;
   if (!cookie.accessToken || !cookie.refreshToken) {
-    res.status(401).json({ flag: false, cause: "Unauthorized" });
-    return false;
+    return { flag: false, cause: "Unauthorized" };
   }
   try {
     const decodedAccessToken = jwt.verify(
@@ -97,10 +97,7 @@ export const verifyAuth = (req, res, info) => {
       !decodedAccessToken.email ||
       !decodedAccessToken.role
     ) {
-      res
-        .status(401)
-        .json({ flag: false, cause: "Token is missing information" });
-      return false;
+      return { flag: false, cause: "Token is missing information" };
     }
 
     if (
@@ -108,18 +105,14 @@ export const verifyAuth = (req, res, info) => {
       !decodedRefreshToken.email ||
       !decodedRefreshToken.role
     ) {
-      res
-        .status(401)
-        .json({ flag: false, cause: "Token is missing information" });
-      return false;
+      return { flag: false, cause: "Token is missing information" };
     }
     if (
       decodedAccessToken.username !== decodedRefreshToken.username ||
       decodedAccessToken.email !== decodedRefreshToken.email ||
       decodedAccessToken.role !== decodedRefreshToken.role
     ) {
-      res.status(401).json({ flag: false, cause: "Mismatched users" });
-      return false;
+      return { flag: false, cause: "Mismatched users" };
     }
 
     return checkRolesPermissions(
@@ -162,16 +155,12 @@ export const verifyAuth = (req, res, info) => {
           info
         );
       } catch (err) {
-        if (err.name === "TokenExpiredError") {
-          res.status(401).json({ flag: false, cause: "Perform login again" });
-        } else {
-          res.status(401).json({ flag: false, cause: err.name });
-        }
-        return false;
+        if (err.name === "TokenExpiredError")
+          return { flag: false, cause: "Perform login again" };
+        else return { flag: false, cause: err.name };
       }
     } else {
-      res.status(401).json({ flag: false, cause: err.name });
-      return false;
+      return { flag: false, cause: err.name };
     }
   }
 };
