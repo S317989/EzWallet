@@ -442,22 +442,22 @@ export const getTransactionsByUserByCategory = async (req, res) => {
   try {
     let filter;
 
-    if (!(await User.findOne({ username: req.params.username })))
-      return res.status(400).json({
-        error: "User not found",
-        refreshedTokenMessage: res.locals.refreshedTokenMessage,
-      });
-
-    if (!(await categories.findOne({ type: req.params.category })))
-      return res.status(400).json({
-        error: "Category not found",
-        refreshedTokenMessage: res.locals.refreshedTokenMessage,
-      });
-
     req.url.includes("/transactions/users/")
       ? (async () => {
           if (!verifyAuth(req, res, { authType: "Admin" }).flag)
             return res.status(401).json({ error: "Unauthorized" });
+
+          if (!(await User.findOne({ username: req.params.username })))
+            return res.status(400).json({
+              error: "User not found",
+              refreshedTokenMessage: res.locals.refreshedTokenMessage,
+            });
+
+          if (!(await categories.findOne({ type: req.params.category })))
+            return res.status(400).json({
+              error: "Category not found",
+              refreshedTokenMessage: res.locals.refreshedTokenMessage,
+            });
 
           filter = {
             $and: [
@@ -486,6 +486,18 @@ export const getTransactionsByUserByCategory = async (req, res) => {
           )
             return res.status(401).json({ error: "Unauthorized" });
 
+          if (!(await User.findOne({ username: req.params.username })))
+            return res.status(400).json({
+              error: "User not found",
+              refreshedTokenMessage: res.locals.refreshedTokenMessage,
+            });
+
+          if (!(await categories.findOne({ type: req.params.category })))
+            return res.status(400).json({
+              error: "Category not found",
+              refreshedTokenMessage: res.locals.refreshedTokenMessage,
+            });
+
           filter = {
             $and: [
               { username: req.params.username },
@@ -493,7 +505,6 @@ export const getTransactionsByUserByCategory = async (req, res) => {
             ],
           };
 
-          // Remove the null element
           filter.$and = filter.$and.filter((condition) => condition !== null);
 
           return res.status(200).json({
@@ -525,7 +536,6 @@ export const getTransactionsByGroup = async (req, res) => {
           if (!verifyAuth(req, res, { authType: "Admin" }).flag)
             return res.status(401).json({ error: "Unauthorized" });
 
-          // Trova il gruppo desiderato
           const group = await Group.findOne({ name: req.params.name });
 
           if (!group)
@@ -534,14 +544,12 @@ export const getTransactionsByGroup = async (req, res) => {
               refreshedTokenMessage: res.locals.refreshedTokenMessage,
             });
 
-          // Estrai gli ID degli utenti associati ai membri del gruppo
           const memberUserIds = group.members.map((member) => member.email);
 
           filter = {
             $and: [{ username: { $in: memberUserIds } }],
           };
 
-          // Remove the null element
           filter.$and = filter.$and.filter((condition) => condition !== null);
 
           return res.status(200).json({
@@ -704,26 +712,26 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
  */
 export const deleteTransaction = async (req, res) => {
   try {
-    if (!req.body._id)
-      return res.status(400).json({
-        error: "Missing _ids",
-        refreshedTokenMessage: res.locals.refreshedTokenMessage,
-      });
-
-    // Check if the transaction exists
-    let transactionToBeDeleted = await transactions.findOne({
-      _id: req.body._id,
-    });
-
-    if (!transactionToBeDeleted)
-      return res.status(400).json({
-        error: `Transaction ${req.body._id} not found`,
-        refreshedTokenMessage: res.locals.refreshedTokenMessage,
-      });
-
     const adminAuth = verifyAuth(req, res, { authType: "Admin" });
 
     if (adminAuth.flag) {
+      if (!req.body._id)
+        return res.status(400).json({
+          error: "Missing _ids",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
+
+      // Check if the transaction exists
+      let transactionToBeDeleted = await transactions.findOne({
+        _id: req.body._id,
+      });
+
+      if (!transactionToBeDeleted)
+        return res.status(400).json({
+          error: `Transaction ${req.body._id} not found`,
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
+
       // Delete the transaction where id = req.body._id and username = req.params.username
       await transactions.deleteOne({ _id: req.body._id });
 
@@ -738,12 +746,27 @@ export const deleteTransaction = async (req, res) => {
         const user = await User.findOne({ username: req.params.username });
 
         if (!user)
-          return res
-            .status(400)
-            .json({
-              error: "User not found",
-              refreshedTokenMessage: res.locals.refreshedTokenMessage,
-            });
+          return res.status(400).json({
+            error: "User not found",
+            refreshedTokenMessage: res.locals.refreshedTokenMessage,
+          });
+
+        if (!req.body._id)
+          return res.status(400).json({
+            error: "Missing _ids",
+            refreshedTokenMessage: res.locals.refreshedTokenMessage,
+          });
+
+        // Check if the transaction exists
+        let transactionToBeDeleted = await transactions.findOne({
+          _id: req.body._id,
+        });
+
+        if (!transactionToBeDeleted)
+          return res.status(400).json({
+            error: `Transaction ${req.body._id} not found`,
+            refreshedTokenMessage: res.locals.refreshedTokenMessage,
+          });
 
         // Check if the user is the owner of the transaction
         if (
@@ -786,20 +809,16 @@ export const deleteTransactions = async (req, res) => {
     let transactionIds = req.body._ids;
 
     if (!transactionIds || transactionIds.length === 0)
-      return res
-        .status(400)
-        .json({
-          error: "Missing _ids",
-          refreshedTokenMessage: res.locals.refreshedTokenMessage,
-        });
+      return res.status(400).json({
+        error: "Missing _ids",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     if (transactionIds.some((id) => id === ""))
-      return res
-        .status(400)
-        .json({
-          error: "Empty _ids",
-          refreshedTokenMessage: res.locals.refreshedTokenMessage,
-        });
+      return res.status(400).json({
+        error: "Empty _ids",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     let result = await transactions.find({
       _id: { $in: transactionIds },

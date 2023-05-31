@@ -75,7 +75,8 @@ export const handleAmountFilterParams = (req, data) => {
 export const verifyAuth = (req, res, info) => {
   const cookie = req.cookies;
   if (!cookie.accessToken || !cookie.refreshToken) {
-    return { flag: false, cause: "Unauthorized" };
+    res.status(401).json({ flag: false, cause: "Unauthorized" });
+    return false;
   }
   try {
     const decodedAccessToken = jwt.verify(
@@ -92,21 +93,29 @@ export const verifyAuth = (req, res, info) => {
       !decodedAccessToken.email ||
       !decodedAccessToken.role
     ) {
-      return { flag: false, cause: "Token is missing information" };
+      res
+        .status(401)
+        .json({ flag: false, cause: "Token is missing information" });
+      return false;
     }
+
     if (
       !decodedRefreshToken.username ||
       !decodedRefreshToken.email ||
       !decodedRefreshToken.role
     ) {
-      return { flag: false, cause: "Token is missing information" };
+      res
+        .status(401)
+        .json({ flag: false, cause: "Token is missing information" });
+      return false;
     }
     if (
       decodedAccessToken.username !== decodedRefreshToken.username ||
       decodedAccessToken.email !== decodedRefreshToken.email ||
       decodedAccessToken.role !== decodedRefreshToken.role
     ) {
-      return { flag: false, cause: "Mismatched users" };
+      res.status(401).json({ flag: false, cause: "Mismatched users" });
+      return false;
     }
 
     return checkRolesPermissions(decodedAccessToken, decodedRefreshToken, info);
@@ -134,27 +143,29 @@ export const verifyAuth = (req, res, info) => {
           sameSite: "none",
           secure: true,
         });
-        res.locals.refreshedTokenMessage =
+        res.locals.message =
           "Access token has been refreshed. Remember to copy the new one in the headers of subsequent calls";
 
-        let newDecodedAccessToken = jwt.verify(
-          newAccessToken,
-          process.env.ACCESS_KEY
+        return checkRolesPermissions(
+          decodedAccessToken,
+          decodedRefreshToken,
+          info
         );
-
-        return checkRolesPermissions(newDecodedAccessToken, refreshToken, info);
       } catch (err) {
         if (err.name === "TokenExpiredError") {
-          return { flag: false, cause: "Perform login again" };
+          res.status(401).json({ flag: false, cause: "Perform login again" });
         } else {
-          return { flag: false, cause: err.name };
+          res.status(401).json({ flag: false, cause: err.name });
         }
+        return false;
       }
     } else {
-      return { flag: false, cause: err.name };
+      res.status(401).json({ flag: false, cause: err.name });
+      return false;
     }
   }
 };
+
 /**
  *  Method that contains all the checking roles needed by verifyAuth. (In order to have a clear code)
  *      Additional criteria:
@@ -180,9 +191,7 @@ const checkRolesPermissions = (
   decodedRefreshToken,
   info
 ) => {
-  switch (
-    info.authType //check to probably error here !!!
-  ) {
+  switch (info.authType) {
     case "Admin":
       if (
         decodedAccessToken.role !== "Admin" ||

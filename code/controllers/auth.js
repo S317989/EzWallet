@@ -38,7 +38,7 @@ export const register = async (req, res) => {
       data: { message: `User ${newUser.username} added succesfully` },
     });
   } catch (err) {
-    res.status(500).json(err);
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -77,7 +77,7 @@ export const registerAdmin = async (req, res) => {
       data: { message: `Admin ${newUser.username} added succesfully` },
     });
   } catch (err) {
-    res.status(500).json(err);
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -92,17 +92,17 @@ export const registerAdmin = async (req, res) => {
 export const login = async (req, res) => {
   const { email, password } = req.body;
   const cookie = req.cookies;
+  const existingUser = await User.findOne({ email: email });
 
   if (!email || !password)
     return res.status(400).json({ error: "Missing or Empty fields" });
 
-  const existingUser = await User.findOne({ email: email });
   if (!existingUser)
     return res.status(400).json({ error: "please you need to register" });
-
   try {
     const match = await bcrypt.compare(password, existingUser.password);
     if (!match) return res.status(400).json({ error: "wrong credentials" });
+
     //CREATE ACCESSTOKEN
     const accessToken = jwt.sign(
       {
@@ -148,7 +148,7 @@ export const login = async (req, res) => {
       .status(200)
       .json({ data: { accessToken: accessToken, refreshToken: refreshToken } });
   } catch (error) {
-    res.status(500).json(error);
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -190,6 +190,6 @@ export const logout = async (req, res) => {
     const savedUser = await user.save();
     res.status(200).json({ data: { message: "logged out" } });
   } catch (error) {
-    res.status(400).json(error);
+    res.status(400).json({ error: error.message });
   }
 };
