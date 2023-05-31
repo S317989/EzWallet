@@ -14,6 +14,10 @@ export const handleDateFilterParams = (req) => {
   if (date && (from || upTo))
     throw new Error("Date cannot be with from or upTo");
 
+  // return error if date is in not format YYYY-MM-DD
+  if (date && !date.match(/^\d{4}-\d{2}-\d{2}$/))
+    throw new Error("Date must be in format YYYY-MM-DD");
+
   let filter = {
     date: {},
   };
