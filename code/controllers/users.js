@@ -332,7 +332,7 @@ export const addToGroup = async (req, res) => {
 
     const memberEmails = req.body.emails;
 
-    if (!memberEmails)
+    if (!memberEmails || memberEmails.length === 0)
       return res.status(400).json({
         error: "No emails provided",
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
@@ -406,12 +406,6 @@ export const addToGroup = async (req, res) => {
  */
 export const removeFromGroup = async (req, res) => {
   try {
-    if (!req.body.members)
-      return res.status(400).json({
-        error: "No members provided",
-        refreshedTokenMessage: res.locals.refreshedTokenMessage,
-      });
-
     const searchedGroup = await Group.findOne({ name: req.params.name });
 
     if (!searchedGroup)
@@ -420,7 +414,10 @@ export const removeFromGroup = async (req, res) => {
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
-    let removingEmails = req.body.members;
+    let removingEmails = req.body.emails;
+
+    if (!removingEmails || removingEmails.length === 0)
+      return res.status(400).json({ error: "No emails provided" });
 
     if (!removingEmails.every((email) => validateEmail(email)))
       return res.status(400).json({
