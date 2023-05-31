@@ -282,7 +282,7 @@ export const createTransaction = async (req, res) => {
             username: result.username,
             type: result.type,
             amount: result.amount,
-            data: result.date,
+            date: result.date,
           },
           refreshedTokenMessage: res.locals.refreshedTokenMessage,
         })
@@ -336,92 +336,80 @@ export const getTransactionsByUser = async (req, res) => {
     let username,
       filter = null;
 
-    /** Using of ternary condition, equals to if() else () */
-    req.url.includes("/transactions/users/")
-      ? (async () => {
-          if (!verifyAuth(req, res, { authType: "Admin" }).flag)
-            return res.status(401).json({ error: "Unauthorized" });
+    if (req.url.includes("/transactions/users/")) {
+      if (!verifyAuth(req, res, { authType: "Admin" }).flag)
+        return res.status(401).json({ error: "Unauthorized" });
 
-          /** If url contains username param  */
-          if (Object.keys(req.params).includes("username")) {
-            /** Wait till checking user existing */
-            await User.findOne({
-              username: req.params.username,
-            }).then((data) => {
-              username = data;
-            });
-          }
+      if (!req.params.username)
+        return res.status(400).json({ error: "Missing username" });
 
-          /** If user not found */
-          if (username === null)
-            return res.status(400).json({
-              error: "User not found",
-              refreshedTokenMessage: res.locals.refreshedTokenMessage,
-            });
+      /** Wait till checking user existing */
+      let user = await User.findOne({
+        username: req.params.username,
+      });
 
-          if (req.params.username)
-            filter = { $and: [{ username: req.params.username }] };
+      /** If user not found */
+      if (!user)
+        return res.status(400).json({
+          error: "User not found",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
-          return res.status(200).json({
-            data: await getTransactionsDetails(req, res, filter),
-            refreshedTokenMessage: res.locals.refreshedTokenMessage,
-          });
-        })()
-      : (async () => {
-          const user = await User.findOne({ username: req.params.username });
+      if (user.username) filter = { $and: [{ username: req.params.username }] };
 
-          if (
-            !verifyAuth(req, res, {
-              authType: "User",
-              username: req.params.username,
-            }).flag ||
-            user.refreshToken !== req.cookies.refreshToken
-          )
-            return res.status(401).json({ error: "Unauthorized" });
+      const responseData = await getTransactionsDetails(req, res, filter);
+      return res.status(200).json({
+        data: responseData,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
+    } else {
+      const user = await User.findOne({ username: req.params.username });
 
-          /** Wait till checking user existing */
-          await User.findOne({
-            username: req.params.username,
-          }).then((data) => {
-            username = data;
-          });
+      /** If user not found */
+      if (!user)
+        return res.status(400).json({
+          error: "User not found",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
-          /** If user not found */
-          if (username === null)
-            return res.status(400).json({
-              error: "User not found",
-              refreshedTokenMessage: res.locals.refreshedTokenMessage,
-            });
+      if (
+        !verifyAuth(req, res, {
+          authType: "User",
+          username: req.params.username,
+        }).flag ||
+        user.refreshToken !== req.cookies.refreshToken
+      )
+        return res.status(401).json({ error: "Unauthorized" });
 
-          const dateIncludes = ["date", "from", "upTo"];
+      const dateIncludes = ["date", "from", "upTo"];
 
-          if (dateIncludes.some((v) => Object.keys(req.query).includes(v)))
-            dateFilter = handleDateFilterParams(req);
+      if (dateIncludes.some((v) => Object.keys(req.query).includes(v)))
+        dateFilter = handleDateFilterParams(req);
 
-          const amountIncludes = ["minAmount", "maxAmount"];
-          if (amountIncludes.some((v) => Object.keys(req.query).includes(v)))
-            amountFilter = handleAmountFilterParams(req);
+      const amountIncludes = ["minAmount", "maxAmount"];
+      if (amountIncludes.some((v) => Object.keys(req.query).includes(v)))
+        amountFilter = handleAmountFilterParams(req);
 
-          const filter = {
-            $and: [
-              { username: req.params.username },
-              ...(dateIncludes.some((v) => Object.keys(req.query).includes(v))
-                ? [handleDateFilterParams(req)]
-                : []),
-              ...(amountIncludes.some((v) => Object.keys(req.query).includes(v))
-                ? [handleAmountFilterParams(req)]
-                : []),
-            ],
-          };
+      const filter = {
+        $and: [
+          { username: req.params.username },
+          ...(dateIncludes.some((v) => Object.keys(req.query).includes(v))
+            ? [handleDateFilterParams(req)]
+            : []),
+          ...(amountIncludes.some((v) => Object.keys(req.query).includes(v))
+            ? [handleAmountFilterParams(req)]
+            : []),
+        ],
+      };
 
-          // Remove the null element
-          filter.$and = filter.$and.filter((condition) => condition !== null);
+      // Remove the null element
+      filter.$and = filter.$and.filter((condition) => condition !== null);
 
-          return res.status(200).json({
-            data: await getTransactionsDetails(req, res, filter),
-            refreshedTokenMessage: res.locals.refreshedTokenMessage,
-          });
-        })();
+      return res.status(200).json({
+        data: await getTransactionsDetails(req, res, filter),
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
+    }
   } catch (error) {
     res.status(500).json({
       error: error.message,
@@ -442,76 +430,74 @@ export const getTransactionsByUserByCategory = async (req, res) => {
   try {
     let filter;
 
-    req.url.includes("/transactions/users/")
-      ? (async () => {
-          if (!verifyAuth(req, res, { authType: "Admin" }).flag)
-            return res.status(401).json({ error: "Unauthorized" });
+    if (req.url.includes("/transactions/users/")) {
+      if (!verifyAuth(req, res, { authType: "Admin" }).flag)
+        return res.status(401).json({ error: "Unauthorized" });
 
-          if (!(await User.findOne({ username: req.params.username })))
-            return res.status(400).json({
-              error: "User not found",
-              refreshedTokenMessage: res.locals.refreshedTokenMessage,
-            });
+      if (!(await User.findOne({ username: req.params.username })))
+        return res.status(400).json({
+          error: "User not found",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
-          if (!(await categories.findOne({ type: req.params.category })))
-            return res.status(400).json({
-              error: "Category not found",
-              refreshedTokenMessage: res.locals.refreshedTokenMessage,
-            });
+      if (!(await categories.findOne({ type: req.params.category })))
+        return res.status(400).json({
+          error: "Category not found",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
-          filter = {
-            $and: [
-              { username: req.params.username },
-              { type: req.params.category },
-            ],
-          };
+      filter = {
+        $and: [
+          { username: req.params.username },
+          { type: req.params.category },
+        ],
+      };
 
-          // Remove the null element
-          filter.$and = filter.$and.filter((condition) => condition !== null);
+      // Remove the null element
+      filter.$and = filter.$and.filter((condition) => condition !== null);
 
-          return res.status(200).json({
-            data: await getTransactionsDetails(req, res, filter),
-            refreshedTokenMessage: res.locals.refreshedTokenMessage,
-          });
-        })()
-      : (async () => {
-          let user = await User.findOne({ username: req.params.username });
+      return res.status(200).json({
+        data: await getTransactionsDetails(req, res, filter),
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
+    } else {
+      let user = await User.findOne({ username: req.params.username });
 
-          if (
-            !verifyAuth(req, res, {
-              authType: "User",
-              username: req.params.username,
-            }).flag ||
-            user.refreshToken !== req.cookies.refreshToken
-          )
-            return res.status(401).json({ error: "Unauthorized" });
+      if (
+        !verifyAuth(req, res, {
+          authType: "User",
+          username: req.params.username,
+        }).flag ||
+        user.refreshToken !== req.cookies.refreshToken
+      )
+        return res.status(401).json({ error: "Unauthorized" });
 
-          if (!(await User.findOne({ username: req.params.username })))
-            return res.status(400).json({
-              error: "User not found",
-              refreshedTokenMessage: res.locals.refreshedTokenMessage,
-            });
+      if (!(await User.findOne({ username: req.params.username })))
+        return res.status(400).json({
+          error: "User not found",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
-          if (!(await categories.findOne({ type: req.params.category })))
-            return res.status(400).json({
-              error: "Category not found",
-              refreshedTokenMessage: res.locals.refreshedTokenMessage,
-            });
+      if (!(await categories.findOne({ type: req.params.category })))
+        return res.status(400).json({
+          error: "Category not found",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
-          filter = {
-            $and: [
-              { username: req.params.username },
-              { type: req.params.category },
-            ],
-          };
+      filter = {
+        $and: [
+          { username: req.params.username },
+          { type: req.params.category },
+        ],
+      };
 
-          filter.$and = filter.$and.filter((condition) => condition !== null);
+      filter.$and = filter.$and.filter((condition) => condition !== null);
 
-          return res.status(200).json({
-            data: await getTransactionsDetails(req, res, filter),
-            refreshedTokenMessage: res.locals.refreshedTokenMessage,
-          });
-        })();
+      return res.status(200).json({
+        data: await getTransactionsDetails(req, res, filter),
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
+    }
   } catch (error) {
     res.status(500).json({
       error: error.message,
@@ -531,65 +517,62 @@ export const getTransactionsByUserByCategory = async (req, res) => {
 export const getTransactionsByGroup = async (req, res) => {
   try {
     let filter;
-    req.url.includes("/transactions/groups")
-      ? (async () => {
-          if (!verifyAuth(req, res, { authType: "Admin" }).flag)
-            return res.status(401).json({ error: "Unauthorized" });
 
-          const group = await Group.findOne({ name: req.params.name });
+    if (req.url.includes("/transactions/groups")) {
+      if (!verifyAuth(req, res, { authType: "Admin" }).flag)
+        return res.status(401).json({ error: "Unauthorized" });
 
-          if (!group)
-            return res.status(400).json({
-              error: "Group not found",
-              refreshedTokenMessage: res.locals.refreshedTokenMessage,
-            });
+      const group = await Group.findOne({ name: req.params.name });
 
-          const memberUserIds = group.members.map((member) => member.email);
+      if (!group)
+        return res.status(400).json({
+          error: "Group not found",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
-          filter = {
-            $and: [{ username: { $in: memberUserIds } }],
-          };
+      const memberUserIds = group.members.map((member) => member.email);
 
-          filter.$and = filter.$and.filter((condition) => condition !== null);
+      filter = {
+        $and: [{ username: { $in: memberUserIds } }],
+      };
 
-          return res.status(200).json({
-            data: await getTransactionsDetails(req, res, filter),
-            refreshedTokenMessage: res.locals.refreshedTokenMessage,
-          });
-        })()
-      : (async () => {
-          let groupSearched = await Group.findOne({ name: req.params.name });
+      filter.$and = filter.$and.filter((condition) => condition !== null);
 
-          if (!groupSearched)
-            return res.status(400).json({
-              error: "Group not found",
-              refreshedTokenMessage: res.locals.refreshedTokenMessage,
-            });
+      return res.status(200).json({
+        data: await getTransactionsDetails(req, res, filter),
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
+    } else {
+      let groupSearched = await Group.findOne({ name: req.params.name });
 
-          let membersEmail = groupSearched.members.map(
-            (member) => member.email
-          );
+      if (!groupSearched)
+        return res.status(400).json({
+          error: "Group not found",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
-          if (
-            !verifyAuth(req, res, {
-              authType: "Group",
-              emails: membersEmail,
-            }).flag
-          )
-            return res.status(401).json({ error: "Unauthorized" });
+      let membersEmail = groupSearched.members.map((member) => member.email);
 
-          filter = {
-            $and: [{ username: { $in: membersEmail } }],
-          };
+      if (
+        !verifyAuth(req, res, {
+          authType: "Group",
+          emails: membersEmail,
+        }).flag
+      )
+        return res.status(401).json({ error: "Unauthorized" });
 
-          // Remove the null element
-          filter.$and = filter.$and.filter((condition) => condition !== null);
+      filter = {
+        $and: [{ username: { $in: membersEmail } }],
+      };
 
-          return res.status(200).json({
-            data: await getTransactionsDetails(req, res, filter),
-            refreshedTokenMessage: res.locals.refreshedTokenMessage,
-          });
-        })();
+      // Remove the null element
+      filter.$and = filter.$and.filter((condition) => condition !== null);
+
+      return res.status(200).json({
+        data: await getTransactionsDetails(req, res, filter),
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
+    }
   } catch (error) {
     res.status(500).json({
       error: error.message,
@@ -610,91 +593,79 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
   try {
     let filter;
 
-    req.url.includes("/transactions/groups")
-      ? (async () => {
-          if (!verifyAuth(req, res, { authType: "Admin" }).flag)
-            return res.status(401).json({ error: "Unauthorized" });
+    if (req.url.includes("/transactions/groups")) {
+      if (!verifyAuth(req, res, { authType: "Admin" }).flag)
+        return res.status(401).json({ error: "Unauthorized" });
 
-          const group = await Group.findOne({ name: req.params.name });
+      const group = await Group.findOne({ name: req.params.name });
 
-          if (!group)
-            return res.status(400).json({
-              error: "Group not found",
-              refreshedTokenMessage: res.locals.refreshedTokenMessage,
-            });
+      if (!group)
+        return res.status(400).json({
+          error: "Group not found",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
-          const category = await categories.findOne({
-            type: req.params.category,
-          });
+      const category = await categories.findOne({
+        type: req.params.category,
+      });
 
-          if (!category)
-            return res.status(400).json({
-              error: "Category not found",
-              refreshedTokenMessage: res.locals.refreshedTokenMessage,
-            });
+      if (!category)
+        return res.status(400).json({
+          error: "Category not found",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
-          const memberUserIds = group.members.map((member) => member.email);
+      const memberUserIds = group.members.map((member) => member.email);
 
-          filter = {
-            $and: [
-              { username: { $in: memberUserIds } },
-              { type: category.type },
-            ],
-          };
+      filter = {
+        $and: [{ username: { $in: memberUserIds } }, { type: category.type }],
+      };
 
-          return res.status(200).json({
-            data: await getTransactionsDetails(req, res, filter),
-            refreshedTokenMessage: res.locals.refreshedTokenMessage,
-          });
-        })()
-      : (async () => {
-          let groupSearched = await Group.findOne({ name: req.params.name });
+      return res.status(200).json({
+        data: await getTransactionsDetails(req, res, filter),
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
+    } else {
+      let groupSearched = await Group.findOne({ name: req.params.name });
 
-          if (!groupSearched)
-            return res.status(400).json({
-              error: "Group not found",
-              refreshedTokenMessage: res.locals.refreshedTokenMessage,
-            });
+      if (!groupSearched)
+        return res.status(400).json({
+          error: "Group not found",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
-          const category = await categories.findOne({
-            type: req.params.category,
-          });
+      const category = await categories.findOne({
+        type: req.params.category,
+      });
 
-          if (!category)
-            return res.status(400).json({
-              error: "Category not found",
-              refreshedTokenMessage: res.locals.refreshedTokenMessage,
-            });
+      if (!category)
+        return res.status(400).json({
+          error: "Category not found",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
-          let membersEmail = groupSearched.members.map(
-            (member) => member.email
-          );
+      let membersEmail = groupSearched.members.map((member) => member.email);
 
-          if (
-            !verifyAuth(req, res, {
-              authType: "Group",
-              emails: membersEmail,
-            }).flag
-          )
-            return res.status(401).json({ error: "Unauthorized" });
+      if (
+        !verifyAuth(req, res, {
+          authType: "Group",
+          emails: membersEmail,
+        }).flag
+      )
+        return res.status(401).json({ error: "Unauthorized" });
 
-          // Estrai gli ID degli utenti associati ai membri del gruppo
-          const memberUserIds = groupSearched.members.map(
-            (member) => member.email
-          );
+      // Estrai gli ID degli utenti associati ai membri del gruppo
+      const memberUserIds = groupSearched.members.map((member) => member.email);
 
-          filter = {
-            $and: [
-              { username: { $in: memberUserIds } },
-              { type: category.type },
-            ],
-          };
+      filter = {
+        $and: [{ username: { $in: memberUserIds } }, { type: category.type }],
+      };
 
-          return res.status(200).json({
-            data: await getTransactionsDetails(req, res, filter),
-            refreshedTokenMessage: res.locals.refreshedTokenMessage,
-          });
-        })();
+      return res.status(200).json({
+        data: await getTransactionsDetails(req, res, filter),
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
+    }
   } catch (error) {
     res.status(500).json({
       error: error.message,

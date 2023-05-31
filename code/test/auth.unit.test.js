@@ -38,7 +38,7 @@ describe("register", () => {
     };
   });
 
-  test("Registration - Done", async () => {
+  test("Registration - Success", async () => {
     jest.spyOn(User, "findOne").mockResolvedValue(false);
 
     await authMethods.register(mockRequest, mockResponse);
@@ -105,7 +105,7 @@ describe("registerAdmin", () => {
     };
   });
 
-  test("Registration Admin - Done", async () => {
+  test("Registration Admin - Success", async () => {
     jest.spyOn(User, "findOne").mockResolvedValue(null);
 
     await authMethods.registerAdmin(mockRequest, mockResponse);
@@ -165,7 +165,7 @@ describe("login", () => {
     };
   });
 
-  test("Login - Done", async () => {
+  test("Login - Success", async () => {
     await authMethods.login(mockRequest, mockResponse);
 
     expect(mockResponse.status).toHaveBeenCalledWith(200);
@@ -237,7 +237,7 @@ describe("logout", () => {
     };
   });
 
-  test("Logout - Done", async () => {
+  test("Logout - Success", async () => {
     await authMethods.logout(mockRequest, mockResponse);
 
     expect(mockResponse.status).toHaveBeenCalledWith(200);

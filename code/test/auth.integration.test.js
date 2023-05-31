@@ -29,7 +29,7 @@ describe("register", () => {
   beforeEach(async () => {
     await User.deleteMany({});
   });
-  test("Registration - Done", (done) => {
+  test("Registration - Success", (done) => {
     const user = {
       username: "Test1",
       email: "test1@test1.com",
@@ -108,7 +108,7 @@ describe("registerAdmin", () => {
       password: "TestAdmin",
     };
   });
-  test("Register Admin - Done", async () => {
+  test("Register Admin - Success", async () => {
     const response = await request(app).post("/api/admin").send(user);
 
     expect(response.status).toBe(200);
@@ -166,7 +166,7 @@ describe("login", () => {
     };
   });
 
-  test("Login - Done", (done) => {
+  test("Login - Success", (done) => {
     User.create(user).then(() => {
       request(app)
         .post("/api/login")
@@ -283,7 +283,7 @@ describe("logout", () => {
     await User.create(user);
   });
 
-  test("Logout - Done", (done) => {
+  test("Logout - Success", (done) => {
     request(app)
       .get("/api/logout")
       .set("Cookie", [

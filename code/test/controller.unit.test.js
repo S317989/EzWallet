@@ -3,8 +3,10 @@ import { app } from "../app";
 import { categories, transactions } from "../models/model";
 import * as verifyAuth from "../controllers/utils.js";
 import * as controllerMethods from "../controllers/controller.js";
+import { User } from "../models/User";
 
 jest.mock("../models/model.js");
+jest.mock("../models/User.js");
 
 beforeAll(() => {
   categories.find.mockClear();
@@ -23,7 +25,7 @@ describe("createCategory", () => {
     });
   });
 
-  test("CreateCategory - Done", async () => {
+  test("CreateCategory - Success", async () => {
     const categoryData = {
       type: "Cat1",
       color: "Black",
@@ -90,7 +92,7 @@ describe("createCategory", () => {
 
     expect(mockResponse.status).toHaveBeenCalledWith(400);
     expect(mockResponse.json).toHaveBeenCalledWith({
-      error: expect.stringMatching("Missing or empty parameters"),
+      error: expect.stringMatching(/Missing or empty parameters/),
     });
   });
 
@@ -110,7 +112,7 @@ describe("createCategory", () => {
 
     expect(mockResponse.status).toHaveBeenCalledWith(400);
     expect(mockResponse.json).toHaveBeenCalledWith({
-      error: expect.stringMatching("Category already exists"),
+      error: expect.stringMatching(/Category already exists/),
     });
   });
 });
@@ -168,8 +170,8 @@ describe("updateCategory", () => {
 
     expect(mockResponse.status).toHaveBeenCalledWith(400);
     expect(mockResponse.json).toHaveBeenCalledWith({
-      error: expect.stringMatching("Missing or empty parameters"),
-      refreshedTokenMessage: expect.stringMatching("refreshedTokenMessage"),
+      error: expect.stringMatching(/Missing or empty parameters/),
+      refreshedTokenMessage: expect.stringMatching(/refreshedTokenMessage/),
     });
   });
 
@@ -196,7 +198,7 @@ describe("updateCategory", () => {
       error: expect.stringMatching(
         `Category ${oldCategoryType} doesn't exists`
       ),
-      refreshedTokenMessage: expect.stringMatching("refreshedTokenMessage"),
+      refreshedTokenMessage: expect.stringMatching(/refreshedTokenMessage/),
     });
   });
 
@@ -225,11 +227,11 @@ describe("updateCategory", () => {
       error: expect.stringMatching(
         `Category ${categoryData.type} already exists`
       ),
-      refreshedTokenMessage: expect.stringMatching("refreshedTokenMessage"),
+      refreshedTokenMessage: expect.stringMatching(/refreshedTokenMessage/),
     });
   });
 
-  test("Update Category - Done", async () => {
+  test("Update Category - Success", async () => {
     const categoryData = {
       type: "NewCat",
       color: "NewColor",
@@ -267,150 +269,501 @@ describe("updateCategory", () => {
 });
 
 describe("deleteCategory", () => {
-  test("Should delete a category", async () => {});
+  beforeEach(async () => {
+    await categories.deleteMany({});
 
-  // passed
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      user: { role: "Admin" },
+    });
+  });
 
-  test("Should return 404 if category does not exist", async () => {
-    const categoryId = "nonexistent-category-id";
+  test("Delete category - Success - Only One Category", async () => {
+    const mockRequest = {
+      body: {
+        types: ["Cat1"],
+      },
+    };
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+
+    jest
+      .spyOn(categories, "find")
+      .mockResolvedValueOnce([{ type: "Cat1" }, { type: "Cat2" }]);
+
+    jest.spyOn(categories, "find").mockResolvedValueOnce([{ type: "Cat1" }]);
+
+    jest.spyOn(categories, "countDocuments").mockResolvedValueOnce(2);
+
+    jest.spyOn(categories, "deleteMany").mockResolvedValue();
+
+    jest.spyOn(transactions, "updateMany").mockResolvedValue();
+
+    await controllerMethods.deleteCategory(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: {
+        message: "Categories Cat1 successfully deleted!",
+        count: expect.any(Number),
+      },
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
+  });
+
+  test("Delete category - Success - All Category, One left", async () => {
+    const mockRequest = {
+      body: {
+        types: ["Cat1", "Cat2"],
+      },
+    };
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+
+    jest
+      .spyOn(categories, "find")
+      .mockResolvedValueOnce([{ type: "Cat1" }, { type: "Cat2" }]);
+
+    jest
+      .spyOn(categories, "find")
+      .mockResolvedValueOnce([{ type: "Cat1" }, { type: "Cat2" }]);
+
+    jest.spyOn(categories, "countDocuments").mockResolvedValueOnce(2);
+
+    jest.spyOn(categories, "deleteMany").mockResolvedValue();
+
+    jest.spyOn(transactions, "updateMany").mockResolvedValue();
+
+    await controllerMethods.deleteCategory(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: {
+        message: "Categories Cat2 successfully deleted!",
+        count: expect.any(Number),
+      },
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
+  });
+
+  test("Delete category - Unauthorized", async () => {
+    const mockRequest = {
+      body: {
+        types: ["Cat1", "Cat2"],
+      },
+    };
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: false,
+      user: { role: "Admin" },
+    });
+
+    await controllerMethods.deleteCategory(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(401);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/Unauthorized/),
+    });
+  });
+
+  test("Delete category - Missing or Empty parameters", async () => {
+    const mockRequest = {
+      body: ["Cat1", "Cat2"],
+    };
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+
+    await controllerMethods.deleteCategory(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/Missing or empty parameters/),
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
+  });
+
+  test("Delete category - Empty string in type array", async () => {
+    const mockRequest = {
+      body: {
+        types: ["Cat1", ""],
+      },
+    };
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+
+    await controllerMethods.deleteCategory(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/Empty string in types array/),
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
+  });
+
+  test("Delete category - No categories can be deleted", async () => {
+    const mockRequest = {
+      body: {
+        types: ["Cat1", "Cat2"],
+      },
+    };
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+
+    jest.spyOn(categories, "find").mockResolvedValueOnce([{ type: "Cat1" }]);
+
+    await controllerMethods.deleteCategory(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/No categories can be deleted/),
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
+  });
+
+  test("Delete category - Category not found", async () => {
+    const mockRequest = {
+      body: {
+        types: ["Cat1", "Cat2"],
+      },
+    };
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+
+    jest.spyOn(categories, "find").mockResolvedValue(false);
+
+    await controllerMethods.deleteCategory(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(
+        `Categories ${mockRequest.body.types} don't exist`
+      ),
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
   });
 });
 
 describe("getCategories", () => {
-  test("Should return all categories", async () => {
-    const mockCategories = [
+  beforeEach(() => {
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      user: { role: "Simple" },
+    });
+  });
+
+  test("GetCategories - Success", async () => {
+    const mockedCategories = [
       { type: "category1", color: "red" },
       { type: "category2", color: "blue" },
       { type: "category3", color: "green" },
     ];
 
-    // Configure the template function to return the simulated categories
-    categories.find.mockResolvedValue(mockCategories);
+    const mockRequest = {};
 
-    // Make a simulated GET request to the endpoint corresponding to the category retrieval
-    const response = await request(app).get("/api/categories");
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
 
-    // verify if the response is correct
+    jest.spyOn(categories, "find").mockResolvedValue(mockedCategories);
 
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual(mockCategories);
+    await controllerMethods.getCategories(mockRequest, mockResponse);
 
-    //Check if the model function has been called
-    expect(categories.find).toHaveBeenCalled();
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: mockedCategories,
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
   });
 
-  test("Should return an empty array if no categories exist", async () => {
-    // Configure the template function to return an empty array of simulated categories
-    categories.find.mockResolvedValue([]);
+  test("GetCategories - Empty List", async () => {
+    const mockedCategories = [];
 
-    // Make a simulated GET request to the endpoint corresponding to the category retrieval
-    const response = await request(app).get("/api/categories");
+    const mockRequest = {};
 
-    // verify if the response is correct
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual([]);
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
 
-    // Check if the model function has been called
-    expect(categories.find).toHaveBeenCalled();
+    jest.spyOn(categories, "find").mockResolvedValue(mockedCategories);
+
+    await controllerMethods.getCategories(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: mockedCategories,
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
+  });
+
+  test("GetCategories - Unauthorized", async () => {
+    const mockRequest = {};
+
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: false,
+      user: { role: "Simple" },
+    });
+
+    await controllerMethods.getCategories(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(401);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/Unauthorized/),
+    });
   });
 });
 
 describe("createTransaction", () => {
-  test("Should create a new transaction", async () => {
-    const mockTransaction = {
-      id: "12345",
+  let mockedTransaction, mockRequest, mockResponse;
+
+  beforeEach(() => {
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      user: { role: "Simple" },
+    });
+
+    mockedTransaction = {
+      username: "Test1",
       amount: 100,
-      category: "food",
-      date: "2023-05-17",
+      type: "food",
+      date: "2023/01/01",
     };
 
-    const mockRequestBody = {
-      amount: 100,
-      category: "food",
-      date: "2023-05-17",
+    mockRequest = {
+      body: mockedTransaction,
+      params: {
+        username: "Test1",
+      },
     };
 
-    // Configure the model function to return the saved simulated transaction
-    transactions.prototype.save.mockResolvedValue(mockTransaction);
-
-    // Make a simulated POST request to the endpoint corresponding to the creation of a transaction
-    const response = await request(app)
-      .post("/api/transactions")
-      .send(mockRequestBody);
-
-    // verify if the response is correct
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual(mockTransaction);
-
-    // Check if the model function has been called with the right parameters
-    expect(transactions.prototype.save).toHaveBeenCalledWith(mockRequestBody);
+    mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
   });
 
-  test("Should return an error if required fields are missing", async () => {
-    const mockRequestBody = {
-      amount: 100,
-      // category is missing
-      date: "2023-05-17",
-    };
+  test("CreateTransaction - Success", async () => {
+    // Mock isNan and parseFloat on amount param
+    jest.spyOn(global, "isNaN").mockReturnValueOnce(false);
+    jest.spyOn(global, "parseFloat").mockReturnValueOnce(true);
 
-    // Make a simulated POST request to the endpoint corresponding to the creation of a transaction
-    const response = await request(app)
-      .post("/api/transactions")
-      .send(mockRequestBody);
+    // Mock findOne methods
+    jest.spyOn(categories, "findOne").mockResolvedValue(true);
+    jest.spyOn(User, "findOne").mockResolvedValue(true);
 
-    // verify if the response is an error of validation ( status 400 , error message sent )
-    expect(response.status).toBe(400);
-    expect(response.body.error).toBe("Missing required fields");
+    jest
+      .spyOn(transactions.prototype, "save")
+      .mockResolvedValue(mockedTransaction);
 
-    // Vérifiez si la fonction du modèle n'a pas été appelée
-    expect(transactions.prototype.save).not.toHaveBeenCalled();
+    await controllerMethods.createTransaction(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: mockedTransaction,
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
+  });
+
+  test("CreateTransaction - Unauthorized", async () => {
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: false,
+      user: { role: "Simple" },
+    });
+
+    await controllerMethods.createTransaction(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(401);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/Unauthorized/),
+    });
+  });
+
+  test("CreateTransaction - Missing or empty parameters", async () => {
+    delete mockedTransaction.username;
+
+    await controllerMethods.createTransaction(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/Missing or empty parameters/),
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
+  });
+
+  test("CreateTransaction - Amount is not a number", async () => {
+    mockedTransaction.amount = "NoNumber";
+
+    await controllerMethods.createTransaction(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/Amount is not a number/),
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
+  });
+
+  test("CreateTransaction - Username not equivalent", async () => {
+    mockedTransaction.username = "Test2";
+
+    await controllerMethods.createTransaction(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/Username values are not equivalent/),
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
+  });
+
+  test("CreateTransaction - Username (or Category) doesn't exists", async () => {
+    jest.spyOn(User, "findOne").mockResolvedValue(false);
+
+    await controllerMethods.createTransaction(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(
+        `Username ${mockedTransaction.username} or category ${mockedTransaction.type} doesn't exist`
+      ),
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
   });
 });
 
 describe("getAllTransactions", () => {
-  test("Should retrieve all transactions", async () => {
+  let mockRequest, mockResponse;
+
+  beforeEach(() => {
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      user: { role: "Admin" },
+    });
+
+    mockRequest = {};
+    mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+  });
+
+  test("GetAllTransactions - Success", async () => {
     const mockTransactions = [
       { id: "1", amount: 100, category: "1", date: "D1" },
       { id: "2", amount: 200, category: "2", date: "D2" },
       { id: "3", amount: 50, category: "3", date: "D3" },
     ];
 
-    // Configure the model function to return simulated transactions
-    transactions.find.mockResolvedValue(mockTransactions);
+    jest
+      .spyOn(mockTransactions, "unshift")
+      .mockReturnValueOnce(mockTransactions);
 
-    // Make a simulated GET request to the endpoint corresponding to the recovery of all transactions
-    const response = await request(app).get("/api/transactions");
+    jest.spyOn(transactions, "aggregate").mockReturnValueOnce(mockTransactions);
 
-    // verify if the response is correct(status HTTP 200, transactions retrieved)
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual(mockTransactions);
+    jest.spyOn(mockTransactions, "map").mockReturnValueOnce(mockTransactions);
 
-    // Check if the model function has been called without parameters
-    expect(transactions.find).toHaveBeenCalledWith({});
+    await controllerMethods.getAllTransactions(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: mockTransactions,
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
   });
 
-  test("Should return an empty array if no transactions found", async () => {
-    const mockEmptyTransactions = [];
+  test("GetAllTransactions - Empty list", async () => {
+    const mockTransactions = [];
 
-    // Configure the template function to return an empty array
-    transactions.find.mockResolvedValue(mockEmptyTransactions);
+    jest
+      .spyOn(mockTransactions, "unshift")
+      .mockReturnValueOnce(mockTransactions);
 
-    // Make a simulated GET request to the endpoint corresponding to the recovery of all transactions
-    const response = await request(app).get("/api/transactions");
+    jest.spyOn(transactions, "aggregate").mockReturnValueOnce(mockTransactions);
 
-    // verify if the response is correct (status HTTP 200, empty array returned)
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual([]);
+    jest.spyOn(mockTransactions, "map").mockReturnValueOnce(mockTransactions);
 
-    // Check if the model function has been called without parameters
-    expect(transactions.find).toHaveBeenCalledWith({});
+    await controllerMethods.getAllTransactions(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: mockTransactions,
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
+  });
+
+  test("GetAllTransactions - Unauthorized", async () => {
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: false,
+      user: { role: "Admin" },
+    });
+
+    await controllerMethods.getAllTransactions(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(401);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/Unauthorized/),
+    });
   });
 });
 
 describe("getTransactionsByUser", () => {
-  test("Should retrieve transactions by user ID", async () => {
-    const userId = "123456";
-    const mockTransactions = [
+  let mockRequest, mockResponse, mockTransactions, user;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    await User.deleteMany({});
+
+    user = {
+      username: "Test1",
+      password: "Test1",
+      email: "test1@test1.com",
+    };
+
+    await User.create(user);
+
+    mockRequest = {
+      params: { username: "Test1" },
+    };
+
+    mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+
+    mockTransactions = [
       {
         id: "1",
         amount: 100,
@@ -418,35 +771,79 @@ describe("getTransactionsByUser", () => {
         date: "2023-05-17",
         userId: "123456",
       },
-      {
-        id: "2",
-        amount: 200,
-        category: "transportation",
-        date: "2023-05-18",
-        userId: "123456",
-      },
-      {
-        id: "3",
-        amount: 50,
-        category: "shopping",
-        date: "2023-05-19",
-        userId: "123456",
-      },
     ];
 
-    // Configure the model function to return simulated transactions
-    transactions.find.mockResolvedValue(mockTransactions);
+    jest.spyOn(User, "findOne").mockResolvedValue(user);
 
-    // Make a simulated GET request to the endpoint corresponding to the retrieval of transactions by user ID
-    const response = await request(app).get(`/api/transactions/user/${userId}`);
-
-    // Check if the response is correct (HTTP status 200, transactions returned)
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual(mockTransactions);
-
-    // Check if the template function has been called with the user ID as a query parameter
-    expect(transactions.find).toHaveBeenCalledWith({ userId });
+    jest.spyOn(mockTransactions, "map").mockReturnValue(mockTransactions);
   });
+
+  describe("Admin User", () => {
+    beforeEach(() => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+        flag: true,
+        user: { role: "Admin" },
+      });
+
+      mockRequest.url = `localhost:3000/api/transactions/users/${mockRequest.params.username}`;
+    });
+
+    test("GetTransactionByUser - Admin - Success", async () => {
+      jest
+        .spyOn(transactions, "aggregate")
+        .mockReturnValueOnce(mockTransactions);
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: mockTransactions,
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUser - Admin - Unauthorized", async () => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
+        flag: false,
+        user: { role: "Admin" },
+      });
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Unauthorized/),
+      });
+    });
+
+    test("GetTransactionByUser - Admin - User not found", async () => {
+      jest.spyOn(User, "findOne").mockResolvedValueOnce(false);
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/User not found/),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUser - Admin - No transactions", async () => {
+      mockTransactions = [];
+
+      jest.spyOn(transactions, "aggregate").mockReturnValueOnce([]);
+
+      jest.spyOn(mockTransactions, "map").mockReturnValueOnce([]);
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: [],
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+  });
+  describe("Regular User", () => {});
 
   test("Should return an empty array if no transactions found for the user", async () => {
     const userId = "123456";
