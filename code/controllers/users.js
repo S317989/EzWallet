@@ -406,9 +406,9 @@ export const addToGroup = async (req, res) => {
  */
 export const removeFromGroup = async (req, res) => {
   try {
-    if (!req.body.name || !req.body.members)
+    if (!req.body.members)
       return res.status(400).json({
-        error: "No group name or members provided",
+        error: "No members provided",
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
@@ -420,16 +420,16 @@ export const removeFromGroup = async (req, res) => {
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
-    if (req.params.name !== req.body.name)
+    let removingEmails = req.body.members;
+
+    if (!removingEmails.every((email) => validateEmail(email)))
       return res.status(400).json({
-        error: "Group name does not match",
+        error: "Invalid email format",
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
-    let remainingEmails = req.body.members;
-
     if (
-      !verifyAuth(req, res, { authType: "Group", emails: remainingEmails }).flag
+      !verifyAuth(req, res, { authType: "Group", emails: removingEmails }).flag
     )
       return res.status(401).json({ error: "Unauthorized" });
 
@@ -446,27 +446,20 @@ export const removeFromGroup = async (req, res) => {
 
     let user;
 
-    if (!remainingEmails.every((email) => validateEmail(email)))
-      return res.status(400).json({
-        error: "Invalid email format",
-        refreshedTokenMessage: res.locals.refreshedTokenMessage,
-      });
-
-    // Verifica se tutte le email corrispondono a utenti esistenti nel database
     const existingUsers = await User.find({
-      email: { $in: remainingEmails },
+      email: { $in: removingEmails },
     });
 
-    if (existingUsers.length !== remainingEmails.length) {
+    // return error if all the emails doesn't exist
+    if (!existingUsers.length)
       return res.status(400).json({
         error: "Invalid or non-existing emails",
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
-    }
 
     if (
       searchedGroup.members.every(
-        (user) => !remainingEmails.includes(user.email)
+        (user) => !removingEmails.includes(user.email)
       )
     )
       return res.status(400).json({
@@ -477,38 +470,20 @@ export const removeFromGroup = async (req, res) => {
     // Add into notInGroup the emails that are not in the group but are into remainingEmails
     const oldEmails = oldMemberList.map((member) => member.email);
 
-    remainingEmails.forEach((email) => {
-      if (!oldEmails.includes(email)) {
-        notInGroup.push(email);
-      }
-    });
-
-    // Delete the emails from notInGroup from remainingEmails
-    remainingEmails = remainingEmails.filter(
-      (email) => !notInGroup.includes(email)
-    );
-
-    // If no elements will be present, keep the first one in DB
-    if (oldMemberList.length - remainingEmails.length === 0) {
-      remainingEmails = remainingEmails.filter(
-        (email) => email === oldMemberList[0].email
-      );
-    }
-
-    // From the emails that need to be present, retrieve the other emails
-    let removingEmails = oldEmails.filter(
-      (email) => !remainingEmails.includes(email)
-    );
-
     for (let email of removingEmails) {
       user = await User.findOne({ email });
 
       if (!user) usersNotFound.push(email);
 
+      if (user && !oldEmails.includes(email)) notInGroup.push(email);
+
       searchedGroup.members = searchedGroup.members.filter(
         (member) => !removingEmails.includes(member.email)
       );
     }
+
+    if (searchedGroup.members.length === 0)
+      searchedGroup.members.push(oldMemberList[0]);
 
     await searchedGroup.save();
 
