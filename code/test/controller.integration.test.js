@@ -233,7 +233,7 @@ describe("updateCategory", () => {
     }
 
     request(app)
-      .patch("api/categories/:type".replace(":type", standardValue.type))
+      .patch("/api/categories/:type".replace(":type", standardValue.type))
       .send(newValue)
       .set("Cookie", [
         `accessToken=${accessToken}`,
@@ -258,7 +258,7 @@ describe("updateCategory", () => {
     }
 
     request(app)
-      .patch("api/categories/:type".replace(":type", standardValue.type))
+      .patch("/api/categories/:type".replace(":type", standardValue.type))
       .send(newValue)
       .set("Cookie", [
         `accessToken=${accessToken}`,
@@ -280,7 +280,7 @@ describe("updateCategory", () => {
     }
 
     request(app)
-      .patch("api/categories/:type".replace(":type", standardValue.type))
+      .patch("/api/categories/:type".replace(":type", standardValue.type))
       .send(newValue)
       .set("Cookie", [
         `accessToken=${accessToken}`,
@@ -302,7 +302,7 @@ describe("updateCategory", () => {
     }
 
     request(app)
-      .patch("api/categories/:type".replace(":type","Type"))
+      .patch("/api/categories/:type".replace(":type","Type"))
       .send(newValue)
       .set("Cookie", [
         `accessToken=${accessToken}`,
@@ -325,7 +325,7 @@ describe("updateCategory", () => {
 
     categories.create(newValue).then(()=>{
       request(app)
-        .patch("api/categories/:type".replace(":type",standardValue.type))
+        .patch("/api/categories/:type".replace(":type",standardValue.type))
         .send(newValue)
         .set("Cookie", [
           `accessToken=${accessToken}`,
@@ -348,7 +348,7 @@ describe("updateCategory", () => {
     }
 
     request(app)
-      .patch("api/categories/:type".replace(":type",standardValue.type))
+      .patch("/api/categories/:type".replace(":type",standardValue.type))
       .send(newValue)
       .then((response) => {
         expect(response.status).toBe(401);
@@ -426,7 +426,7 @@ describe("deleteCategory", () => {
     const categoryToBeDeleted =["NewType1"];
 
     request(app)
-      .delete("api/categories")
+      .delete("/api/categories")
       .send({
         types: categoryToBeDeleted
       })
@@ -450,7 +450,7 @@ describe("deleteCategory", () => {
     const categoryToBeDeleted =["NewType1", "NewType2", "NewType3"];
 
     request(app)
-      .delete("api/categories")
+      .delete("/api/categories")
       .send({
         types: categoryToBeDeleted
       })
@@ -476,7 +476,7 @@ describe("deleteCategory", () => {
     categories.deleteMany(category2, category3, category4, category5)
     .then(() => {
       request(app)
-        .delete("api/categories")
+        .delete("/api/categories")
         .send({
           types: categoryToBeDeleted
         })
@@ -488,7 +488,7 @@ describe("deleteCategory", () => {
           expect(response.status).toBe(400);
           expect(response.body).toHaveProperty("error");
           expect(response.body).toEqual({
-            error: expect.stringContaining(/No categories can be deleted/)
+            error: expect().stringContaining(/No categories can be deleted/)
           });
           done();
         })
@@ -501,7 +501,7 @@ describe("deleteCategory", () => {
     const categoryToBeDeleted =["", "NewType2", "NewType3"];
 
     request(app)
-      .delete("api/categories")
+      .delete("/api/categories")
       .send({
         types: categoryToBeDeleted
       })
@@ -513,7 +513,7 @@ describe("deleteCategory", () => {
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
         expect(response.body).toEqual({
-          error: expect.stringContaining(/Empty string/)
+          error: expect().stringContaining(/Empty string/)
         });
         done();
       })
@@ -524,7 +524,7 @@ describe("deleteCategory", () => {
     const categoryToBeDeleted =["Type", "NewType2", "NewType3"];
 
     request(app)
-      .delete("api/categories")
+      .delete("/api/categories")
       .send(categoryToBeDeleted)
       .set("Cookie", [
         `accessToken=${accessToken}`,
@@ -534,7 +534,7 @@ describe("deleteCategory", () => {
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
         expect(response.body).toEqual({
-          error: expect.stringContaining(/don't exist/)
+          error: expect().stringContaining(/don't exist/)
         });
         done();
       })
@@ -545,7 +545,7 @@ describe("deleteCategory", () => {
     const categoryToBeDeleted =["Type", "NewType2", "NewType3"];
 
     request(app)
-      .delete("api/categories")
+      .delete("/api/categories")
       .send()
       .set("Cookie", [
         `accessToken=${accessToken}`,
@@ -555,7 +555,7 @@ describe("deleteCategory", () => {
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
         expect(response.body).toEqual({
-          error: expect.stringContaining(/don't exist/)
+          error: expect().stringContaining(/don't exist/)
         });
         done();
       })
@@ -566,7 +566,7 @@ describe("deleteCategory", () => {
     const categoryToBeDeleted =["NewType1", "NewType2", "NewType3"];
 
     request(app)
-      .get("api/categories")
+      .get("/api/categories")
       .send({
         types: categoryToBeDeleted
       })
@@ -574,7 +574,7 @@ describe("deleteCategory", () => {
         expect(response.status).toBe(401);
         expect(response.body).toHaveProperty("error");
         expect(response.body).toEqual({
-          error: expect.stringContaining(/don't exist/)
+          error: expect().stringContaining(/don't exist/)
         });
         done();
       })
@@ -585,7 +585,7 @@ describe("deleteCategory", () => {
     const categoryToBeDeleted =["NewType1", "NewType2", "NewType3"];
 
     request(app)
-      .get("api/categories")
+      .get("/api/categories")
       .send({
         types: categoryToBeDeleted
       }).set("Cookie", [
@@ -596,7 +596,7 @@ describe("deleteCategory", () => {
         expect(response.status).toBe(401);
         expect(response.body).toHaveProperty("error");
         expect(response.body).toEqual({
-          error: expect.stringContaining(/don't exist/)
+          error: expect().stringContaining(/don't exist/)
         });
         done();
       })
@@ -605,56 +605,92 @@ describe("deleteCategory", () => {
 });
 
 describe("getCategories", () => {
+  let user, accessToken, refreshToken;
+  let category1, category2, category3, category4, category5
 
   beforeAll(async () => {
-    await categories.deleteMany({});
 
-    const category1 ={
+    user = {
+      username: "TestAdmin",
+      email: "admin@test.com",
+      password: "TestAdmin",
+    };
+
+    accessToken = jwt.sign(
+      {
+       username: user.username,
+       email: user.email,
+       password: user.password,
+       role: "Admin",
+      },
+      "EZWALLET",
+      {
+       expiresIn: "1h",
+      }
+    );
+
+    refreshToken = jwt.sign(
+      {
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: "Admin",
+      },
+      "EZWALLET",
+      { expiresIn: "7d" }
+    );
+
+    await categories.deleteMany({});
+    category1 ={
       type:"NewType1",
       color: "NewColor1",
     }
-    const category2 ={
+    category2 ={
       type:"NewType2",
       color: "NewColor2",
     }
-    const category3 ={
+    category3 ={
       type:"NewType3",
       color: "NewColor3",
     }
-    const category4 ={
+    category4 ={
       type:"NewType4",
       color: "NewColor4",
     }
-    const category5 ={
+    category5 ={
       type:"NewType5",
       color: "NewColor5",
     }
-    
     await categories.insertMany([category1, category2, category3, category4, category5]);
+
   });
-  test("Success !", (done) => {
+  test("Get Categories - Success!", (done) => {
     request(app)
-      .get("api/categories")
+      .get("/api/categories")
       .send()
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
       .then((response) => {
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("data");
         expect(response.body.data).toBeInstanceOf(Array);
-        expect(response.body.data[0]).toBeInstanceOf(categories);
+        expect(response.body.data[0]).toHaveProperty("type");
+        expect(response.body.data[0]).toHaveProperty("color");
         done();
       })
       .catch((err) => done(err));
   });
 
-  test("User not Authenticated", (done) => {
+  test("Get Categories - User not Authenticated", (done) => {
     request(app)
-      .get("api/categories/")
+      .get("/api/categories/")
       .send()
       .then((response) => {
         expect(response.status).toBe(401);
         expect(response.body).toHaveProperty("error");
-        expect(response.body.data).toHaveProperty("message");
-        expect(response.body.error).toContain("unauthorized");
+        expect(response.body.error).toMatch(/Unauthorized/);
         done();
       })
       .catch((err) => done(err));
