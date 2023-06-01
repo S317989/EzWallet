@@ -1,6 +1,11 @@
 import request from "supertest";
 import { app } from "../app";
 import { User } from "../models/User.js";
+import { categories, transactions } from "../models/model.js";
+import { verifyAuth } from "../controllers/utils";
+import { getUser, getusers, createGroup } from "../controllers/users";
+import { Group } from "../models/User.js";
+import {user} from "../models/User"
 
 /**
  * In order to correctly mock the calls to external modules it is necessary to mock them using the following line.
