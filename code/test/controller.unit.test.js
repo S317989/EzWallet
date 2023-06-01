@@ -3,7 +3,7 @@ import { app } from "../app";
 import { categories, transactions } from "../models/model";
 import * as verifyAuth from "../controllers/utils.js";
 import * as controllerMethods from "../controllers/controller.js";
-import { User } from "../models/User";
+import { Group, User } from "../models/User";
 
 jest.mock("../models/model.js");
 jest.mock("../models/User.js");
@@ -783,9 +783,9 @@ describe("getTransactionsByUser", () => {
         {
           id: "1",
           amount: 100,
-          category: "food",
+          type: "food",
           date: "2023-05-17",
-          userId: "123456",
+          username: "123456",
         },
       ];
 
@@ -1176,177 +1176,830 @@ describe("getTransactionsByUser", () => {
 });
 
 describe("getTransactionsByUserByCategory", () => {
-  test("Should retrieve transactions by user ID and category", async () => {
-    const userId = "123456";
-    const category = "food";
-    const mockTransactions = [
-      {
-        id: "1",
-        amount: 100,
-        category: "food",
-        date: "2023-05-17",
-        userId: "123456",
+  let mockRequest, mockResponse, mockTransaction, user;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    await User.deleteMany({});
+
+    user = {
+      username: "Test1",
+      password: "Test1",
+      email: "test1@test1.com",
+      refreshToken: "refreshToken",
+    };
+
+    await User.create(user);
+
+    mockRequest = {
+      params: { username: user.username, category: "food" },
+      cookies: {
+        refreshToken: "refreshToken",
       },
-      {
-        id: "2",
-        amount: 200,
-        category: "food",
-        date: "2023-05-18",
-        userId: "123456",
+    };
+
+    mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: {
+        refreshedTokenMessage: "refreshedTokenMessage",
       },
-    ];
+    };
 
-    // Configure the model function to return simulated transactions
-    transactions.find.mockResolvedValue(mockTransactions);
-
-    // Make a simulated GET request to the corresponding endpoint to retrieve transactions by user ID and category
-    const response = await request(app).get(
-      `/api/transactions/user/${userId}/category/${category}`
-    );
-
-    // Check if the response is correct (HTTP status 200, transactions returned)
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual(mockTransactions);
-
-    // Check if the template function was called with the user ID and category as query parameters
-    expect(transactions.find).toHaveBeenCalledWith({ userId, category });
+    jest.spyOn(User, "findOne").mockResolvedValue(user);
   });
 
-  test("Should return an empty array if no transactions found for the user and category", async () => {
-    const userId = "123456";
-    const category = "food";
-    const mockEmptyTransactions = [];
+  describe("Admin", () => {
+    beforeEach(() => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+        flag: true,
+        user: { role: "Admin" },
+      });
 
-    // Configure the template function to return an empty table
-    transactions.find.mockResolvedValue(mockEmptyTransactions);
+      mockTransaction = [
+        {
+          //id: "1",
+          amount: 100,
+          color: "red",
+          type: "food",
+          date: "2023-05-17",
+          username: "TestUser",
+        },
+      ];
 
-    // Make a simulated GET request to the corresponding endpoint to retrieve transactions by user ID and category
-    const response = await request(app).get(
-      `/api/transactions/user/${userId}/category/${category}`
-    );
+      jest.spyOn(categories, "findOne").mockResolvedValue(mockTransaction);
 
-    // Check if the response is correct (HTTP status 200, empty table returned)
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual([]);
+      jest.spyOn(mockTransaction, "map").mockReturnValue(mockTransaction);
 
-    // Check if the template function was called with the user ID and category as query parameters
-    expect(transactions.find).toHaveBeenCalledWith({ userId, category });
+      mockRequest.url = `localhost:3000/api/transactions/users/${mockRequest.params.username}/category/${mockTransaction[0].category}`;
+    });
+
+    test("GetTransactionByUserByCategory - Admin - Success - Filled list", async () => {
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter(
+            (transaction) => transaction.type === mockRequest.params.category
+          )
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByUserByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: expect.arrayContaining(mockTransaction),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUserByCategory - Admin - Success - Empty list", async () => {
+      mockRequest.params.category = "test";
+
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter(
+            (transaction) => transaction.type === mockRequest.params.category
+          )
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByUserByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: [],
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUserByCategory - Admin - Unauthorized", async () => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
+        flag: false,
+        user: { role: "Admin" },
+      });
+
+      await controllerMethods.getTransactionsByUserByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Unauthorized/),
+      });
+    });
+
+    test("GetTransactionByUserByCategory - Admin - User not found", async () => {
+      jest.spyOn(User, "findOne").mockResolvedValueOnce(false);
+
+      await controllerMethods.getTransactionsByUserByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/User not found/),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUserByCategory - Admin - Category not found", async () => {
+      jest.spyOn(categories, "findOne").mockResolvedValueOnce(false);
+
+      await controllerMethods.getTransactionsByUserByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Category not found/),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+  });
+
+  describe("User", () => {
+    beforeEach(() => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+        flag: true,
+        user: { role: "User" },
+      });
+
+      mockTransaction = [
+        {
+          //id: "1",
+          amount: 100,
+          color: "red",
+          type: "food",
+          date: "2023-05-17",
+          username: "TestUser",
+        },
+      ];
+
+      jest.spyOn(categories, "findOne").mockResolvedValue(mockTransaction);
+
+      jest.spyOn(mockTransaction, "map").mockReturnValue(mockTransaction);
+
+      mockRequest.url = `localhost:3000/api/users/${mockRequest.params.username}/transactions/category/${mockTransaction[0].category}`;
+    });
+
+    test("GetTransactionByUserByCategory - User - Success - Filled list", async () => {
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter(
+            (transaction) => transaction.type === mockRequest.params.category
+          )
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByUserByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: expect.arrayContaining(mockTransaction),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUserByCategory - User - Success - Empty list", async () => {
+      mockRequest.params.category = "test";
+
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter(
+            (transaction) => transaction.type === mockRequest.params.category
+          )
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByUserByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: [],
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUserByCategory - User - Unauthorized", async () => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
+        flag: false,
+        user: { role: "User" },
+      });
+
+      await controllerMethods.getTransactionsByUserByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Unauthorized/),
+      });
+    });
+
+    test("GetTransactionByUserByCategory - User - User not found", async () => {
+      jest.spyOn(User, "findOne").mockResolvedValueOnce(false);
+
+      await controllerMethods.getTransactionsByUserByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/User not found/),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUserByCategory - User - Category not found", async () => {
+      jest.spyOn(categories, "findOne").mockResolvedValueOnce(false);
+
+      await controllerMethods.getTransactionsByUserByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Category not found/),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
   });
 });
 
 describe("getTransactionsByGroup", () => {
-  test("Should retrieve transactions by group ID", async () => {
-    const groupId = "123456";
-    const mockTransactions = [
-      {
-        id: "1",
-        amount: 100,
-        category: "food",
-        date: "2023-05-17",
-        groupId: "123456",
+  let mockRequest, mockResponse, mockTransaction, group;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    await User.deleteMany({});
+
+    group = {
+      name: "GroupTest",
+      members: ["TestUser1", "TestUser2"],
+    };
+
+    await Group.create(group);
+
+    mockRequest = {
+      params: { name: "GroupTest" },
+      cookies: {
+        refreshToken: "refreshToken",
       },
-      {
-        id: "2",
-        amount: 200,
-        category: "rent",
-        date: "2023-05-18",
-        groupId: "123456",
+    };
+
+    mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: {
+        refreshedTokenMessage: "refreshedTokenMessage",
       },
-    ];
+    };
 
-    // Configure the model function to return simulated transactions
-    transactions.find.mockResolvedValue(mockTransactions);
-
-    // Make a simulated GET request to the endpoint corresponding to the retrieval of transactions by group ID
-    const response = await request(app).get(
-      `/api/transactions/group/${groupId}`
-    );
-
-    // Check if the response is correct (HTTP status 200, transactions returned)
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual(mockTransactions);
-
-    // Check if the template function has been called with the group ID as a query parameter
-    expect(transactions.find).toHaveBeenCalledWith({ groupId });
+    jest.spyOn(Group, "findOne").mockResolvedValue(group);
   });
 
-  test("Should return an empty array if no transactions found for the group", async () => {
-    const groupId = "123456";
-    const mockEmptyTransactions = [];
+  describe("Admin", () => {
+    beforeEach(() => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+        flag: true,
+        user: { role: "Admin" },
+      });
 
-    // Configure the template function to return an empty table
-    transactions.find.mockResolvedValue(mockEmptyTransactions);
+      mockTransaction = [
+        {
+          //id: "1",
+          amount: 100,
+          color: "red",
+          type: "food",
+          date: "2023-05-17",
+          username: "TestUser1",
+        },
+      ];
 
-    // Make a simulated GET request to the endpoint corresponding to the retrieval of transactions by group ID
-    const response = await request(app).get(
-      `/api/transactions/group/${groupId}`
-    );
+      jest.spyOn(mockTransaction, "map").mockReturnValue(mockTransaction);
 
-    // Check if the response is correct (HTTP status 200, empty table returned)
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual([]);
+      mockRequest.url = `localhost:3000/api/transactions/groups/${mockRequest.params.username}`;
+    });
 
-    // Check if the template function has been called with the group ID as a query parameter
-    expect(transactions.find).toHaveBeenCalledWith({ groupId });
+    test("GetTransactionByGroup - Admin - Success - Filled list", async () => {
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter((transaction) => group.members.includes(transaction.username))
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByGroup(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: expect.arrayContaining(mockTransaction),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByGroup - Admin - Success - Empty list", async () => {
+      group.members = ["TestUser3", "TestUser4"];
+
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter((transaction) => group.members.includes(transaction.username))
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByGroup(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: [],
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByGroup - Admin - Unauthorized", async () => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
+        flag: false,
+        user: { role: "Admin" },
+      });
+
+      await controllerMethods.getTransactionsByGroup(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Unauthorized/),
+      });
+    });
+
+    test("GetTransactionByGroup - Admin - Group not found", async () => {
+      jest.spyOn(Group, "findOne").mockResolvedValueOnce(false);
+
+      await controllerMethods.getTransactionsByGroup(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Group not found/),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+  });
+
+  describe("Group", () => {
+    beforeEach(() => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+        flag: true,
+        user: { role: "Group", members: group.members },
+      });
+
+      mockTransaction = [
+        {
+          //id: "1",
+          amount: 100,
+          color: "red",
+          type: "food",
+          date: "2023-05-17",
+          username: "TestUser1",
+        },
+      ];
+
+      jest.spyOn(mockTransaction, "map").mockReturnValue(mockTransaction);
+
+      mockRequest.url = `localhost:3000/api/groups/${mockRequest.params.name}/transactions`;
+    });
+
+    test("GetTransactionByGroup - Group - Success - Filled list", async () => {
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter((transaction) => group.members.includes(transaction.username))
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByGroup(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: expect.arrayContaining(mockTransaction),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByGroup - Group - Success - Empty list", async () => {
+      group.members = ["TestUser3", "TestUser4"];
+
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter((transaction) => group.members.includes(transaction.username))
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByGroup(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: [],
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByGroup - Group - Unauthorized", async () => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
+        flag: false,
+        user: { role: "Group", members: group.members },
+      });
+
+      await controllerMethods.getTransactionsByGroup(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Unauthorized/),
+      });
+    });
+
+    test("GetTransactionByGroup - Group - Group not found", async () => {
+      jest.spyOn(Group, "findOne").mockResolvedValueOnce(false);
+
+      await controllerMethods.getTransactionsByGroup(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Group not found/),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
   });
 });
 
 describe("getTransactionsByGroupByCategory", () => {
-  test("Should retrieve transactions by group ID and category", async () => {
-    const groupId = "123456";
-    const category = "food";
-    const mockTransactions = [
-      {
-        id: "1",
-        amount: 100,
-        category: "food",
-        date: "2023-05-17",
-        groupId: "123456",
+  let mockRequest, mockResponse, mockTransaction, group;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    await User.deleteMany({});
+
+    group = {
+      name: "GroupTest",
+      members: ["TestUser1", "TestUser2"],
+    };
+
+    await Group.create(group);
+
+    mockRequest = {
+      params: { name: "GroupTest", category: "food" },
+      cookies: {
+        refreshToken: "refreshToken",
       },
-      {
-        id: "2",
-        amount: 200,
-        category: "food",
-        date: "2023-05-18",
-        groupId: "123456",
+    };
+
+    mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: {
+        refreshedTokenMessage: "refreshedTokenMessage",
       },
-    ];
+    };
 
-    // Configure the model function to return simulated transactions
-    transactions.find.mockResolvedValue(mockTransactions);
-
-    // Make a simulated GET request to the endpoint corresponding to the retrieval of transactions by group ID and category
-    const response = await request(app).get(
-      `/api/transactions/group/${groupId}/category/${category}`
-    );
-
-    // Check if the response is correct (HTTP status 200, transactions returned)
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual(mockTransactions);
-
-    // Check if the template function was called with the group ID and category as query parameters
-    expect(transactions.find).toHaveBeenCalledWith({ groupId, category });
+    jest.spyOn(Group, "findOne").mockResolvedValue(group);
+    jest
+      .spyOn(categories, "findOne")
+      .mockResolvedValue(mockRequest.params.category);
   });
 
-  test("Should return an empty array if no transactions found for the group and category", async () => {
-    const groupId = "123456";
-    const category = "food";
-    const mockEmptyTransactions = [];
+  describe("Admin", () => {
+    beforeEach(() => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+        flag: true,
+        user: { role: "Admin" },
+      });
 
-    // Configure the template function to return an empty table
-    transactions.find.mockResolvedValue(mockEmptyTransactions);
+      mockTransaction = [
+        {
+          //id: "1",
+          amount: 100,
+          color: "red",
+          type: "food",
+          date: "2023-05-17",
+          username: "TestUser1",
+        },
+      ];
 
-    // Make a simulated GET request to the endpoint corresponding to the retrieval of transactions by group ID and category
-    const response = await request(app).get(
-      `/api/transactions/group/${groupId}/category/${category}`
-    );
+      jest.spyOn(mockTransaction, "map").mockReturnValue(mockTransaction);
 
-    // Check if the response is correct (HTTP status 200, empty table returned)
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual([]);
+      mockRequest.url = `localhost:3000/api/transactions/groups/${mockRequest.params.name}/category/${mockRequest.params.category}`;
+    });
 
-    // Check if the template function was called with the group ID and category as query parameters
-    expect(transactions.find).toHaveBeenCalledWith({ groupId, category });
+    test("GetTransactionByGroupByCategory - Admin - Success - Filled list", async () => {
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter(
+            (transaction) =>
+              group.members.includes(transaction.username) &&
+              transaction.type === mockRequest.params.category
+          )
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByGroupByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: expect.arrayContaining(mockTransaction),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByGroupByCategory - Admin - Success - Empty list", async () => {
+      mockRequest.params.category = "test";
+
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter(
+            (transaction) =>
+              group.members.includes(transaction.username) &&
+              transaction.type === mockRequest.params.category
+          )
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByGroupByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: [],
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByGroupByCategory - Admin - Unauthorized", async () => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
+        flag: false,
+        user: { role: "Admin" },
+      });
+
+      await controllerMethods.getTransactionsByGroupByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Unauthorized/),
+      });
+    });
+
+    test("GetTransactionByGroupByCategory - Admin - Group not found", async () => {
+      jest.spyOn(Group, "findOne").mockResolvedValueOnce(false);
+
+      await controllerMethods.getTransactionsByGroupByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Group not found/),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByGroupByCategory - Admin - Category not found", async () => {
+      jest.spyOn(categories, "findOne").mockResolvedValueOnce(false);
+
+      await controllerMethods.getTransactionsByGroupByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Category not found/),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+  });
+
+  describe("Group", () => {
+    beforeEach(() => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+        flag: true,
+        user: { role: "Group", members: group.members },
+      });
+
+      mockTransaction = [
+        {
+          //id: "1",
+          amount: 100,
+          color: "red",
+          type: "food",
+          date: "2023-05-17",
+          username: "TestUser1",
+        },
+      ];
+
+      jest.spyOn(mockTransaction, "map").mockReturnValue(mockTransaction);
+
+      mockRequest.url = `localhost:3000/api/groups/${mockRequest.params.name}/transactions/category/${mockRequest.params.category}`;
+    });
+
+    test("GetTransactionByGroupByCategory - Group - Success - Filled list", async () => {
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter(
+            (transaction) =>
+              group.members.includes(transaction.username) &&
+              transaction.type === mockRequest.params.category
+          )
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByGroupByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: expect.arrayContaining(mockTransaction),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByGroupByCategory - Group - Success - Empty list", async () => {
+      mockRequest.params.category = "test";
+
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter(
+            (transaction) =>
+              group.members.includes(transaction.username) &&
+              transaction.type === mockRequest.params.category
+          )
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByGroupByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: [],
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByGroupByCategory - Group - Unauthorized", async () => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
+        flag: false,
+        user: { role: "Group", members: ["Test2", "Test3"] },
+      });
+
+      await controllerMethods.getTransactionsByGroupByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Unauthorized/),
+      });
+    });
+
+    test("GetTransactionByGroupByCategory - Group - Group not found", async () => {
+      jest.spyOn(Group, "findOne").mockResolvedValueOnce(false);
+
+      await controllerMethods.getTransactionsByGroupByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Group not found/),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByGroupByCategory - Group - Category not found", async () => {
+      jest.spyOn(categories, "findOne").mockResolvedValueOnce(false);
+
+      await controllerMethods.getTransactionsByGroupByCategory(
+        mockRequest,
+        mockResponse
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Category not found/),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
   });
 });
 
