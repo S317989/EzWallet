@@ -358,6 +358,7 @@ export const getTransactionsByUser = async (req, res) => {
       if (user.username) filter = { $and: [{ username: req.params.username }] };
 
       const responseData = await getTransactionsDetails(req, res, filter);
+
       return res.status(200).json({
         data: responseData,
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
@@ -382,13 +383,7 @@ export const getTransactionsByUser = async (req, res) => {
         return res.status(401).json({ error: "Unauthorized" });
 
       const dateIncludes = ["date", "from", "upTo"];
-
-      if (dateIncludes.some((v) => Object.keys(req.query).includes(v)))
-        dateFilter = handleDateFilterParams(req);
-
       const amountIncludes = ["minAmount", "maxAmount"];
-      if (amountIncludes.some((v) => Object.keys(req.query).includes(v)))
-        amountFilter = handleAmountFilterParams(req);
 
       const filter = {
         $and: [
@@ -851,7 +846,7 @@ const getTransactionsDetails = async (req, res, filter) => {
     Object.assign(
       {},
       {
-        id: v._id,
+        //id: v._id,
         username: v.username,
         amount: v.amount,
         type: v.type,

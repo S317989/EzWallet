@@ -739,7 +739,7 @@ describe("getAllTransactions", () => {
 });
 
 describe("getTransactionsByUser", () => {
-  let mockRequest, mockResponse, mockTransactions, user;
+  let mockRequest, mockResponse, mockTransaction, user;
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -749,33 +749,27 @@ describe("getTransactionsByUser", () => {
       username: "Test1",
       password: "Test1",
       email: "test1@test1.com",
+      refreshToken: "refreshToken",
     };
 
     await User.create(user);
 
     mockRequest = {
-      params: { username: "Test1" },
+      params: { username: user.username },
+      cookies: {
+        refreshToken: "refreshToken",
+      },
     };
 
     mockResponse = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
-      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+      locals: {
+        refreshedTokenMessage: "refreshedTokenMessage",
+      },
     };
 
-    mockTransactions = [
-      {
-        id: "1",
-        amount: 100,
-        category: "food",
-        date: "2023-05-17",
-        userId: "123456",
-      },
-    ];
-
     jest.spyOn(User, "findOne").mockResolvedValue(user);
-
-    jest.spyOn(mockTransactions, "map").mockReturnValue(mockTransactions);
   });
 
   describe("Admin User", () => {
@@ -785,18 +779,30 @@ describe("getTransactionsByUser", () => {
         user: { role: "Admin" },
       });
 
+      mockTransaction = [
+        {
+          id: "1",
+          amount: 100,
+          category: "food",
+          date: "2023-05-17",
+          userId: "123456",
+        },
+      ];
+
+      jest.spyOn(mockTransaction, "map").mockReturnValue(mockTransaction);
+
       mockRequest.url = `localhost:3000/api/transactions/users/${mockRequest.params.username}`;
     });
 
     test("GetTransactionByUser - Admin - Success", async () => {
       jest
         .spyOn(transactions, "aggregate")
-        .mockReturnValueOnce(mockTransactions);
+        .mockReturnValueOnce(mockTransaction);
 
       await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        data: mockTransactions,
+        data: mockTransaction,
         refreshedTokenMessage: "refreshedTokenMessage",
       });
     });
@@ -828,11 +834,11 @@ describe("getTransactionsByUser", () => {
     });
 
     test("GetTransactionByUser - Admin - No transactions", async () => {
-      mockTransactions = [];
+      mockTransaction = [];
 
       jest.spyOn(transactions, "aggregate").mockReturnValueOnce([]);
 
-      jest.spyOn(mockTransactions, "map").mockReturnValueOnce([]);
+      jest.spyOn(mockTransaction, "map").mockReturnValueOnce([]);
 
       await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
 
@@ -843,24 +849,329 @@ describe("getTransactionsByUser", () => {
       });
     });
   });
-  describe("Regular User", () => {});
 
-  test("Should return an empty array if no transactions found for the user", async () => {
-    const userId = "123456";
-    const mockEmptyTransactions = [];
+  describe("Regular User", () => {
+    beforeEach(() => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+        flag: true,
+        user: { role: "User" },
+      });
 
-    // Configure the template function to return an empty table
-    transactions.find.mockResolvedValue(mockEmptyTransactions);
+      mockTransaction = [
+        {
+          //id: "1",
+          username: "TestUser",
+          amount: 100,
+          type: "food",
+          color: "red",
+          date: "2023-04-30",
+        },
+      ];
 
-    // Make a simulated GET request to the endpoint corresponding to the retrieval of transactions by user ID
-    const response = await request(app).get(`/api/transactions/user/${userId}`);
+      mockRequest.url = `localhost:3000/api/users/${mockRequest.params.username}/transactions`;
+    });
 
-    // Check if the response is correct (HTTP status 200, empty table returned)
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual([]);
+    test("GetTransactionByUser - User - Success - Date Filter with filled list", async () => {
+      mockRequest.query = { date: "2023-04-29" };
 
-    // Check if the template function has been called with the user ID as a query parameter
-    expect(transactions.find).toHaveBeenCalledWith({ userId });
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter((transaction) => transaction.date >= mockRequest.query.date)
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: mockTransaction,
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUser - User - Success - Date Filter with empty list", async () => {
+      mockRequest.query = { date: "2023-04-31" };
+
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter((transaction) => transaction.date >= mockRequest.query.date)
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: [],
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUser - User - Success - From filter with filled list", async () => {
+      mockRequest.query = { from: "2023-04-29" };
+
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter((transaction) => transaction.date >= mockRequest.query.from)
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: mockTransaction,
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUser - User - Success - From Filter with empty list", async () => {
+      mockRequest.query = { from: "2023-04-31" };
+
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter((transaction) => transaction.date > mockRequest.query.from)
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: [],
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUser - User - Success - UpTo filter with filled list", async () => {
+      mockRequest.query = { from: "2023-04-31" };
+
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter((transaction) => transaction.date <= mockRequest.query.from)
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: mockTransaction,
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUser - User - Success - UpTo Filter with empty list", async () => {
+      mockRequest.query = { upTo: "2023-04-29" };
+
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter((transaction) => transaction.date <= mockRequest.query.upTo)
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: [],
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUser - User - Success - MinAmount Filter with empty list", async () => {
+      mockRequest.query = { minAmount: "110" };
+
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter(
+            (transaction) => transaction.amount >= mockRequest.query.minAmount
+          )
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: [],
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUser - User - Success - MinAmount Filter with filled list", async () => {
+      mockRequest.query = { minAmount: "90" };
+
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter(
+            (transaction) => transaction.amount >= mockRequest.query.minAmount
+          )
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: mockTransaction,
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUser - User - Success - MaxAmount Filter with empty list", async () => {
+      mockRequest.query = { maxAmount: "90" };
+
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter(
+            (transaction) => transaction.amount <= mockRequest.query.maxAmount
+          )
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: [],
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUser - User - Success - MaxAmount Filter with filled list", async () => {
+      mockRequest.query = { maxAmount: "110" };
+
+      transactions.aggregate.mockResolvedValueOnce(
+        mockTransaction
+          .filter(
+            (transaction) => transaction.amount <= mockRequest.query.maxAmount
+          )
+          .map((v) => ({
+            //_id: v._id,
+            username: v.username,
+            amount: v.amount,
+            type: v.type,
+            categories_info: { color: "red" },
+            date: v.date,
+          }))
+      );
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: mockTransaction,
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUser - User - Throws error cause From and UpTo cannot be together", async () => {
+      mockRequest.query = { upTo: "2023-04-29", from: "2023-04-29" };
+
+      jest
+        .spyOn(verifyAuth, "handleDateFilterParams")
+        .mockImplementationOnce(() => {
+          throw new Error("From and UpTo cannot be together");
+        });
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(500);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/From and UpTo cannot be together/),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("GetTransactionByUser - User - Unauthorized", async () => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
+        flag: false,
+        user: { role: "User" },
+      });
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Unauthorized/),
+      });
+    });
+
+    test("GetTransactionByUser - User - User not found", async () => {
+      jest.spyOn(User, "findOne").mockResolvedValueOnce(false);
+
+      await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/User not found/),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
   });
 });
 
