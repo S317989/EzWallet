@@ -128,6 +128,7 @@ export const verifyAuth = (req, res, info) => {
           cookie.refreshToken,
           process.env.ACCESS_KEY
         );
+
         const newAccessToken = jwt.sign(
           {
             username: refreshToken.username,
@@ -138,6 +139,7 @@ export const verifyAuth = (req, res, info) => {
           process.env.ACCESS_KEY,
           { expiresIn: "1h" }
         );
+
         res.cookie("accessToken", newAccessToken, {
           httpOnly: true,
           path: "/api",
@@ -145,13 +147,19 @@ export const verifyAuth = (req, res, info) => {
           sameSite: "none",
           secure: true,
         });
+
         res.locals.message =
           "Access token has been refreshed. Remember to copy the new one in the headers of subsequent calls";
 
+        let newDecodedAccessToken = jwt.verify(
+          newAccessToken,
+          process.env.ACCESS_KEY
+        );
+
         return checkRolesPermissions(
           res,
-          decodedAccessToken,
-          decodedRefreshToken,
+          newDecodedAccessToken,
+          refreshToken,
           info
         );
       } catch (err) {
@@ -214,7 +222,7 @@ const checkRolesPermissions = (
 
       break;
     case "Group":
-      if (decodedAccessToken.role !== "Admin")
+      if (decodedAccessToken.role === "Admin")
         return { flag: true, cause: "Authorized" };
       else if (
         decodedAccessToken.role !== "Admin" &&
