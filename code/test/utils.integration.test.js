@@ -6,6 +6,11 @@ import {
 
 describe("handleDateFilterParams", () => {
   test("Dummy test, change it", () => {
+    handleAmountFilterParams({
+      dvsdv<
+    });
+
+    
     expect(true).toBe(true);
   });
 });

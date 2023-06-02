@@ -804,7 +804,7 @@ export const deleteTransactions = async (req, res) => {
 
     if (notFoundTrans.length > 0)
       return res.status(400).json({
-        error: `Transactions [${notFoundTrans}] don't exist, cannot procede with deletion`,
+        error: `Transactions [${notFoundTrans}] don't exist, cannot proceed with deletion`,
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 

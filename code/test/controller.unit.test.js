@@ -2004,94 +2004,332 @@ describe("getTransactionsByGroupByCategory", () => {
 });
 
 describe("deleteTransaction", () => {
-  test("Should delete a transaction by ID", async () => {
-    const transactionId = "123456";
-    const mockDeletedTransaction = {
-      id: "123456",
-      amount: 100,
-      category: "food",
-      date: "2023-05-17",
-      groupId: "789012",
+  let mockRequest, mockResponse, user, mockTransaction;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    await User.deleteMany({});
+
+    user = {
+      username: "TestUser1",
+      password: "Test1",
+      email: "test@test.com",
     };
 
-    // Configure the model function to return the simulated deleted transaction
-    transactions.deleteOne.mockResolvedValue({ n: 1, deletedCount: 1, ok: 1 });
+    await User.create(user);
 
-    // Make a simulated DELETE request to the endpoint corresponding to the deletion of a transaction by ID
-    const response = await request(app).delete(
-      `/api/transactions/${transactionId}`
-    );
+    mockRequest = {
+      params: { username: user.username },
+      cookies: {
+        refreshToken: "refreshToken",
+      },
+      url: `localhost:3000/api//users/${user.username}/transactions`,
+    };
 
-    // Check if the response is correct (HTTP status 200, deleted transaction returned)
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual(mockDeletedTransaction);
+    mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: {
+        refreshedTokenMessage: "refreshedTokenMessage",
+      },
+    };
 
-    // Check if the template function was called with the transaction ID as a query parameter
-    expect(transactions.deleteOne).toHaveBeenCalledWith({ _id: transactionId });
+    jest.spyOn(User, "findOne").mockResolvedValue(user);
+    jest
+      .spyOn(categories, "findOne")
+      .mockResolvedValue(mockRequest.params.category);
   });
 
-  test("Should return an error if the transaction to delete is not found", async () => {
-    const transactionId = "123456";
+  describe("Admin", () => {
+    beforeEach(() => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+        flag: true,
+        user: { role: "Admin" },
+      });
 
-    // Configure the template function to return a transaction delete without result
-    transactions.deleteOne.mockResolvedValue({ n: 0, deletedCount: 0, ok: 1 });
+      mockTransaction = [
+        {
+          id: "1",
+          amount: 100,
+          color: "red",
+          type: "food",
+          date: "2023-05-17",
+          username: "TestUser",
+        },
+      ];
 
-    // Make a simulated DELETE request to the endpoint corresponding to the deletion of a transaction by ID
-    const response = await request(app).delete(
-      `/api/transactions/${transactionId}`
-    );
+      mockRequest.body = {
+        _id: mockTransaction[0].id,
+      };
 
-    // Check if the response is correct (HTTP status 404, error message returned)
-    expect(response.status).toBe(404);
-    expect(response.body).toEqual({ error: "Transaction not found" });
+      jest.spyOn(transactions, "findOne").mockResolvedValue(mockTransaction);
 
-    // Check if the template function was called with the transaction ID as a query parameter
-    expect(transactions.deleteOne).toHaveBeenCalledWith({ _id: transactionId });
+      jest.spyOn(transactions, "deleteOne").mockResolvedValue(true);
+    });
+
+    test("DeleteTransaction - Admin - Success", async () => {
+      await controllerMethods.deleteTransaction(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: {
+          message: expect.stringMatching(
+            `Transaction ${mockTransaction[0].id} successfully deleted`
+          ),
+        },
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("DeleteTransaction - Admin - Missing Ids", async () => {
+      mockRequest.body = {};
+
+      await controllerMethods.deleteTransaction(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Missing _ids/),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("DeleteTransaction - Admin - Transaction not found", async () => {
+      jest.spyOn(transactions, "findOne").mockResolvedValueOnce(false);
+
+      await controllerMethods.deleteTransaction(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(
+          `Transaction ${mockRequest.body._id} not found`
+        ),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+  });
+
+  describe("User", () => {
+    beforeEach(() => {
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
+        flag: false,
+        user: { role: "Admin" },
+      });
+
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+        flag: true,
+        user: { role: "User" },
+      });
+
+      user.refreshToken = "refreshToken";
+
+      mockTransaction = [
+        {
+          id: "1",
+          amount: 100,
+          color: "red",
+          type: "food",
+          date: "2023-05-17",
+          username: "TestUser1",
+        },
+      ];
+
+      mockRequest.body = {
+        _id: mockTransaction[0].id,
+      };
+
+      jest.spyOn(User, "findOne").mockResolvedValue(user);
+
+      jest.spyOn(transactions, "findOne").mockResolvedValue(mockTransaction[0]);
+
+      jest.spyOn(transactions, "deleteOne").mockResolvedValue(true);
+    });
+
+    test("DeleteTransaction - User - Success", async () => {
+      await controllerMethods.deleteTransaction(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: {
+          message: expect.stringMatching(
+            `Transaction ${mockTransaction[0].id} successfully deleted`
+          ),
+        },
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("DeleteTransaction - User - User not found", async () => {
+      jest.spyOn(User, "findOne").mockResolvedValueOnce(false);
+
+      await controllerMethods.deleteTransaction(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/User not found/),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("DeleteTransaction - User - Missing Ids", async () => {
+      user.refreshToken = "refreshToken";
+      mockRequest.body = {};
+
+      await controllerMethods.deleteTransaction(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Missing _ids/),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("DeleteTransaction - User - Transaction not found", async () => {
+      jest.spyOn(transactions, "findOne").mockResolvedValueOnce(false);
+
+      await controllerMethods.deleteTransaction(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(
+          `Transaction ${mockRequest.body._id} not found`
+        ),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
+
+    test("DeleteTransaction - User - User not the owner", async () => {
+      user.refreshToken = "refreshTokenError";
+
+      await controllerMethods.deleteTransaction(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(`The user is not the owner`),
+        refreshedTokenMessage: "refreshedTokenMessage",
+      });
+    });
   });
 });
 
 describe("deleteTransactions", () => {
-  test("Should delete multiple transactions by IDs", async () => {
-    const transactionIds = ["1", "8", "9"];
-    const mockDeletedTransactions = [
-      { id: "1", amount: 100000, category: "food", date: "D1", groupId: "G1" },
+  let mockRequest, mockResponse, mockTransactions, user;
+
+  beforeEach(async () => {
+    user = {
+      username: "TestUser1",
+      password: "Test1",
+      email: "test@test.com",
+    };
+
+    await User.create(user);
+
+    mockTransactions = [
       {
-        id: "8",
-        amount: 300,
-        category: "transportation",
-        date: "D2",
-        groupId: "G2",
+        _id: "1",
+        amount: 100,
+        color: "red",
+        type: "food",
+        date: "2023-05-17",
+        username: "TestUser1",
       },
-      { id: "9", amount: 20, category: "shopping", date: "D3", groupId: "G3" },
+      {
+        _id: "2",
+        amount: 100,
+        color: "red",
+        type: "food",
+        date: "2023-05-17",
+        username: "TestUser1",
+      },
     ];
 
-    // Configure the template function to return simulated deleted transactions
-    transactions.deleteMany.mockResolvedValue({ n: 3, deletedCount: 3, ok: 1 });
+    mockRequest = {
+      body: {
+        _ids: [mockTransactions[0]._id, mockTransactions[1]._id],
+      },
+    };
 
-    // Make a simulated DELETE request to the endpoint corresponding to the deletion of several transactions by IDs
-    const response = await request(app)
-      .delete("/api/transactions")
-      .send({ ids: transactionIds });
+    mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
 
-    // Check if the response is correct (HTTP status 200, deleted transactions returned)
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual(mockDeletedTransactions);
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      user: { role: "Admin" },
+    });
 
-    // Check if the template function has been called with the transaction IDs as a query parameter
-    expect(transactions.deleteMany).toHaveBeenCalledWith({
-      _id: { $in: transactionIds },
+    jest.spyOn(transactions, "find").mockResolvedValue(mockTransactions);
+
+    jest.spyOn(transactions, "deleteMany").mockResolvedValue(true);
+  });
+
+  test("DeleteTransactions - Admin - Success", async () => {
+    await controllerMethods.deleteTransactions(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: {
+        message: expect.stringMatching(
+          `Transactions ${mockTransactions[0]._id},${mockTransactions[1]._id} successfully deleted`
+        ),
+      },
+      refreshedTokenMessage: "refreshedTokenMessage",
     });
   });
 
-  test("Should return an error if no transaction IDs are provided", async () => {
-    // Make a simulated DELETE request to the endpoint corresponding to the deletion of several transactions without IDs
-    const response = await request(app).delete("/api/transactions").send({});
+  test("DeleteTransactions - Admin - Missing _ids", async () => {
+    mockRequest.body = {};
 
-    // Check if the response is correct (HTTP status 400, error message returned)
-    expect(response.status).toBe(400);
-    expect(response.body).toEqual({ error: "No transaction IDs provided" });
+    await controllerMethods.deleteTransactions(mockRequest, mockResponse);
 
-    // Check if the model function has not been called
-    expect(transactions.deleteMany).not.toHaveBeenCalled();
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/Missing _ids/),
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
+  });
+
+  test("DeleteTransactions - Admin - Empty _ids", async () => {
+    mockRequest.body = {
+      _ids: ["", ""],
+    };
+
+    await controllerMethods.deleteTransactions(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/Empty _ids/),
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
+  });
+
+  test("DeleteTransactions - Admin - Transactions don't exist", async () => {
+    jest.spyOn(transactions, "find").mockResolvedValueOnce(false);
+
+    await controllerMethods.deleteTransactions(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(
+        `Transaction ${mockTransactions[0]._id},${mockTransactions[1]._id} don't exist`
+      ),
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
+  });
+
+  test("DeleteTransactions - Admin - Transaction not found", async () => {
+    // Mock filter method for transaction 1 not found
+    jest.spyOn(Array.prototype, "filter").mockImplementationOnce(() => {
+      return [mockTransactions[1]];
+    });
+
+    await controllerMethods.deleteTransactions(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: `Transactions [${mockTransactions[1]}] don't exist, cannot proceed with deletion`,
+      refreshedTokenMessage: "refreshedTokenMessage",
+    });
   });
 });
