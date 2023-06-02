@@ -1441,7 +1441,10 @@ describe("getTransactionsByUserByCategory", () => {
     });
 
     test("GetTransactionByUserByCategory - User - User not found", async () => {
+      jest.spyOn(User, "findOne").mockResolvedValueOnce(user);
       jest.spyOn(User, "findOne").mockResolvedValueOnce(false);
+
+      
 
       await controllerMethods.getTransactionsByUserByCategory(
         mockRequest,
