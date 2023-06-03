@@ -750,7 +750,7 @@ export const deleteTransaction = async (req, res) => {
           data: { message: `Transaction ${req.body._id} successfully deleted` },
           refreshedTokenMessage: res.locals.refreshedTokenMessage,
         });
-      } else return res.status(401).json({ error: userAuth.message });
+      } else return res.status(401).json({ error: userAuth.cause });
     }
   } catch (error) {
     res.status(500).json({

@@ -21,7 +21,8 @@ export const getUsers = async (req, res) => {
         role: user.role,
       };
     });
-    res.status(200).json({
+
+    return res.status(200).json({
       data: users,
       refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
@@ -51,15 +52,15 @@ export const getUser = async (req, res) => {
       //User auth successful
       const user = await User.findOne({ username: req.params.username });
 
-      if (user.refreshToken !== req.cookies.refreshToken)
-        return res.status(400).json({
-          error: "Unauthorized",
-          refreshedTokenMessage: res.locals.refreshedTokenMessage,
-        });
-
       if (!user)
         return res.status(400).json({
           error: "User not found",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
+
+      if (user.refreshToken !== req.cookies.refreshToken)
+        return res.status(400).json({
+          error: "Unauthorized",
           refreshedTokenMessage: res.locals.refreshedTokenMessage,
         });
 
@@ -75,9 +76,8 @@ export const getUser = async (req, res) => {
       const adminAuth = verifyAuth(req, res, { authType: "Admin" });
 
       if (adminAuth.flag) {
-        //Admin auth successful
-
         const user = await User.findOne({ username: req.params.username });
+
         if (!user)
           return res.status(400).json({
             error: "User not found",
@@ -93,7 +93,7 @@ export const getUser = async (req, res) => {
           refreshedTokenMessage: res.locals.refreshedTokenMessage,
         });
       } else {
-        return res.status(401).json({ error: adminAuth.message });
+        return res.status(401).json({ error: adminAuth.cause });
       }
     }
   } catch (error) {
@@ -143,7 +143,7 @@ export const createGroup = async (req, res) => {
       checkInGroup = false;
 
     const userCaller = await User.findOne({
-      refreshToken: req.body.refreshToken,
+      refreshToken: req.cookies.refreshToken,
     });
 
     if (
@@ -193,7 +193,7 @@ export const createGroup = async (req, res) => {
 
     await newGroup.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       data: {
         group: newGroup,
         alreadyInGroup: alreadyInGroup,
@@ -298,7 +298,7 @@ export const getGroup = async (req, res) => {
           refreshedTokenMessage: res.locals.refreshedTokenMessage,
         });
       } else {
-        return res.status(401).json({ error: userAuth.message });
+        return res.status(401).json({ error: userAuth.cause });
       }
     }
   } catch (err) {
