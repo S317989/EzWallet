@@ -1918,55 +1918,310 @@ describe("getTransactionsByGroup", () => {
 });
 
 describe("getTransactionsByGroupByCategory", () => {
-  test("Success !", (done) => {
-    request(app)
-      .get("")
-      .send()
-      .then((response) => {
-        expect();
-        done();
-      })
-      .catch((err) => done(err));
+  let user1, User1_accessToken, User1_refreshToken;
+  let user2, User2_accessToken, User2_refreshToken;
+  let admin, Admin_accessToken, Admin_refreshToken;
+  let cat1, cat2;
+  let group1, group2;
+
+  beforeAll(async ()=>{
+    
+    admin = {
+      username: "TestAdmin",
+      email: "admin@test.com",
+      password: "TestAdmin",
+    };
+
+    Admin_accessToken = jwt.sign(
+      {
+       username: admin.username,
+       email: admin.email,
+       password: admin.password,
+       role: "Admin",
+      },
+      "EZWALLET",
+      {
+       expiresIn: "1h",
+      }
+    );
+
+    Admin_refreshToken = jwt.sign(
+      {
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
+        role: "Admin",
+      },
+      "EZWALLET",
+      { expiresIn: "7d" }
+    );
+
+    user1 = {
+      username: "TestUser",
+      email: "user@test.com",
+      password: "TestUser",
+    };
+
+    User1_accessToken = jwt.sign(
+      {
+       username: user1.username,
+       email: user1.email,
+       password: user1.password,
+       role: "Regular",
+      },
+      "EZWALLET",
+      {
+       expiresIn: "1h",
+      }
+    );
+
+    User1_refreshToken = jwt.sign(
+      {
+        username: user1.username,
+        email: user1.email,
+        password: user1.password,
+        role: "Regular",
+      },
+      "EZWALLET",
+      { expiresIn: "7d" }
+    );
+
+    user2 = {
+      username: "TestUser",
+      email: "user@test.com",
+      password: "TestUser",
+    };
+
+    User2_accessToken = jwt.sign(
+      {
+       username: user2.username,
+       email: user2.email,
+       password: user2.password,
+       role: "Regular",
+      },
+      "EZWALLET",
+      {
+       expiresIn: "1h",
+      }
+    );
+
+    User2_refreshToken = jwt.sign(
+      {
+        username: user2.username,
+        email: user2.email,
+        password: user2.password,
+        role: "Regular",
+      },
+      "EZWALLET",
+      { expiresIn: "7d" }
+    );
+
+    cat1 = {
+      type:"Category1",
+      color:"Color1",
+    };
+    cat2 = {
+      type:"Category2",
+      color:"Color2",
+    };
+
+    await categories.insertMany([cat1, cat2]);
+    await User.insertMany([admin, user1, user2]);
+    
+    group1 = {
+      name: "Group1",
+      members: [{
+        email: admin.email,
+        user: User.findOne(admin.username).map((ans)=>ans.Id),
+      },{
+        email: user1.email,
+        user: User.findOne(user1.username).map((ans)=>ans.Id),
+      }]
+    }
+
+    group2 = {
+      name: "Group2",
+      members: [{
+        email: user2.email,
+        user: User.findOne(user2.username).map((ans)=>ans.Id),
+      }]
+    }
+
+    await Group.insertMany([group1, group2]);
+
+    await transactions.deleteMany({});
+
+    const transaction1 = {
+      username: user1.username,
+      type: cat2.type,
+      amount: 100,
+    }
+    const transaction2 = {
+      username: admin.username,
+      type: cat2.type,
+      amount: 3,
+    }
+    const transaction3 = {
+      username: user2.username,
+      type: cat2.type,
+      amount: 17.9,
+    }
+    const transaction4 = {
+      username: user2.username,
+      type: cat1.type,
+      amount: 0.78,
+    }
+
+    await transactions.insertMany([transaction1, transaction2, transaction3, transaction4]);
   });
-  test("Username not in the database", (done) => {
+
+  test("Get Transactions By Group By Category - Regular User - Success !", (done) => {
+    const groupname = group1.name;
+    const category = cat2.type
+
     request(app)
-      .get("")
+      .get("/api/groups/:name/transactions/category/:category"
+        .replace(":name", groupname)
+        .replace(":category", category)
+      )
       .send()
+      .set("Cookie", [
+        `accessToken=${User1_accessToken}`,
+        `refreshToken=${User1_refreshToken}`,
+      ])
       .then((response) => {
-        expect();
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("data");
+        expect(response.body.data).toBeInstanceOf(Array);
+        expect(response.body.data[0]).toContain("username");
+        expect(response.body.data[0]).toEqual(username);
+        expect(response.body.data[0]).toContain("type");
+        expect(response.body.data[0]).toContain("amount");
+        expect(response.body.data[0]).toContain("date");
+        expect(response.body.data[0]).toContain("color");
         done();
       })
       .catch((err) => done(err));
   });
 
-  test("Category not in the database", (done) => {
+  test("Get Transactions By Group By Category - Admin - Success !", (done) => {
+    const groupname = group2.name;
+    const category = cat1.type;
+
     request(app)
-      .get("")
+      .get("/api/transactions/groups/:name/category/:category"
+        .replace(":name", groupname)
+        .replace(":category", category)
+      )
       .send()
+      .set("Cookie", [
+        `accessToken=${Admin_accessToken}`,
+        `refreshToken=${Admin_refreshToken}`,
+      ])
       .then((response) => {
-        expect();
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("data");
+        expect(response.body.data).toBeInstanceOf(Array);
+        expect(response.body.data[0]).toContain("username");
+        expect(response.body.data[0]).toEqual(username);
+        expect(response.body.data[0]).toContain("type");
+        expect(response.body.data[0]).toContain("amount");
+        expect(response.body.data[0]).toContain("date");
+        expect(response.body.data[0]).toContain("color");
         done();
       })
       .catch((err) => done(err));
   });
 
-  test("Username not consistent with the User", (done) => {
+  test("Get Transactions By Group By Category - Admin - Group in params not in the DB", (done) => {
+    const category = cat1.type;
+
     request(app)
-      .get("")
+      .get("/api/transactions/groups/:name/category/:category"
+        .replace(":name", "Group")
+        .replace(":category", category)
+      )
       .send()
+      .set("Cookie", [
+        `accessToken=${Admin_accessToken}`,
+        `refreshToken=${Admin_refreshToken}`,
+      ])
       .then((response) => {
-        expect();
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.data).toHaveProperty("message");
+        expect(response.body.error).toContain("not in the DB");
         done();
       })
       .catch((err) => done(err));
   });
 
-  test(" Not an Admin", (done) => {
+  test("Get Transactions By Group By Category - Admin - Category in params not in the DB", (done) => {
+    const groupname = group1.name;
+
     request(app)
-      .get("")
+      .get("/api/transactions/groups/:name/category/:category"
+        .replace(":name", groupname)
+        .replace(":category", "Category")
+      )
       .send()
+      .set("Cookie", [
+        `accessToken=${Admin_accessToken}`,
+        `refreshToken=${Admin_refreshToken}`,
+      ])
       .then((response) => {
-        expect();
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.data).toHaveProperty("message");
+        expect(response.body.error).toContain("not in the DB");
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Get Transactions By Group By Category - Regular User - Authenticated User not part of the group", (done) => {
+    const groupname = group1.name;
+    const category = cat1.type;
+
+    request(app)
+      .get("/api/groups/:name/transactions/category/:category"
+        .replace(":groups", groupname)
+        .replace(":category", category)
+      )
+      .send()
+      .set("Cookie", [
+        `accessToken=${User2_accessToken}`,
+        `refreshToken=${User2_refreshToken}`,
+      ])
+      .then((response) => {
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.data).toHaveProperty("message");
+        expect(response.body.error).toContain("not in the DB");
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Get Transactions By Group By Category - Regular User - Admin Route for an authenticated Regular User", (done) => {
+    const groupname = group2.name;
+    const category = cat1.type;
+
+    request(app)
+      .get("/api/groups/:name/transactions/category/:category"
+        .replace(":groups", groupname)
+        .replace(":category", category)
+      )
+      .send()
+      .set("Cookie", [
+        `accessToken=${User1_accessToken}`,
+        `refreshToken=${User1_refreshToken}`,
+      ])
+      .then((response) => {
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.data).toHaveProperty("message");
+        expect(response.body.error).toContain("not in the DB");
         done();
       })
       .catch((err) => done(err));
