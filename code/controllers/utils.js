@@ -82,6 +82,7 @@ export const verifyAuth = (req, res, info) => {
   if (!cookie.accessToken || !cookie.refreshToken) {
     return { flag: false, cause: "Unauthorized" };
   }
+
   try {
     const decodedAccessToken = jwt.verify(
       cookie.accessToken,
@@ -199,6 +200,10 @@ const checkRolesPermissions = (
   decodedRefreshToken,
   info
 ) => {
+  console.log(decodedAccessToken);
+
+  console.log(info.emails.includes(decodedAccessToken.email));  
+
   switch (info.authType) {
     case "Admin":
       if (

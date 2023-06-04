@@ -21,7 +21,7 @@ describe("createCategory", () => {
   beforeEach(() => {
     jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
       flag: true,
-      user: { role: "Admin" },
+      cause: "Authorized",
     });
   });
 
@@ -67,7 +67,7 @@ describe("createCategory", () => {
     // jest.spyOn on verifyAuth method
     jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
       authorized: false,
-      user: { role: "Admin" },
+      cause: "Unauthorized",
     });
 
     await controllerMethods.createCategory(mockRequest, mockResponse);
@@ -123,7 +123,7 @@ describe("updateCategory", () => {
 
     jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
       flag: true,
-      user: { role: "Admin" },
+      cause: "Authorized",
     });
   });
 
@@ -139,7 +139,7 @@ describe("updateCategory", () => {
     // jest.spyOn on verifyAuth method
     jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
       flag: false,
-      user: { role: "Admin" },
+      cause: "Unauthorized",
     });
 
     await controllerMethods.updateCategory(mockRequest, mockResponse);
@@ -274,7 +274,7 @@ describe("deleteCategory", () => {
 
     jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
       flag: true,
-      user: { role: "Admin" },
+      cause: "Authorized",
     });
   });
 
@@ -366,7 +366,7 @@ describe("deleteCategory", () => {
 
     jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
       flag: false,
-      user: { role: "Admin" },
+      cause: "Unauthorized",
     });
 
     await controllerMethods.deleteCategory(mockRequest, mockResponse);
@@ -470,7 +470,7 @@ describe("getCategories", () => {
   beforeEach(() => {
     jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
       flag: true,
-      user: { role: "Simple" },
+      cause: "Authorized",
     });
   });
 
@@ -533,7 +533,7 @@ describe("getCategories", () => {
 
     jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
       flag: false,
-      user: { role: "Simple" },
+      cause: "Unauthorized",
     });
 
     await controllerMethods.getCategories(mockRequest, mockResponse);
@@ -551,7 +551,7 @@ describe("createTransaction", () => {
   beforeEach(() => {
     jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
       flag: true,
-      user: { role: "Simple" },
+      cause: "Authorized",
     });
 
     mockedTransaction = {
@@ -600,7 +600,7 @@ describe("createTransaction", () => {
   test("CreateTransaction - Unauthorized", async () => {
     jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
       flag: false,
-      user: { role: "Simple" },
+      cause: "Unauthorized",
     });
 
     await controllerMethods.createTransaction(mockRequest, mockResponse);
@@ -668,7 +668,7 @@ describe("getAllTransactions", () => {
   beforeEach(() => {
     jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
       flag: true,
-      user: { role: "Admin" },
+      cause: "Authorized",
     });
 
     mockRequest = {};
@@ -726,7 +726,7 @@ describe("getAllTransactions", () => {
   test("GetAllTransactions - Unauthorized", async () => {
     jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
       flag: false,
-      user: { role: "Admin" },
+      cause: "Unauthorized",
     });
 
     await controllerMethods.getAllTransactions(mockRequest, mockResponse);
@@ -776,7 +776,7 @@ describe("getTransactionsByUser", () => {
     beforeEach(() => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
         flag: true,
-        user: { role: "Admin" },
+        cause: "Authorized",
       });
 
       mockTransaction = [
@@ -810,7 +810,7 @@ describe("getTransactionsByUser", () => {
     test("GetTransactionByUser - Admin - Unauthorized", async () => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
         flag: false,
-        user: { role: "Admin" },
+        cause: "Unauthorized",
       });
 
       await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
@@ -854,7 +854,7 @@ describe("getTransactionsByUser", () => {
     beforeEach(() => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
         flag: true,
-        user: { role: "User" },
+        cause: "Authorized",
       });
 
       mockTransaction = [
@@ -1150,7 +1150,7 @@ describe("getTransactionsByUser", () => {
     test("GetTransactionByUser - User - Unauthorized", async () => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
         flag: false,
-        user: { role: "User" },
+        cause: "Unauthorized",
       });
 
       await controllerMethods.getTransactionsByUser(mockRequest, mockResponse);
@@ -1213,7 +1213,7 @@ describe("getTransactionsByUserByCategory", () => {
     beforeEach(() => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
         flag: true,
-        user: { role: "Admin" },
+        cause: "Authorized",
       });
 
       mockTransaction = [
@@ -1295,7 +1295,7 @@ describe("getTransactionsByUserByCategory", () => {
     test("GetTransactionByUserByCategory - Admin - Unauthorized", async () => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
         flag: false,
-        user: { role: "Admin" },
+        cause: "Unauthorized",
       });
 
       await controllerMethods.getTransactionsByUserByCategory(
@@ -1344,7 +1344,7 @@ describe("getTransactionsByUserByCategory", () => {
     beforeEach(() => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
         flag: true,
-        user: { role: "User" },
+        cause: "Authorized",
       });
 
       mockTransaction = [
@@ -1426,7 +1426,7 @@ describe("getTransactionsByUserByCategory", () => {
     test("GetTransactionByUserByCategory - User - Unauthorized", async () => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
         flag: false,
-        user: { role: "User" },
+        cause: "Unauthorized",
       });
 
       await controllerMethods.getTransactionsByUserByCategory(
@@ -1511,7 +1511,7 @@ describe("getTransactionsByGroup", () => {
     beforeEach(() => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
         flag: true,
-        user: { role: "Admin" },
+        cause: "Authorized",
       });
 
       mockTransaction = [
@@ -1581,7 +1581,7 @@ describe("getTransactionsByGroup", () => {
     test("GetTransactionByGroup - Admin - Unauthorized", async () => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
         flag: false,
-        user: { role: "Admin" },
+        cause: "Unauthorized",
       });
 
       await controllerMethods.getTransactionsByGroup(mockRequest, mockResponse);
@@ -1609,7 +1609,7 @@ describe("getTransactionsByGroup", () => {
     beforeEach(() => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
         flag: true,
-        user: { role: "Group", members: group.members },
+        cause: "Authorized",
       });
 
       mockTransaction = [
@@ -1679,7 +1679,7 @@ describe("getTransactionsByGroup", () => {
     test("GetTransactionByGroup - Group - Unauthorized", async () => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
         flag: false,
-        user: { role: "Group", members: group.members },
+        cause: "Unauthorized",
       });
 
       await controllerMethods.getTransactionsByGroup(mockRequest, mockResponse);
@@ -1743,7 +1743,7 @@ describe("getTransactionsByGroupByCategory", () => {
     beforeEach(() => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
         flag: true,
-        user: { role: "Admin" },
+        cause: "Authorized",
       });
 
       mockTransaction = [
@@ -1827,7 +1827,7 @@ describe("getTransactionsByGroupByCategory", () => {
     test("GetTransactionByGroupByCategory - Admin - Unauthorized", async () => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
         flag: false,
-        user: { role: "Admin" },
+        cause: "Unauthorized",
       });
 
       await controllerMethods.getTransactionsByGroupByCategory(
@@ -1876,7 +1876,7 @@ describe("getTransactionsByGroupByCategory", () => {
     beforeEach(() => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
         flag: true,
-        user: { role: "Group", members: group.members },
+        cause: "Authorized",
       });
 
       mockTransaction = [
@@ -1960,7 +1960,7 @@ describe("getTransactionsByGroupByCategory", () => {
     test("GetTransactionByGroupByCategory - Group - Unauthorized", async () => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
         flag: false,
-        user: { role: "Group", members: ["Test2", "Test3"] },
+        cause: "Unauthorized",
       });
 
       await controllerMethods.getTransactionsByGroupByCategory(
@@ -2047,7 +2047,7 @@ describe("deleteTransaction", () => {
     beforeEach(() => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
         flag: true,
-        user: { role: "Admin" },
+        cause: "Authorized",
       });
 
       mockTransaction = [
@@ -2115,12 +2115,12 @@ describe("deleteTransaction", () => {
     beforeEach(() => {
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
         flag: false,
-        user: { role: "Admin" },
+        cause: "Unauthorized",
       });
 
       jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
         flag: true,
-        user: { role: "User" },
+        cause: "Authorized",
       });
 
       user.refreshToken = "refreshToken";
@@ -2259,7 +2259,7 @@ describe("deleteTransactions", () => {
 
     jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
       flag: true,
-      user: { role: "Admin" },
+      cause: "Authorized",
     });
 
     jest.spyOn(transactions, "find").mockResolvedValue(mockTransactions);
