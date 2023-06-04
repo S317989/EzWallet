@@ -91,7 +91,7 @@ describe("registerAdmin", () => {
     // jest.spyOn on verifyAuth method
     jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
       flag: true,
-      user: { role: "Admin" },
+      cause: "Authorized",
     });
     jest.spyOn(User, "findOne").mockResolvedValue(admin);
     jest.spyOn(User, "create").mockResolvedValue(admin);
@@ -219,7 +219,7 @@ describe("logout", () => {
 
     jest.spyOn(verifyAuth, "verifyAuth").mockImplementation(() => ({
       flag: true,
-      user: { role: "Simple" },
+      cause: "Authorized",
     }));
     jest.spyOn(User, "findOne").mockResolvedValue(user);
 
@@ -251,7 +251,7 @@ describe("logout", () => {
   test("Logout - Already logged out", async () => {
     jest.spyOn(verifyAuth, "verifyAuth").mockImplementation(() => ({
       flag: false,
-      user: { role: "Simple" },
+      cause: "Unauthorized",
     }));
 
     await authMethods.logout(mockRequest, mockResponse);

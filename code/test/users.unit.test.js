@@ -1,59 +1,293 @@
 import request from "supertest";
 import { app } from "../app";
-import { User } from "../models/User.js";
+import { Group, User } from "../models/User.js";
+import * as verifyAuth from "../controllers/utils.js";
+import * as usersMethods from "../controllers/users.js";
 
-/**
- * In order to correctly mock the calls to external modules it is necessary to mock them using the following line.
- * Without this operation, it is not possible to replace the actual implementation of the external functions with the one
- * needed for the test cases.
- * `jest.mock()` must be called for every external module that is called in the functions under test.
- */
 jest.mock("../models/User.js");
 
-/**
- * Defines code to be executed before each test case is launched
- * In this case the mock implementation of `User.find()` is cleared, allowing the definition of a new mock implementation.
- * Not doing this `mockClear()` means that test cases may use a mock implementation intended for other test cases.
- */
+let mockRequest, mockResponse;
+
 beforeEach(() => {
   User.find.mockClear();
-  //additional `mockClear()` must be placed here
 });
 
 describe("getUsers", () => {
-  test("should return empty list if there are no users", async () => {
-    //any time the `User.find()` method is called jest will replace its actual implementation with the one defined below
-    jest.spyOn(User, "find").mockImplementation(() => []);
-    const response = await request(app).get("/api/users");
+  let mockRequest, mockResponse;
 
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual([]);
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      cause: "Authorized",
+    });
+
+    mockRequest = {};
+
+    mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
   });
 
-  test("should retrieve list of all users", async () => {
-    const retrievedUsers = [
-      {
-        username: "test1",
-        email: "test1@example.com",
-        password: "hashedPassword1",
-      },
-      {
-        username: "test2",
-        email: "test2@example.com",
-        password: "hashedPassword2",
-      },
-    ];
-    jest.spyOn(User, "find").mockImplementation(() => retrievedUsers);
-    const response = await request(app).get("/api/users");
+  test("GetUsers - Success with filled list", async () => {
+    User.find.mockResolvedValue([
+      { username: "user1", email: "user1@email.com", role: "Regular" },
+      { username: "user2", email: "user2@email.com", role: "Regular" },
+    ]);
 
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual(retrievedUsers);
+    await usersMethods.getUsers(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: [
+        {
+          username: "user1",
+          email: "user1@email.com",
+          role: "Regular",
+        },
+        {
+          username: "user2",
+          email: "user2@email.com",
+          role: "Regular",
+        },
+      ],
+      refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+    });
+  });
+
+  test("GetUsers - Success with empty list", async () => {
+    User.find.mockResolvedValue([]);
+
+    await usersMethods.getUsers(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: [],
+      refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+    });
+  });
+
+  test("GetUsers - Unauthorized", async () => {
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: false,
+      cause: "Unauthorized",
+    });
+
+    User.find.mockResolvedValue([
+      { username: "user1", email: "user1@email.com", role: "Regular" },
+      { username: "user2", email: "user2@email.com", role: "Regular" },
+    ]);
+
+    await usersMethods.getUsers(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(401);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/Unauthorized/),
+    });
   });
 });
 
-describe("getUser", () => {});
+describe("getUser", () => {
+  let mockRequest, mockResponse;
 
-describe("createGroup", () => {});
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      cause: "Authorized",
+    });
+
+    mockRequest = {
+      params: { username: "user1" },
+      cookies: {
+        refreshToken: "refreshToken",
+      },
+    };
+
+    mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+  });
+
+  describe("Admin", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
+        flag: false,
+        cause: "Unauthorized",
+        role: "User",
+      });
+
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
+        flag: true,
+        cause: "Authorized",
+        role: "Admin",
+      });
+    });
+
+    test("GetUser - Success", async () => {
+      User.findOne.mockResolvedValue({
+        username: "user1",
+        email: "user1@email.com",
+        role: "Regular",
+      });
+
+      await usersMethods.getUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: {
+          username: "user1",
+          email: expect.stringMatching(/@/),
+          role: "Regular",
+        },
+        refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+      });
+    });
+
+    test("GetUser - User not found", async () => {
+      User.findOne.mockResolvedValue(null);
+
+      await usersMethods.getUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/User not found/),
+        refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+      });
+    });
+  });
+
+  describe("Regular", () => {
+    test("GetUser - Success", async () => {
+      User.findOne.mockResolvedValue({
+        username: "user1",
+        email: "user1@email.com",
+        role: "Regular",
+        refreshToken: "refreshToken",
+      });
+
+      await usersMethods.getUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: {
+          username: "user1",
+          email: expect.stringMatching(/@/),
+          role: "Regular",
+        },
+        refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+      });
+    });
+
+    test("GetUser - User not found", async () => {
+      User.findOne.mockResolvedValue(null);
+
+      await usersMethods.getUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/User not found/),
+        refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+      });
+    });
+
+    test("GetUser - Unauthorized", async () => {
+      User.findOne.mockResolvedValue({
+        username: "user1",
+        role: "Regular",
+      });
+
+      await usersMethods.getUser(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Unauthorized/),
+        refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+      });
+    });
+  });
+});
+
+describe("createGroup", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      cause: "Authorized",
+    });
+
+    mockRequest = {
+      body: {
+        name: "Group1",
+        memberEmails: ["user1@email.com", "user2@email.com"],
+      },
+      cookies: {
+        refreshToken: "refreshToken",
+      },
+    };
+
+    mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+  });
+
+  test("CreateGroup - Success", async () => {
+    User.find.mockResolvedValueOnce([
+      { username: "caller", email: "caller@email.com", role: "Regular" },
+    ]);
+
+    Group.findOne.mockResolvedValue(false);
+
+    Group.create.mockResolvedValue({
+      name: "Group1",
+      members: mockRequest.body.memberEmails,
+    });
+
+    jest.spyOn(Group.prototype, "save").mockResolvedValue({
+      name: "Group1",
+      members: mockRequest.body.memberEmails,
+    });
+
+    await usersMethods.createGroup(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: {
+        group: {
+          name: "Group1",
+          members: mockRequest.body.memberEmails,
+        },
+        alreadyInGroup: [],
+        membersNotFound: [],
+      },
+      refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+    });
+  });
+
+  test("CreateGroup - Unauthorized", async () => {
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
+      flag: false,
+      cause: "Unauthorized",
+      role: "User",
+    });
+
+    jest.spyOn(Group.prototype, "save").mockResolvedValue({
+      name: "Group1",
+      members: mockRequest.body.membersEmails,
+    });
+  });
+});
 
 describe("getGroups", () => {});
 

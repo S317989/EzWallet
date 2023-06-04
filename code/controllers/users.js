@@ -330,6 +330,8 @@ export const addToGroup = async (req, res) => {
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
+    const actualMemers = [...searchedGroup.members];
+
     const memberEmails = req.body.emails;
 
     if (!memberEmails || memberEmails.length === 0)
