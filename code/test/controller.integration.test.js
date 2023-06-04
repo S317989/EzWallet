@@ -1128,46 +1128,144 @@ describe("getAllTransactions", () => {
 });
 
 describe("getTransactionsByUser", () => {
+  let user, User_accessToken, User_refreshToken;
+  let admin, Admin_accessToken, Admin_refreshToken;
+  let cat1, cat2;
+
   beforeAll(async ()=>{
+    
+    admin = {
+      username: "TestAdmin",
+      email: "admin@test.com",
+      password: "TestAdmin",
+    };
+
+    Admin_accessToken = jwt.sign(
+      {
+       username: admin.username,
+       email: admin.email,
+       password: admin.password,
+       role: "Admin",
+      },
+      "EZWALLET",
+      {
+       expiresIn: "1h",
+      }
+    );
+
+    Admin_refreshToken = jwt.sign(
+      {
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
+        role: "Admin",
+      },
+      "EZWALLET",
+      { expiresIn: "7d" }
+    );
+    user = {
+      username: "TestUser",
+      email: "user@test.com",
+      password: "TestUser",
+    };
+
+    User_accessToken = jwt.sign(
+      {
+       username: user.username,
+       email: user.email,
+       password: user.password,
+       role: "Regular",
+      },
+      "EZWALLET",
+      {
+       expiresIn: "1h",
+      }
+    );
+
+    User_refreshToken = jwt.sign(
+      {
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: "Regular",
+      },
+      "EZWALLET",
+      { expiresIn: "7d" }
+    );
+
+    cat1 = {
+      type:"Category1",
+      color:"Color1",
+    };
+    cat2 = {
+      type:"Category2",
+      color:"Color2",
+    };
+
+    await categories.insertMany([cat1, cat2]);
+    await User.insertMany([admin, user]);
+    
     await transactions.deleteMany({});
-  });
-  beforeEach(async () => {
-    const today = "04-03-2020";
 
     const transaction1 = {
-      username: "User1",
-      type: "Type1",
+      username: user.username,
+      type: cat2.type,
       amount: 100,
-      date: today,
     }
     const transaction2 = {
-      username: "Admin",
-      type: "Type2",
+      username: admin.username,
+      type: cat2.type,
       amount: 3,
-      date: today,
     }
     const transaction3 = {
-      username: "User2",
-      type: "Type1",
-      amount: 17,
-      date: today,
+      username: user.username,
+      type: cat2.type,
+      amount: 17.9,
     }
     const transaction4 = {
-      username: "User1",
-      type: "Type3",
-      amount: 50,
-      date: today,
+      username: user.username,
+      type: cat1.type,
+      amount: 0.78,
     }
 
     await transactions.insertMany([transaction1, transaction2, transaction3, transaction4]);
   });
-  
-  test("Get Transaction By User1", (done) => {
-    const username = "User1";
+
+  test("Get Transaction By User - Regular User - Success !", (done) => {
+    const username = user.username;
 
     request(app)
-      .get("api/users/:username/transactions".replace(":username",username))
+      .get("/api/users/:username/transactions".replace(":username",username))
       .send()
+      .set("Cookie", [
+        `accessToken=${User_accessToken}`,
+        `refreshToken=${User_refreshToken}`,
+      ])
+      .then((response) => {
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("data");
+        expect(response.body.data).toBeInstanceOf(Array);
+        expect(response.body.data[0]).toContain("username");
+        expect(response.body.data[0]).toEqual(username);
+        expect(response.body.data[0]).toContain("type");
+        expect(response.body.data[0]).toContain("amount");
+        expect(response.body.data[0]).toContain("date");
+        expect(response.body.data[0]).toContain("color");
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Get Transaction By User - Admin - Success !", (done) => {
+    const username = user.username;
+
+    request(app)
+      .get("api/transactions/users/:username".replace(":username",username))
+      .send()
+      .set("Cookie", [
+        `accessToken=${Admin_accessToken}`,
+        `refreshToken=${Admin_refreshToken}`,
+      ])
       .then((response) => {
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("data");
@@ -1181,11 +1279,37 @@ describe("getTransactionsByUser", () => {
       })
       .catch((err) => done(err));
   });
-  test("User not Consistent", (done) => {
-    /**Username have to consistent with the logged in user */
+
+  test("Get Transaction By User - Admin - Username in params not in the DB", (done) => {
+
     request(app)
-      .get("api/users/:username/transactions")
+    .get("api/transactions/users/:username".replace(":username", "User1"))
+    .send()
+    .set("Cookie", [
+      `accessToken=${Admin_accessToken}`,
+      `refreshToken=${Admin_refreshToken}`,
+    ])
+      .then((response) => {
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.data).toHaveProperty("message");
+
+        expect(response.body.error).toContain("not in the DB");
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Get Transaction By User - Regular User - User authenticated and params doesn't match ", (done) => {
+    let username = admin.username;
+    
+    request(app)
+      .get("api/users/:username/transactions".replace(":username", username))
       .send()
+      .set("Cookie", [
+        `accessToken=${User_accessToken}`,
+        `refreshToken=${User_refreshToken}`,
+      ])
       .then((response) => {
         expect(response.status).toBe(401);
         expect(response.body).toHaveProperty("error");
@@ -1196,10 +1320,37 @@ describe("getTransactionsByUser", () => {
       .catch((err) => done(err));
   });
 
-  test("Get All Transaction - Not an Admin", (done) => {
+  test("Get Transaction By User - Regular User - Admin route for an authorized regular user", (done) => {
+    let username = admin.username;
+    
     request(app)
-      .get("api/transactions/users/:username")
+      .get("api/transactions/users/:username".replace(":username", username))
       .send()
+      .set("Cookie", [
+        `accessToken=${User_accessToken}`,
+        `refreshToken=${User_refreshToken}`,
+      ])
+      .then((response) => {
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.data).toHaveProperty("message");
+        expect(response.body.error).toContain("unauthorized");
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Get Transaction By User -  - Check for query filter", (done) => {
+    /** Don't know if it's necessary! */
+    let username = admin.username;
+    
+    request(app)
+      .get("api/transactions/users/:username".replace(":username", username))
+      .send()
+      .set("Cookie", [
+        `accessToken=${User_accessToken}`,
+        `refreshToken=${User_refreshToken}`,
+      ])
       .then((response) => {
         expect(response.status).toBe(401);
         expect(response.body).toHaveProperty("error");
@@ -1212,17 +1363,131 @@ describe("getTransactionsByUser", () => {
 });
 
 describe("getTransactionsByUserByCategory", () => {
-  beforeAll(async()=>{});
-  beforeEach(async()=>{});
+  let user, User_accessToken, User_refreshToken;
+  let admin, Admin_accessToken, Admin_refreshToken;
+  let cat1, cat2;
+
+  beforeAll(async ()=>{
+    
+    admin = {
+      username: "TestAdmin",
+      email: "admin@test.com",
+      password: "TestAdmin",
+    };
+
+    Admin_accessToken = jwt.sign(
+      {
+       username: admin.username,
+       email: admin.email,
+       password: admin.password,
+       role: "Admin",
+      },
+      "EZWALLET",
+      {
+       expiresIn: "1h",
+      }
+    );
+
+    Admin_refreshToken = jwt.sign(
+      {
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
+        role: "Admin",
+      },
+      "EZWALLET",
+      { expiresIn: "7d" }
+    );
+    user = {
+      username: "TestUser",
+      email: "user@test.com",
+      password: "TestUser",
+    };
+
+    User_accessToken = jwt.sign(
+      {
+       username: user.username,
+       email: user.email,
+       password: user.password,
+       role: "Regular",
+      },
+      "EZWALLET",
+      {
+       expiresIn: "1h",
+      }
+    );
+
+    User_refreshToken = jwt.sign(
+      {
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: "Regular",
+      },
+      "EZWALLET",
+      { expiresIn: "7d" }
+    );
+
+    cat1 = {
+      type:"Category1",
+      color:"Color1",
+    };
+    cat2 = {
+      type:"Category2",
+      color:"Color2",
+    };
+
+    await categories.insertMany([cat1, cat2]);
+    await User.insertMany([admin, user]);
+    
+    await transactions.deleteMany({});
+
+    const transaction1 = {
+      username: user.username,
+      type: cat2.type,
+      amount: 100,
+    }
+    const transaction2 = {
+      username: admin.username,
+      type: cat2.type,
+      amount: 3,
+    }
+    const transaction3 = {
+      username: user.username,
+      type: cat2.type,
+      amount: 17.9,
+    }
+    const transaction4 = {
+      username: user.username,
+      type: cat1.type,
+      amount: 0.78,
+    }
+
+    await transactions.insertMany([transaction1, transaction2, transaction3, transaction4]);
+  });  beforeEach(async()=>{});
   afterAll(async()=>{});
   afterEach(async()=>{});
 
-  test("Success !", (done) => {
+  test("Get Transactions By User By Category - Success !", (done) => {
+    const username = user.username;
+
     request(app)
-      .get("")
+      .get("/api/users/:username/transactions".replace(":username",username))
       .send()
+      .set("Cookie", [
+        `accessToken=${User_accessToken}`,
+        `refreshToken=${User_refreshToken}`,
+      ])
       .then((response) => {
-        expect();
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("data");
+        expect(response.body.data).toBeInstanceOf(Array);
+        expect(response.body.data[0]).toContain("username");
+        expect(response.body.data[0]).toEqual(username);
+        expect(response.body.data[0]).toContain("type");
+        expect(response.body.data[0]).toContain("amount");
+        expect(response.body.data[0]).toContain("date");
+        expect(response.body.data[0]).toContain("color");
         done();
       })
       .catch((err) => done(err));
