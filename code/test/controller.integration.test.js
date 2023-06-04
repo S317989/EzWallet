@@ -1464,15 +1464,19 @@ describe("getTransactionsByUserByCategory", () => {
     }
 
     await transactions.insertMany([transaction1, transaction2, transaction3, transaction4]);
-  });  beforeEach(async()=>{});
+  });
+  beforeEach(async()=>{});
   afterAll(async()=>{});
   afterEach(async()=>{});
 
-  test("Get Transactions By User By Category - Success !", (done) => {
+  test("Get Transactions By User By Category - Regular User - Success !", (done) => {
     const username = user.username;
-
+    const category = cat1.type;
     request(app)
-      .get("/api/users/:username/transactions".replace(":username",username))
+      .get("/api/users/:username/transactions/category/:category"
+        .replace(":username", username)
+        .replace(":category", category)
+      )
       .send()
       .set("Cookie", [
         `accessToken=${User_accessToken}`,
@@ -1492,45 +1496,143 @@ describe("getTransactionsByUserByCategory", () => {
       })
       .catch((err) => done(err));
   });
-  test("Username not in the database", (done) => {
+
+  test("Get Transactions By User By Category - Admin - Success !", (done) => {
+    const username = admin.username;
+    const category = cat1.type;
     request(app)
-      .get("")
+      .get("/api/transactions/users/:username/category/:category"
+        .replace(":username", username)
+        .replace(":category", category)
+      )
       .send()
+      .set("Cookie", [
+        `accessToken=${Admin_accessToken}`,
+        `refreshToken=${Admin_refreshToken}`,
+      ])
       .then((response) => {
-        expect();
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("data");
+        expect(response.body.data).toBeInstanceOf(Array);
+        expect(response.body.data[0]).toContain("username");
+        expect(response.body.data[0]).toEqual(username);
+        expect(response.body.data[0]).toContain("type");
+        expect(response.body.data[0]).toContain("amount");
+        expect(response.body.data[0]).toContain("date");
+        expect(response.body.data[0]).toContain("color");
         done();
       })
       .catch((err) => done(err));
   });
 
-  test("Category not in the database", (done) => {
+  test("Get Transaction By User By Category - Admin - Username in params not in the DB", (done) => {
+    const username = admin.username;
+    const category = cat1.type;
     request(app)
-      .get("")
+      .get("api/transactions/users/:username/category/:category"
+        .replace(":username", "User1")
+        .replace(":category", category)
+      )
       .send()
+      .set("Cookie", [
+        `accessToken=${Admin_accessToken}`,
+        `refreshToken=${Admin_refreshToken}`,
+      ])
       .then((response) => {
-        expect();
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.data).toHaveProperty("message");
+        expect(response.body.error).toContain("not in the DB");
         done();
       })
       .catch((err) => done(err));
   });
 
-  test("Username not consistent with the User", (done) => {
+  test("Get Transaction By User By Category - Admin - Category in params not in the DB", (done) => {
+    const username = admin.username;
+    const category = cat1.type;
     request(app)
-      .get("")
+      .get("api/transactions/users/:username/category/:category"
+        .replace(":username", username)
+        .replace(":category", "Category")
+      )
       .send()
+      .set("Cookie", [
+        `accessToken=${Admin_accessToken}`,
+        `refreshToken=${Admin_refreshToken}`,
+      ])
       .then((response) => {
-        expect();
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.data).toHaveProperty("message");
+        expect(response.body.error).toContain("not in the DB");
         done();
       })
       .catch((err) => done(err));
   });
 
-  test(" Not an Admin", (done) => {
+  test("Get Transaction By User By Category - Regular User - User authenticated and params doesn't match", (done) => {
+    const username = admin.username;
+    const category = cat1.type;
     request(app)
-      .get("")
+      .get("api/users/:username/transactions/category/:category"
+        .replace(":username", username)
+        .replace(":category", category)
+      )
       .send()
+      .set("Cookie", [
+        `accessToken=${User_accessToken}`,
+        `refreshToken=${User_refreshToken}`,
+      ])
       .then((response) => {
-        expect();
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.data).toHaveProperty("message");
+        expect(response.body.error).toContain("not in the DB");
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Get Transaction By User By Category - Regular User - Admin route for an authorized regular user", (done) => {
+    const username = admin.username;
+    const category = cat1.type;
+    request(app)
+      .get("api/transactions/users/:username/category/:category"
+        .replace(":username", username)
+        .replace(":category", category)
+      )
+      .send()
+      .set("Cookie", [
+        `accessToken=${User_accessToken}`,
+        `refreshToken=${User_refreshToken}`,
+      ])
+      .then((response) => {
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.data).toHaveProperty("message");
+        expect(response.body.error).toContain("not in the DB");
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  test("Get Transaction By User By Category -  - Check for query filter", (done) => {
+    /** Don't know if it's necessary! */
+    let username = admin.username;
+    
+    request(app)
+      .get("api/transactions/users/:username".replace(":username", username))
+      .send()
+      .set("Cookie", [
+        `accessToken=${User_accessToken}`,
+        `refreshToken=${User_refreshToken}`,
+      ])
+      .then((response) => {
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.data).toHaveProperty("message");
+        expect(response.body.error).toContain("unauthorized");
         done();
       })
       .catch((err) => done(err));
