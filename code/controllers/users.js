@@ -430,11 +430,11 @@ export const removeFromGroup = async (req, res) => {
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
-    if(req.url.includes("/insert")){
+    if(req.url.includes("/pull")){
       if (!verifyAuth(req, res, { authType: "Admin" }).flag)
         return res.status(401).json({ error: "Unauthorized" });
     }else{
-      if (!verifyAuth(req, res, { authType: "Group", emails: memberEmails }).flag)
+      if (!verifyAuth(req, res, { authType: "Group", emails: removingEmails }).flag)
         return res.status(401).json({ error: "Unauthorized" });
     }
 
