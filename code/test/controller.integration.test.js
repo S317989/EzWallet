@@ -1774,7 +1774,7 @@ describe("getTransactionsByGroup", () => {
     await transactions.deleteMany({});
 
     const transaction1 = {
-      username: user.username,
+      username: user1.username,
       type: cat2.type,
       amount: 100,
     }
@@ -1784,12 +1784,12 @@ describe("getTransactionsByGroup", () => {
       amount: 3,
     }
     const transaction3 = {
-      username: user.username,
+      username: user2.username,
       type: cat2.type,
       amount: 17.9,
     }
     const transaction4 = {
-      username: user.username,
+      username: user2.username,
       type: cat1.type,
       amount: 0.78,
     }
