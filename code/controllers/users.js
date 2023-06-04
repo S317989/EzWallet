@@ -345,7 +345,7 @@ export const addToGroup = async (req, res) => {
       if (!verifyAuth(req, res, { authType: "Admin" }).flag)
         return res.status(401).json({ error: "Unauthorized" });
     }else{
-      if (!verifyAuth(req, res, { authType: "Group", emails: oldMemberList }).flag)
+      if (!verifyAuth(req, res, { authType: "Group", emails: oldMemberList.map((ans)=>ans.email) }).flag)
         return res.status(401).json({ error: "Unauthorized" });
     }
 
@@ -373,7 +373,7 @@ export const addToGroup = async (req, res) => {
 
     if (searchedGroup.members.every((user) => oldMemberList.includes(user)))
       return res.status(400).json({
-        error: `The specified [${oldMemberList}] members either do not exist or are already in a group`,
+        error: `The specified ${memberEmails} users either do not exist or are already in a group`,
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
@@ -441,7 +441,7 @@ export const removeFromGroup = async (req, res) => {
       if (!verifyAuth(req, res, { authType: "Admin" }).flag)
         return res.status(401).json({ error: "Unauthorized" });
     }else{
-      if (!verifyAuth(req, res, { authType: "Group", emails: oldMemberList }).flag)
+      if (!verifyAuth(req, res, { authType: "Group", emails: oldMemberList.map((ans)=>ans.email) }).flag)
         return res.status(401).json({ error: "Unauthorized" });
     }
 
