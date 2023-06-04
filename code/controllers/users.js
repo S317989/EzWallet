@@ -281,7 +281,7 @@ export const getGroup = async (req, res) => {
           });
 
         let isInGroup = groupInfo.members.find(
-          (member) => member.email === user.username
+          (member) => member.email === user.email
         );
 
         if (!isInGroup)
@@ -337,14 +337,7 @@ export const addToGroup = async (req, res) => {
         error: "No emails provided",
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
-
     
-    const oldMemberList = [...searchedGroup.members],
-      membersNotFound = [],
-      alreadyInGroup = [];
-
-    let user;
-
     if(req.url.includes("/insert")){
       if (!verifyAuth(req, res, { authType: "Admin" }).flag)
         return res.status(401).json({ error: "Unauthorized" });
@@ -353,6 +346,12 @@ export const addToGroup = async (req, res) => {
         return res.status(401).json({ error: "Unauthorized" });
     }
     
+    const oldMemberList = [...searchedGroup.members],
+      membersNotFound = [],
+      alreadyInGroup = [];
+
+    let user;
+
     if (!memberEmails.every((email) => validateEmail(email)))
       return res.status(400).json({
         error: "Invalid email format",
@@ -431,13 +430,13 @@ export const removeFromGroup = async (req, res) => {
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
-      if(req.url.includes("/insert")){
-        if (!verifyAuth(req, res, { authType: "Admin" }).flag)
-          return res.status(401).json({ error: "Unauthorized" });
-      }else{
-        if (!verifyAuth(req, res, { authType: "Group", emails: memberEmails }).flag)
-          return res.status(401).json({ error: "Unauthorized" });
-      }
+    if(req.url.includes("/insert")){
+      if (!verifyAuth(req, res, { authType: "Admin" }).flag)
+        return res.status(401).json({ error: "Unauthorized" });
+    }else{
+      if (!verifyAuth(req, res, { authType: "Group", emails: memberEmails }).flag)
+        return res.status(401).json({ error: "Unauthorized" });
+    }
 
     const oldMemberList = [...searchedGroup.members];
 
