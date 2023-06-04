@@ -330,25 +330,29 @@ export const addToGroup = async (req, res) => {
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
-    const actualMemers = [...searchedGroup.members];
-
     const memberEmails = req.body.emails;
     const oldMemberList = [...searchedGroup.members],
       membersNotFound = [],
       alreadyInGroup = [];
-    
-      if (!memberEmails || memberEmails.length === 0)
+
+    const oldMemberEmails = oldMemberList.map((member) => member.email);
+
+    if (!memberEmails || memberEmails.length === 0)
       return res.status(400).json({
         error: "No emails provided",
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
-    
-    if(req.url.includes("/insert")){
+
+    if (req.url.includes("/insert")) {
       if (!verifyAuth(req, res, { authType: "Admin" }).flag)
         return res.status(401).json({ error: "Unauthorized" });
-    }else{
-      if (!verifyAuth(req, res, { authType: "Group", emails: oldMemberList }).flag)
+    } else {
+      if (
+        !verifyAuth(req, res, { authType: "Group", emails: oldMemberEmails })
+          .flag
+      ) {
         return res.status(401).json({ error: "Unauthorized" });
+      }
     }
 
     let user;
@@ -379,7 +383,7 @@ export const addToGroup = async (req, res) => {
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
-    await searchedGroup.save();
+    //await searchedGroup.save();
 
     return res.status(200).json({
       data: {
@@ -433,21 +437,25 @@ export const removeFromGroup = async (req, res) => {
 
     const oldMemberList = [...searchedGroup.members];
 
+    const oldMemberEmails = oldMemberList.map((member) => member.email);
+
     if (oldMemberList.length === 1)
       return res.status(400).json({
         error: "You cannot remove all the members from a group",
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
-    if(req.url.includes("/pull")){
+    if (req.url.includes("/pull")) {
       if (!verifyAuth(req, res, { authType: "Admin" }).flag)
         return res.status(401).json({ error: "Unauthorized" });
-    }else{
-      if (!verifyAuth(req, res, { authType: "Group", emails: oldMemberList }).flag)
+    } else {
+      if (
+        !verifyAuth(req, res, { authType: "Group", emails: oldMemberEmails })
+          .flag
+      )
         return res.status(401).json({ error: "Unauthorized" });
     }
 
-    
     const notInGroup = [],
       usersNotFound = [];
 
