@@ -200,10 +200,6 @@ const checkRolesPermissions = (
   decodedRefreshToken,
   info
 ) => {
-  console.log(decodedAccessToken);
-
-  console.log(info.emails.includes(decodedAccessToken.email));  
-
   switch (info.authType) {
     case "Admin":
       if (

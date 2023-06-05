@@ -383,7 +383,7 @@ export const addToGroup = async (req, res) => {
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
-    //await searchedGroup.save();
+    await searchedGroup.save();
 
     return res.status(200).json({
       data: {
@@ -566,25 +566,17 @@ export const deleteUser = async (req, res) => {
       username: user.username,
     });
 
-    /* Removing User from the group -> cover the case that the user is in multiple group (extreme) */
+    const group = await Group.findOneAndUpdate(
+      { "members.email": user.email },
+      { $pull: { members: { email: user.email } } },
+      { new: true }
+    );
+
     let InGroup = false;
-    const groupslist = (await Group.find())
-      .filter((ans) =>
-        ans.members.some((member) => member.email === user.email)
-      )
-      .forEach(async (group) => {
-        InGroup = true;
-        group.members.forEach((m) => {
-          m.email === user.email ? group.members.remove(m) : null;
-        });
 
-        /** If the user is the last member of a group, we delete the group */
-        if (group.members.length === 0) {
-          let groupToDelete = await Group.findOne({ name: group.name });
+    if (group) InGroup = true;
 
-          await Group.deleteOne(groupToDelete);
-        } else await group.save();
-      });
+    if (group.length === 0) await Group.deleteOne(group);
 
     /** Effective user removing */
     await User.deleteOne(user);
