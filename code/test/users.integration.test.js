@@ -1059,40 +1059,328 @@ describe("addToGroup", () => {
 
     admin.refreshToken = refreshToken;
 
-    await User.create(user);
+    await User.create(admin, user);
     await Group.create(group);
   });
 
   test("AddToGroup - Success", (done) => {
+    let user1 = {
+      username: "user1",
+      email: "user1@email.com",
+      password: "user1",
+      role: "Regular",
+    };
+
+    let user2 = {
+      username: "user2",
+      email: "user2@email.com",
+      password: "user2",
+      role: "Regular",
+    };
+
+    User.create(user1, user2).then(() => {
+      request(app)
+        .patch(`/api/groups/${group.name}/add`)
+        .set("Cookie", [
+          `accessToken=${accessToken}`,
+          `refreshToken=${refreshToken}`,
+        ])
+        .send({
+          name: group.name,
+          emails: ["user1@email.com", "user2@email.com"],
+        })
+        .then((response) => {
+          expect(response.status).toBe(200);
+          expect(response.body).toEqual({
+            data: expect.objectContaining({
+              group: expect.objectContaining({
+                name: "GroupName",
+                members: expect.arrayContaining([
+                  expect.objectContaining({ email: user.email }),
+                  expect.objectContaining({ email: user1.email }),
+                  expect.objectContaining({ email: user2.email }),
+                ]),
+              }),
+              alreadyInGroup: [],
+              membersNotFound: [],
+            }),
+            refreshedTokenMessage: response.body.refreshedTokenMessage,
+          });
+          done();
+        });
+    });
+  });
+
+  test("AddToGroup - Group does not exist", (done) => {
+    Group.deleteMany({}).then(() => {
+      request(app)
+        .patch(`/api/groups/${group.name}/add`)
+        .set("Cookie", [
+          `accessToken=${accessToken}`,
+          `refreshToken=${refreshToken}`,
+        ])
+        .send({
+          name: group.name,
+          emails: ["user1@email.com", "user2@email.com"],
+        })
+        .then((response) => {
+          // Verifica lo stato della risposta
+          expect(response.status).toBe(400);
+          expect(response.body).toEqual({
+            error: expect.stringMatching(/Group does not exist/),
+            refreshedTokenMessage: response.body.refreshedTokenMessage,
+          });
+          done();
+        });
+    });
+  });
+
+  test("AddToGroup - No emails provided", (done) => {
     request(app)
-      .post(`/api/groups/${group.name}/add`)
+      .patch(`/api/groups/${group.name}/add`)
       .set("Cookie", [
         `accessToken=${accessToken}`,
         `refreshToken=${refreshToken}`,
       ])
-      .send({ email: user.email })
+      .send({
+        name: group.name,
+        emails: [],
+      })
       .then((response) => {
-        expect(response.status).toBe(200);
+        expect(response.status).toBe(400);
         expect(response.body).toEqual({
-          data: {
-            group: {
-              name: "GroupName",
-              members: expect.arrayContaining([
-                expect.objectContaining({ email: user.email }),
-                expect.objectContaining({ email: "user1@email.com" }),
-              ]),
-            },
-            alreadyInGroup: [],
-            membersNotFound: [],
-          },
+          error: expect.stringMatching(/No emails provided/),
           refreshedTokenMessage: response.body.refreshedTokenMessage,
-        }),
-          done();
+        });
+        done();
+      });
+  });
+
+  test("AddToGroup - Users does not exists", (done) => {
+    request(app)
+      .patch(`/api/groups/${group.name}/add`)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
+      .send({
+        name: group.name,
+        emails: ["user1@email.com", "user2@email.com"],
+      })
+      .then((response) => {
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+          error: `The specified user1@email.com,user2@email.com users either do not exist or are already in a group`,
+          refreshedTokenMessage: response.body.refreshedTokenMessage,
+        });
+        done();
       });
   });
 });
 
-//describe("removeFromGroup", () => {});
+describe("removeFromGroup", () => {
+  let admin, user, group;
+  beforeEach(async () => {
+    await User.deleteMany({});
+    await Group.deleteMany({});
+
+    admin = {
+      username: "admin",
+      email: "admin@email.com",
+      password: "admin",
+      role: "Admin",
+    };
+
+    group = {
+      name: "GroupName",
+      members: [
+        { email: "user@email.com", id: "1" },
+        {
+          email: "user1@email.com",
+          id: "2",
+        },
+      ],
+    };
+
+    user = {
+      username: "user",
+      email: "user@email.com",
+      password: "user",
+      role: "Regular",
+    };
+
+    accessToken = jwt.sign(
+      {
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
+        role: "Admin",
+      },
+      "EZWALLET",
+      {
+        expiresIn: "1h",
+      }
+    );
+
+    refreshToken = jwt.sign(
+      {
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
+        role: "Admin",
+      },
+      "EZWALLET",
+      { expiresIn: "7d" }
+    );
+
+    admin.refreshToken = refreshToken;
+
+    await User.create(admin, user);
+    await Group.create(group);
+  });
+
+  test("RemoveFromGroup - Success", (done) => {
+    let user1 = {
+      username: "user1",
+      email: "user1@email.com",
+      password: "user1",
+      role: "Regular",
+    };
+
+    User.create(user1).then(() => {
+      request(app)
+        .patch(`/api/groups/${group.name}/remove`)
+        .set("Cookie", [
+          `accessToken=${accessToken}`,
+          `refreshToken=${refreshToken}`,
+        ])
+        .send({
+          name: group.name,
+          emails: ["user1@email.com"],
+        })
+        .then((response) => {
+          expect(response.status).toBe(200);
+          expect(response.body).toEqual({
+            data: expect.objectContaining({
+              group: expect.objectContaining({
+                name: "GroupName",
+                members: expect.arrayContaining([
+                  expect.objectContaining({ email: user.email }),
+                ]),
+              }),
+              notInGroup: [],
+              membersNotFound: [],
+            }),
+            refreshedTokenMessage: response.body.refreshedTokenMessage,
+          });
+          done();
+        });
+    });
+  });
+
+  test("RemoveFromGroup - Group does not exist", (done) => {
+    Group.deleteMany({}).then(() => {
+      request(app)
+        .patch(`/api/groups/${group.name}/remove`)
+        .set("Cookie", [
+          `accessToken=${accessToken}`,
+          `refreshToken=${refreshToken}`,
+        ])
+        .send({
+          name: group.name,
+          emails: ["user1@email.com"],
+        })
+        .then((response) => {
+          expect(response.status).toBe(400);
+          expect(response.body).toEqual({
+            error: expect.stringMatching(/Group does not exist/),
+            refreshedTokenMessage: response.body.refreshedTokenMessage,
+          });
+          done();
+        });
+    });
+  });
+
+  test("RemoveFromGroup - No emails provided", (done) => {
+    request(app)
+      .patch(`/api/groups/${group.name}/remove`)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
+      .send({
+        name: group.name,
+        emails: [],
+      })
+      .then((response) => {
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+          error: expect.stringMatching(/No emails provided/),
+          refreshedTokenMessage: response.body.refreshedTokenMessage,
+        });
+        done();
+      });
+  });
+
+  test("RemoveFromGroup - Cannot remove all members", (done) => {
+    let user1 = {
+      username: "user1",
+      email: "user1@email.com",
+      password: "user1",
+      role: "Regular",
+    };
+
+    group.members = [{ email: "user@email.com", id: "1" }];
+
+    Group.deleteMany({}).then(() => {
+      Group.create(group).then(() => {
+        User.create(user1).then(() => {
+          request(app)
+            .patch(`/api/groups/${group.name}/remove`)
+            .set("Cookie", [
+              `accessToken=${accessToken}`,
+              `refreshToken=${refreshToken}`,
+            ])
+            .send({
+              name: group.name,
+              emails: ["user1@email.com"],
+            })
+            .then((response) => {
+              expect(response.status).toBe(400);
+              expect(response.body).toEqual({
+                error: expect.stringMatching(
+                  /You cannot remove all the members from a group/
+                ),
+                refreshedTokenMessage: response.body.refreshedTokenMessage,
+              });
+              done();
+            });
+        });
+      });
+    });
+  });
+
+  test("RemoveFromGroup - Not existing user", (done) => {
+    request(app)
+      .patch(`/api/groups/${group.name}/remove`)
+      .set("Cookie", [
+        `accessToken=${accessToken}`,
+        `refreshToken=${refreshToken}`,
+      ])
+      .send({
+        name: group.name,
+        emails: ["user1@email.com"],
+      })
+      .then((response) => {
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+          error: expect.stringMatching(/Invalid or non-existing emails/),
+          refreshedTokenMessage: response.body.refreshedTokenMessage,
+        });
+        done();
+      });
+  });
+});
 
 describe("deleteUser", () => {
   let admin, user, group;
