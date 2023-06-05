@@ -335,8 +335,6 @@ export const addToGroup = async (req, res) => {
       membersNotFound = [],
       alreadyInGroup = [];
 
-    const oldMemberEmails = oldMemberList.map((member) => member.email);
-
     if (!memberEmails || memberEmails.length === 0)
       return res.status(400).json({
         error: "No emails provided",
@@ -348,7 +346,7 @@ export const addToGroup = async (req, res) => {
         return res.status(401).json({ error: "Unauthorized" });
     } else {
       if (
-        !verifyAuth(req, res, { authType: "Group", emails: oldMemberEmails })
+        !verifyAuth(req, res, { authType: "Group", emails: oldMemberList.map((ans)=>ans.email) })
           .flag
       ) {
         return res.status(401).json({ error: "Unauthorized" });
@@ -379,7 +377,7 @@ export const addToGroup = async (req, res) => {
 
     if (searchedGroup.members.every((user) => oldMemberList.includes(user)))
       return res.status(400).json({
-        error: `The specified [${oldMemberList}] members either do not exist or are already in a group`,
+        error: `The specified ${memberEmails} users either do not exist or are already in a group`,
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
@@ -437,8 +435,6 @@ export const removeFromGroup = async (req, res) => {
 
     const oldMemberList = [...searchedGroup.members];
 
-    const oldMemberEmails = oldMemberList.map((member) => member.email);
-
     if (oldMemberList.length === 1)
       return res.status(400).json({
         error: "You cannot remove all the members from a group",
@@ -450,11 +446,12 @@ export const removeFromGroup = async (req, res) => {
         return res.status(401).json({ error: "Unauthorized" });
     } else {
       if (
-        !verifyAuth(req, res, { authType: "Group", emails: oldMemberEmails })
+        !verifyAuth(req, res, { authType: "Group", emails: oldMemberList.map((ans)=>ans.email) })
           .flag
       )
         return res.status(401).json({ error: "Unauthorized" });
     }
+
 
     const notInGroup = [],
       usersNotFound = [];
