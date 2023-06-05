@@ -37,7 +37,7 @@ describe("getUsers", () => {
   });
 
   test("GetUsers - Success with filled list", async () => {
-    User.find.mockResolvedValue([
+    moduleMock.User.find = jest.fn().mockResolvedValue([
       { username: "user1", email: "user1@email.com", role: "Regular" },
       { username: "user2", email: "user2@email.com", role: "Regular" },
     ]);
@@ -63,7 +63,7 @@ describe("getUsers", () => {
   });
 
   test("GetUsers - Success with empty list", async () => {
-    User.find.mockResolvedValue([]);
+    moduleMock.User.find = jest.fn().mockResolvedValue([]);
 
     await usersMethods.getUsers(mockRequest, mockResponse);
 
@@ -80,7 +80,7 @@ describe("getUsers", () => {
       cause: "Unauthorized",
     });
 
-    User.find.mockResolvedValue([
+    moduleMock.User.find = jest.fn().mockResolvedValue([
       { username: "user1", email: "user1@email.com", role: "Regular" },
       { username: "user2", email: "user2@email.com", role: "Regular" },
     ]);
@@ -137,7 +137,7 @@ describe("getUser", () => {
     });
 
     test("GetUser - Success", async () => {
-      User.findOne.mockResolvedValue({
+      moduleMock.User.findOne = jest.fn().mockResolvedValue({
         username: "user1",
         email: "user1@email.com",
         role: "Regular",
@@ -157,7 +157,7 @@ describe("getUser", () => {
     });
 
     test("GetUser - User not found", async () => {
-      User.findOne.mockResolvedValue(null);
+      moduleMock.User.findOne = jest.fn().mockResolvedValue(null);
 
       await usersMethods.getUser(mockRequest, mockResponse);
 
@@ -171,7 +171,7 @@ describe("getUser", () => {
 
   describe("Regular", () => {
     test("GetUser - Success", async () => {
-      User.findOne.mockResolvedValue({
+      moduleMock.User.findOne = jest.fn().mockResolvedValue({
         username: "user1",
         email: "user1@email.com",
         role: "Regular",
@@ -192,7 +192,7 @@ describe("getUser", () => {
     });
 
     test("GetUser - User not found", async () => {
-      User.findOne.mockResolvedValue(null);
+      moduleMock.User.findOne = jest.fn().mockResolvedValue(null);
 
       await usersMethods.getUser(mockRequest, mockResponse);
 
@@ -204,7 +204,7 @@ describe("getUser", () => {
     });
 
     test("GetUser - Unauthorized", async () => {
-      User.findOne.mockResolvedValue({
+      moduleMock.User.findOne = jest.fn().mockResolvedValue({
         username: "user1",
         role: "Regular",
       });
@@ -504,11 +504,437 @@ describe("getGroup", () => {
       refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
     });
   });
+
+  describe("Admin", () => {
+    test("GetGroup - Admin - Success", async () => {
+      jest.spyOn(Group, "findOne").mockResolvedValueOnce({
+        name: "Group1",
+        members: ["email@email.com"],
+      });
+
+      await usersMethods.getGroup(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: {
+          name: "Group1",
+          members: ["email@email.com"],
+        },
+        refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+      });
+    });
+
+    test("GetGroup - Admin - Unauthorized", async () => {
+      jest.spyOn(Group, "findOne").mockResolvedValueOnce({
+        name: "Group1",
+        members: ["email@email.com"],
+      });
+
+      jest
+        .spyOn(verifyAuth, "verifyAuth")
+        .mockReturnValueOnce({
+          flag: false,
+          cause: "Unauthorized",
+        })
+        .mockReturnValueOnce({
+          flag: false,
+          cause: "Unauthorized",
+        });
+
+      await usersMethods.getGroup(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Unauthorized/),
+      });
+    });
+  });
+
+  describe("User", () => {
+    beforeEach(() => {
+      jest
+        .spyOn(verifyAuth, "verifyAuth")
+        .mockReturnValueOnce({
+          flag: false,
+          cause: "Unauthorized",
+        })
+        .mockReturnValue({
+          flag: true,
+          cause: "Authorized",
+        });
+    });
+
+    test("GetGroup - User - Success", async () => {
+      jest.spyOn(Group, "findOne").mockResolvedValueOnce({
+        name: "Group1",
+        members: ["email@email.com"],
+      });
+
+      jest.spyOn(User, "findOne").mockResolvedValueOnce(true);
+
+      jest.spyOn(Group, "find").mockResolvedValueOnce(true);
+
+      await usersMethods.getGroup(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        data: {
+          name: "Group1",
+          members: ["email@email.com"],
+        },
+        refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+      });
+    });
+
+    test("GetGroup - User - Unauthorized", async () => {
+      jest.spyOn(Group, "findOne").mockResolvedValueOnce({
+        name: "Group1",
+        members: ["email@email.com"],
+      });
+
+      jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+        flag: false,
+        cause: "Unauthorized",
+      });
+
+      await usersMethods.getGroup(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/Unauthorized/),
+      });
+    });
+
+    test("GetGroup - User - User not found", async () => {
+      jest.spyOn(Group, "findOne").mockResolvedValueOnce({
+        name: "Group1",
+        members: ["email@email.com"],
+      });
+
+      jest.spyOn(User, "findOne").mockResolvedValueOnce(false);
+
+      await usersMethods.getGroup(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/User not found/),
+        refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+      });
+    });
+
+    test("GetGroup - User - User not in group", async () => {
+      jest.spyOn(Group, "findOne").mockResolvedValueOnce({
+        name: "Group1",
+        members: ["email@email.com"],
+      });
+
+      moduleMock.User.findOne = jest.fn().mockResolvedValueOnce({
+        username: "user",
+        email: "user@email.com",
+        password: "User",
+        role: "Regular",
+      });
+
+      moduleMock.Group.find = jest.fn().mockResolvedValueOnce(undefined);
+
+      await usersMethods.getGroup(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: expect.stringMatching(/User not in the specified group/),
+        refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+      });
+    });
+  });
 });
 
-describe("addToGroup", () => {});
+describe("addToGroup", () => {
+  beforeEach(() => {
+    mockRequest = {
+      params: { name: "Group1" },
+      body: { emails: ["user2@email.com", "user3@email.com"] },
+      url: "/insert",
+    };
+    mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+  });
 
-describe("removeFromGroup", () => {});
+  test("AddToGroup - Success", async () => {
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      cause: "Authorized",
+    });
+
+    moduleMock.Group.findOne = jest.fn().mockResolvedValueOnce({
+      name: "Group1",
+      members: [{ email: "user1@email.com", user: "user1" }],
+      save: jest.fn(),
+    });
+
+    // Mocking User.findOne
+    moduleMock.User.findOne = jest
+      .fn()
+      .mockResolvedValueOnce({
+        email: "user2@email.com",
+        _id: "user2",
+      })
+      .mockReturnValueOnce({
+        email: "user3@email.com",
+        _id: "user3",
+      })
+      .mockReturnValueOnce(null) // User not found
+      .mockReturnValueOnce(null); // User not found
+
+    await usersMethods.addToGroup(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: {
+        group: {
+          name: "Group1",
+          members: [
+            { email: "user1@email.com", user: "user1" },
+            { email: "user2@email.com", _id: "user2" },
+            { email: "user3@email.com", _id: "user3" },
+          ],
+        },
+        alreadyInGroup: [],
+        membersNotFound: [],
+      },
+      refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+    });
+  });
+
+  test("AddToGroup - Group not found", async () => {
+    moduleMock.Group.findOne = jest.fn().mockResolvedValueOnce(false);
+
+    await usersMethods.addToGroup(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/Group does not exist/),
+      refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+    });
+  });
+
+  test("AddToGroup - No emails provided", async () => {
+    delete mockRequest.body.emails;
+
+    moduleMock.Group.findOne = jest.fn().mockResolvedValueOnce({
+      name: "Group1",
+      members: [{ email: "user1@email.com", user: "user1" }],
+      save: jest.fn(),
+    });
+
+    await usersMethods.addToGroup(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/No emails provided/),
+      refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+    });
+  });
+
+  test("AddToGroup - User doesn't exist or already in group", async () => {
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      cause: "Authorized",
+    });
+
+    moduleMock.Group.findOne = jest.fn().mockResolvedValueOnce({
+      name: "Group1",
+      members: [{ email: "user1@email.com", user: "user1" }],
+      save: jest.fn(),
+    });
+
+    // Mocking User.findOne
+    moduleMock.User.findOne = jest
+      .fn()
+      .mockReturnValueOnce(null) // User not found
+      .mockReturnValueOnce(null); // User not found
+
+    await usersMethods.addToGroup(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: `The specified user2@email.com,user3@email.com users either do not exist or are already in a group`,
+      refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+    });
+  });
+});
+
+describe("removeFromGroup", () => {
+  beforeEach(() => {
+    mockRequest = {
+      params: { name: "group-name" },
+      body: {
+        emails: ["existing-member2@example.com", "not-in-group@example.com"],
+      },
+      url: "/pull",
+    };
+
+    mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      locals: { refreshedTokenMessage: "refreshedTokenMessage" },
+    };
+  });
+
+  test("RemoveFromGroup - Success", async () => {
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      cause: "Authorized",
+    });
+
+    // Mocking Group.findOne
+    moduleMock.Group.findOne = jest.fn().mockResolvedValueOnce({
+      name: "group-name",
+      members: [
+        { email: "existing-member1@example.com", user: "existing-user1-id" },
+        { email: "existing-member2@example.com", user: "existing-user2-id" },
+      ],
+      save: jest.fn(),
+    });
+
+    // Mocking User.find
+    moduleMock.User.find = jest.fn().mockResolvedValueOnce([
+      { email: "existing-member1@example.com", _id: "existing-user1-id" },
+      { email: "existing-member2@example.com", _id: "existing-user2-id" },
+      { email: "not-in-group@example.com", _id: "not-in-group-user-id" },
+    ]);
+
+    moduleMock.User.findOne = jest
+      .fn()
+      .mockResolvedValueOnce({
+        email: "existing-member1@example.com",
+        _id: "existing-user1-id",
+      })
+      .mockResolvedValueOnce({
+        email: "not-in-group@example.com",
+        _id: "not-in-group-user-id",
+      });
+
+    await usersMethods.removeFromGroup(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      data: {
+        group: {
+          name: "group-name",
+          members: [
+            {
+              email: "existing-member1@example.com",
+              user: "existing-user1-id",
+            },
+          ],
+        },
+        notInGroup: ["not-in-group@example.com"], // Member not found
+        membersNotFound: [], // Member not in the group
+      },
+      refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+    });
+  });
+
+  test("RemoveFromGroup - Group does not exist", async () => {
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      cause: "Authorized",
+    });
+
+    moduleMock.Group.findOne = jest.fn().mockResolvedValueOnce(false);
+
+    await usersMethods.removeFromGroup(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/Group does not exist/),
+      refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+    });
+  });
+
+  test("RemoveFromGroup - No emails provided", async () => {
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      cause: "Authorized",
+    });
+
+    // Mocking Group.findOne
+    moduleMock.Group.findOne = jest.fn().mockResolvedValueOnce({
+      name: "group-name",
+      members: [
+        { email: "existing-member1@example.com", user: "existing-user1-id" },
+        { email: "existing-member2@example.com", user: "existing-user2-id" },
+      ],
+      save: jest.fn(),
+    });
+
+    delete mockRequest.body.emails;
+
+    await usersMethods.removeFromGroup(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(/No emails provided/),
+      refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+    });
+  });
+
+  test("RemoveFromGroup - Cannot remove all members of a group", async () => {
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      cause: "Authorized",
+    });
+
+    // Mocking Group.findOne
+    moduleMock.Group.findOne = jest.fn().mockResolvedValueOnce({
+      name: "group-name",
+      members: [
+        { email: "existing-member1@example.com", user: "existing-user1-id" },
+      ],
+      save: jest.fn(),
+    });
+
+    await usersMethods.removeFromGroup(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching(
+        /You cannot remove all the members from a group/
+      ),
+      refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+    });
+  });
+
+  test("RemoveFromGroup - Invalid emails", async () => {
+    jest.spyOn(verifyAuth, "verifyAuth").mockReturnValue({
+      flag: true,
+      cause: "Authorized",
+    });
+
+    // Mocking Group.findOne
+    moduleMock.Group.findOne = jest.fn().mockResolvedValueOnce({
+      name: "group-name",
+      members: [
+        { email: "existing-member1@example.com", user: "existing-user1-id" },
+        { email: "existing-member2@example.com", user: "existing-user2-id" },
+      ],
+      save: jest.fn(),
+    });
+
+    moduleMock.User.find = jest.fn().mockResolvedValueOnce([]);
+
+    await usersMethods.removeFromGroup(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: expect.stringMatching("Invalid or non-existing emails"),
+      refreshedTokenMessage: mockResponse.locals.refreshedTokenMessage,
+    });
+  });
+});
 
 describe("deleteUser", () => {
   beforeEach(() => {

@@ -1092,7 +1092,7 @@ describe("addToGroup", () => {
   });
 });
 
-describe("removeFromGroup", () => {});
+//describe("removeFromGroup", () => {});
 
 describe("deleteUser", () => {
   let admin, user, group;

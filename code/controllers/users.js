@@ -346,8 +346,10 @@ export const addToGroup = async (req, res) => {
         return res.status(401).json({ error: "Unauthorized" });
     } else {
       if (
-        !verifyAuth(req, res, { authType: "Group", emails: oldMemberList.map((ans)=>ans.email) })
-          .flag
+        !verifyAuth(req, res, {
+          authType: "Group",
+          emails: oldMemberList.map((ans) => ans.email),
+        }).flag
       ) {
         return res.status(401).json({ error: "Unauthorized" });
       }
@@ -425,7 +427,12 @@ export const removeFromGroup = async (req, res) => {
     let removingEmails = req.body.emails;
 
     if (!removingEmails || removingEmails.length === 0)
-      return res.status(400).json({ error: "No emails provided" });
+      return res
+        .status(400)
+        .json({
+          error: "No emails provided",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
 
     if (!removingEmails.every((email) => validateEmail(email)))
       return res.status(400).json({
@@ -446,12 +453,13 @@ export const removeFromGroup = async (req, res) => {
         return res.status(401).json({ error: "Unauthorized" });
     } else {
       if (
-        !verifyAuth(req, res, { authType: "Group", emails: oldMemberList.map((ans)=>ans.email) })
-          .flag
+        !verifyAuth(req, res, {
+          authType: "Group",
+          emails: oldMemberList.map((ans) => ans.email),
+        }).flag
       )
         return res.status(401).json({ error: "Unauthorized" });
     }
-
 
     const notInGroup = [],
       usersNotFound = [];
