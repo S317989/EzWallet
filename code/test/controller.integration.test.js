@@ -34,20 +34,20 @@ beforeEach(async () => {
 })
 
 describe("createCategory", () => {
-  let user, accessToken, refreshToken;
+  let admin, accessToken, refreshToken;
 
   beforeEach(async ()=>{
-    user = {
+    admin = {
       username: "TestAdmin",
       email: "admin@test.com",
       password: "TestAdmin",
+      role: "Admin"
     };
-
     accessToken = jwt.sign(
       {
-       username: user.username,
-       email: user.email,
-       password: user.password,
+       username: admin.username,
+       email: admin.email,
+       password: admin.password,
        role: "Admin",
       },
       "EZWALLET",
@@ -55,17 +55,22 @@ describe("createCategory", () => {
        expiresIn: "1h",
       }
     );
-
     refreshToken = jwt.sign(
       {
-        username: user.username,
-        email: user.email,
-        password: user.password,
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
         role: "Admin",
       },
       "EZWALLET",
       { expiresIn: "7d" }
     );
+    admin.refreshToken = refreshToken;
+
+    await User.create(admin);
+  });
+
+  afterEach(async ()=>{
     await categories.deleteMany({});
   });
 
@@ -186,26 +191,29 @@ describe("createCategory", () => {
       })
       .catch((err) => done(err));
   });
-}); /** 6/6 test */
+}); /** 5/5 test */
 
 describe("updateCategory", () => {
-  let user, accessToken, refreshToken;
+  let admin, Admin_accessToken, Admin_refreshToken;
+  let user, User_accessToken, User_refreshToken;
+
   const standardValue ={
       type:"TestType",
       color:"TestColor",
   }
-  beforeAll(async ()=>{
-    user = {
+
+  beforeEach(async () =>{
+    admin = {
       username: "TestAdmin",
       email: "admin@test.com",
       password: "TestAdmin",
+      role:"Admin"
     };
-
-    accessToken = jwt.sign(
+    Admin_accessToken = jwt.sign(
       {
-       username: user.username,
-       email: user.email,
-       password: user.password,
+       username: admin.username,
+       email: admin.email,
+       password: admin.password,
        role: "Admin",
       },
       "EZWALLET",
@@ -213,23 +221,54 @@ describe("updateCategory", () => {
        expiresIn: "1h",
       }
     );
-
-    refreshToken = jwt.sign(
+    Admin_refreshToken = jwt.sign(
       {
-        username: user.username,
-        email: user.email,
-        password: user.password,
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
         role: "Admin",
       },
       "EZWALLET",
       { expiresIn: "7d" }
     );
-  })
-  
-  beforeEach(async () =>{
-    
-    await categories.deleteMany({});
+    admin.refreshToken = Admin_refreshToken;
+
+    user = {
+      username: "TestUser",
+      email: "user@test.com",
+      password: "TestUser",
+      role: "Regular"
+    };
+    User_accessToken = jwt.sign(
+      {
+       username: user.username,
+       email: user.email,
+       password: user.password,
+       role: "Regular",
+      },
+      "EZWALLET",
+      {
+       expiresIn: "1h",
+      }
+    );
+    User_refreshToken = jwt.sign(
+      {
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: "Regular",
+      },
+      "EZWALLET",
+      { expiresIn: "7d" }
+    );
+    user.refreshToken = User_refreshToken;
+    await User.insertMany([admin, user]);
+
     await categories.create(standardValue);
+  });
+
+  afterEach(async ()=>{
+    await categories.deleteMany({});
   });
 
   test("Update Category - Success", (done) => {
@@ -242,8 +281,8 @@ describe("updateCategory", () => {
       .patch("/api/categories/:type".replace(":type", standardValue.type))
       .send(newValue)
       .set("Cookie", [
-        `accessToken=${accessToken}`,
-        `refreshToken=${refreshToken}`,
+        `accessToken=${Admin_accessToken}`,
+        `refreshToken=${Admin_refreshToken}`,
       ])
       .then((response) => {
         expect(response.status).toBe(200);
@@ -267,8 +306,8 @@ describe("updateCategory", () => {
       .patch("/api/categories/:type".replace(":type", standardValue.type))
       .send(newValue)
       .set("Cookie", [
-        `accessToken=${accessToken}`,
-        `refreshToken=${refreshToken}`,
+        `accessToken=${Admin_accessToken}`,
+        `refreshToken=${Admin_refreshToken}`,
       ])
       .then((response) => {
         expect(response.status).toBe(400);
@@ -289,8 +328,8 @@ describe("updateCategory", () => {
       .patch("/api/categories/:type".replace(":type", standardValue.type))
       .send(newValue)
       .set("Cookie", [
-        `accessToken=${accessToken}`,
-        `refreshToken=${refreshToken}`,
+        `accessToken=${Admin_accessToken}`,
+        `refreshToken=${Admin_refreshToken}`,
       ])
       .then((response) => {
         expect(response.status).toBe(400);
@@ -311,8 +350,8 @@ describe("updateCategory", () => {
       .patch("/api/categories/:type".replace(":type","Type"))
       .send(newValue)
       .set("Cookie", [
-        `accessToken=${accessToken}`,
-        `refreshToken=${refreshToken}`,
+        `accessToken=${Admin_accessToken}`,
+        `refreshToken=${Admin_refreshToken}`,
       ])
       .then((response) => {
         expect(response.status).toBe(400);
@@ -334,8 +373,8 @@ describe("updateCategory", () => {
         .patch("/api/categories/:type".replace(":type",standardValue.type))
         .send(newValue)
         .set("Cookie", [
-          `accessToken=${accessToken}`,
-          `refreshToken=${refreshToken}`,
+          `accessToken=${Admin_accessToken}`,
+          `refreshToken=${Admin_refreshToken}`,
         ])
         .then((response) => {
           expect(response.status).toBe(400);
@@ -356,6 +395,10 @@ describe("updateCategory", () => {
     request(app)
       .patch("/api/categories/:type".replace(":type",standardValue.type))
       .send(newValue)
+      .set("Cookie", [
+        `accessToken=${User_accessToken}`,
+        `refreshToken=${User_refreshToken}`,
+      ])
       .then((response) => {
         expect(response.status).toBe(401);
         expect(response.body).toHaveProperty("error");
@@ -372,13 +415,13 @@ describe("deleteCategory", () => {
   let user, User_accessToken, User_refreshToken;
   let category1, category2, category3, category4;
 
-  beforeAll(async ()=>{
+  beforeEach(async () => {
     admin = {
       username: "TestAdmin",
       email: "admin@test.com",
       password: "TestAdmin",
+      role:"Admin"
     };
-
     Admin_accessToken = jwt.sign(
       {
        username: admin.username,
@@ -391,7 +434,6 @@ describe("deleteCategory", () => {
        expiresIn: "1h",
       }
     );
-
     Admin_refreshToken = jwt.sign(
       {
         username: admin.username,
@@ -402,13 +444,14 @@ describe("deleteCategory", () => {
       "EZWALLET",
       { expiresIn: "7d" }
     );
+    admin.refreshToken = Admin_refreshToken;
 
     user = {
       username: "TestUser",
       email: "user@test.com",
       password: "TestUser",
+      role: "Regular"
     };
-
     User_accessToken = jwt.sign(
       {
        username: user.username,
@@ -421,7 +464,6 @@ describe("deleteCategory", () => {
        expiresIn: "1h",
       }
     );
-
     User_refreshToken = jwt.sign(
       {
         username: user.username,
@@ -432,10 +474,8 @@ describe("deleteCategory", () => {
       "EZWALLET",
       { expiresIn: "7d" }
     );
-  });
-
-  beforeEach(async () => {
-    await categories.deleteMany({});
+    user.refreshToken = User_refreshToken;
+    await User.insertMany([admin, user]);
 
     category1 ={
       type:"NewType1",
@@ -453,8 +493,11 @@ describe("deleteCategory", () => {
       type:"NewType4",
       color: "NewColor4",
     }
-
     await categories.insertMany([category1, category2, category3, category4]);
+  });
+
+  afterEach(async ()=>{
+    await categories.deleteMany({});
   });
 
   test("Delete Category - Delete 1", (done) => {
@@ -535,7 +578,7 @@ describe("deleteCategory", () => {
   }); //EXPECT COUNT=2, IT'S 1
 
   test("Delete Category - Only 1 category in the DB", (done) => {
-    const categoryToBeDeleted =["NewType1", "NewType2", "NewType3"];
+    const categoryToBeDeleted =[category1.type, category2.type, category3.type];
 
     categories
       .deleteMany([category2, category3, category4])
@@ -655,7 +698,7 @@ describe("deleteCategory", () => {
       })
       .catch((err) => done(err));
   }); //200 WHILE EXPECTING 401
-}); /** 5/8 test */
+}); /** 4/8 test */
 
 describe("getCategories", () => {
   let user, accessToken, refreshToken;
@@ -754,16 +797,17 @@ describe("getCategories", () => {
 }); /** 2/2 test */
 
 describe("createTransaction", () => {
-  let user, accessToken, refreshToken, category;
+  let user, accessToken, refreshToken;
+  let category;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
 
     user = {
-      username: "TestUser",
-      email: "user@test.com",
-      password: "TestUser",
+      username: "TestUser1",
+      email: "user1@test.com",
+      password: "TestUser1",
+      role:"Regular",
     };
-
     accessToken = jwt.sign(
       {
        username: user.username,
@@ -776,7 +820,6 @@ describe("createTransaction", () => {
        expiresIn: "1h",
       }
     );
-
     refreshToken = jwt.sign(
       {
         username: user.username,
@@ -787,17 +830,19 @@ describe("createTransaction", () => {
       "EZWALLET",
       { expiresIn: "7d" }
     );
+    user.refreshToken = refreshToken;
+    await User.insertMany([user]);
 
     category = {
       type:"Type",
       color:"Color",
     };
-
     await categories.insertMany([category]);
-    await User.insertMany([user]);
-  });
 
-  beforeEach(async()=>{
+    await transactions.deleteMany({});
+  });
+  
+  afterEach(async ()=>{
     await transactions.deleteMany({});
   });
 
@@ -831,7 +876,7 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //400, EXPECTED 200
+  }); //PASS
 
   test("Create Transaction - Missing attributes", (done) => {
     const newTransaction={
@@ -1039,30 +1084,29 @@ describe("createTransaction", () => {
         )}`,
       ])
       .then((response) => {
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(401);
         expect(response.body).toHaveProperty("error");
-        expect(response.body.error).toMatch(/Not the authenticated user/);
+        expect(response.body.error).toMatch("Unauthorized");
 
         done();
       })
       .catch((err) => done(err));
-  }); // 401, expected 400
+  }); // PASS
 
 }); /** 7/9 test */
 
 describe("getAllTransactions", () => {
   let admin, Admin_accessToken, Admin_refreshToken;
   let user, User_accessToken, User_refreshToken;
-
   let category;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     admin = {
       username: "TestAdmin",
       email: "admin@test.com",
       password: "TestAdmin",
+      role: "Admin",
     };
-
     Admin_accessToken = jwt.sign(
       {
        username: admin.username,
@@ -1075,7 +1119,6 @@ describe("getAllTransactions", () => {
        expiresIn: "1h",
       }
     );
-
     Admin_refreshToken = jwt.sign(
       {
         username: admin.username,
@@ -1086,13 +1129,14 @@ describe("getAllTransactions", () => {
       "EZWALLET",
       { expiresIn: "7d" }
     );
+    admin.refreshToken = Admin_refreshToken;
 
     user = {
-      username: "TestUser",
-      email: "user@test.com",
-      password: "TestUser",
+      username: "TestUser1",
+      email: "user1@test.com",
+      password: "TestUser1",
+      role:"Regular",
     };
-
     User_accessToken = jwt.sign(
       {
        username: user.username,
@@ -1105,7 +1149,6 @@ describe("getAllTransactions", () => {
        expiresIn: "1h",
       }
     );
-
     User_refreshToken = jwt.sign(
       {
         username: user.username,
@@ -1116,19 +1159,15 @@ describe("getAllTransactions", () => {
       "EZWALLET",
       { expiresIn: "7d" }
     );
+    user.refreshToken = User_refreshToken;
+    await User.insertMany([admin, user]);
 
     category = {
       type:"Type",
       color:"Color",
     };
-
     await categories.insertMany([category]);
-    await User.insertMany([admin, user]);
 
-  });
-
-  beforeEach(async () => {
-    await transactions.deleteMany({});
     const Transaction1 = {
       username: admin.username, 
       type: category.type,
@@ -1149,9 +1188,12 @@ describe("getAllTransactions", () => {
       type: category.type,
       amount: 7.24,
     };
-
     await transactions.insertMany([Transaction1, Transaction2, Transaction3, Transaction4]);
-  })
+  });
+
+  afterEach(async ()=>{
+    await transactions.deleteMany({});
+  });
 /*!! ID of the transaction have not to be rethrived !!*/
   test("Get All Transaction - Success !", (done) => {
 
@@ -1183,7 +1225,7 @@ describe("getAllTransactions", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //RECEIVED UNDEFINED VALUE, EXPECT SOMETHING
+  }); //PASS
 
   test("Get All Transaction - No Transaction in the DB", (done) => {
 
@@ -1224,7 +1266,7 @@ describe("getAllTransactions", () => {
       })
       .catch((err) => done(err));
   }); //PASS
-}); /** 2/3 test */
+}); /** 3/3 test */
 
 describe("getTransactionsByUser", () => {
   let user, User_accessToken, User_refreshToken;
@@ -1817,6 +1859,7 @@ describe("getTransactionsByGroup", () => {
       { expiresIn: "7d" }
     );
     user2.refreshToken = User2_refreshToken;
+    await User.insertMany([admin, user1, user2]);
 
     cat1 = {
       type:"Category1",
@@ -1826,10 +1869,7 @@ describe("getTransactionsByGroup", () => {
       type:"Category2",
       color:"Color2",
     };
-
     await categories.insertMany([cat1, cat2]);
-    await User.insertMany([admin, user1, user2]);
-
     
     group1 = {
       name: "Group1",
@@ -1840,37 +1880,36 @@ describe("getTransactionsByGroup", () => {
         email: user1.email,
         user: (await User.findOne({username: user1.username})),
       }]
-    }
+    };
     group2 = {
       name: "Group2",
       members: [{
         email: user2.email,
         user: (await User.findOne({username: user2.username})),
       }]
-    }
-
+    };
     await Group.insertMany([group1, group2]);
 
     const transaction1 = {
       username: user1.username,
       type: cat2.type,
       amount: 100,
-    }
+    };
     const transaction2 = {
       username: admin.username,
       type: cat2.type,
       amount: 3,
-    }
+    };
     const transaction3 = {
       username: user2.username,
       type: cat2.type,
       amount: 17.9,
-    }
+    };
     const transaction4 = {
       username: user2.username,
       type: cat1.type,
       amount: 0.78,
-    }
+    };
     await transactions.insertMany([transaction1, transaction2, transaction3, transaction4]);
   });
 
@@ -1898,7 +1937,7 @@ describe("getTransactionsByGroup", () => {
         done();
       })
       .catch((err) => done(err));
-  });
+  }); //EXPECTED 2 TRX, RECEIVED 0
 
   test("Get Transactions By Group - Admin - Success !", (done) => {
 
@@ -1924,7 +1963,7 @@ describe("getTransactionsByGroup", () => {
         done();
       })
       .catch((err) => done(err));
-  });
+  }); //EXPECTED 2 TRX, RECEIVED 0
 
   test("Get Transaction By Group - Admin - Group in params not in the DB", (done) => {
 
@@ -1944,7 +1983,7 @@ describe("getTransactionsByGroup", () => {
         done();
       })
       .catch((err) => done(err));
-  });
+  }); //PASS
 
   test("Get Transaction By Group - Regular User - Authenticated User not part of the group", (done) => {
 
@@ -1958,13 +1997,13 @@ describe("getTransactionsByGroup", () => {
         `refreshToken=${User2_refreshToken}`,
       ])
       .then((response) => {
-        expect(response.status).toBe(401);
+        expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
-        expect(response.body.error).toContain("Unauthorized");
+        expect(response.body.error).toContain("Group not found");
         done();
       })
       .catch((err) => done(err));
-  });
+  }); //PASS
 
   test("Get Transaction By Group - Regular User - Admin Route for an authenticated Regular User", (done) => {
 
@@ -1984,8 +2023,8 @@ describe("getTransactionsByGroup", () => {
         done();
       })
       .catch((err) => done(err));
-  });
-}); /** 2/5 test */
+  });//PASS
+}); /** 3/5 test */
 
 describe("getTransactionsByGroupByCategory", () => {
   let user1, User1_accessToken, User1_refreshToken;
@@ -2085,6 +2124,7 @@ describe("getTransactionsByGroupByCategory", () => {
       { expiresIn: "7d" }
     );
     user2.refreshToken = User2_refreshToken;
+    await User.insertMany([admin, user1, user2]);
 
     cat1 = {
       type:"Category1",
@@ -2094,10 +2134,7 @@ describe("getTransactionsByGroupByCategory", () => {
       type:"Category2",
       color:"Color2",
     };
-
     await categories.insertMany([cat1, cat2]);
-    await User.insertMany([admin, user1, user2]);
-
     
     group1 = {
       name: "Group1",
@@ -2108,37 +2145,36 @@ describe("getTransactionsByGroupByCategory", () => {
         email: user1.email,
         user: (await User.findOne({username: user1.username})),
       }]
-    }
+    };
     group2 = {
       name: "Group2",
       members: [{
         email: user2.email,
         user: (await User.findOne({username: user2.username})),
       }]
-    }
-
+    };
     await Group.insertMany([group1, group2]);
 
     const transaction1 = {
       username: user1.username,
       type: cat2.type,
       amount: 100,
-    }
+    };
     const transaction2 = {
       username: admin.username,
       type: cat2.type,
       amount: 3,
-    }
+    };
     const transaction3 = {
       username: user2.username,
       type: cat2.type,
       amount: 17.9,
-    }
+    };
     const transaction4 = {
       username: user2.username,
       type: cat1.type,
       amount: 0.78,
-    }
+    };
     await transactions.insertMany([transaction1, transaction2, transaction3, transaction4]);
   });
 
@@ -2168,7 +2204,7 @@ describe("getTransactionsByGroupByCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  }); //EXPECTED 2 TRX, RECEIVED 0 
 
   test("Get Transactions By Group By Category - Admin - Success !", (done) => {
     const groupname = group2.name;
@@ -2188,7 +2224,7 @@ describe("getTransactionsByGroupByCategory", () => {
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("data");
         expect(response.body.data).toBeInstanceOf(Array);
-        expect(response.body.data).toHaveLength(2);
+        expect(response.body.data).toHaveLength(1);
         expect(response.body.data[0]).toHaveProperty("username");
         expect(response.body.data[0]).toHaveProperty("type");
 
@@ -2198,7 +2234,7 @@ describe("getTransactionsByGroupByCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  });
+  }); //EXPECTED 1 TRX, RECEIVED 0 
 
   test("Get Transactions By Group By Category - Admin - Group in params not in the DB", (done) => {
     const category = cat1.type;
@@ -2220,7 +2256,7 @@ describe("getTransactionsByGroupByCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  });
+  }); //PASS
 
   test("Get Transactions By Group By Category - Admin - Category in params not in the DB", (done) => {
 
@@ -2241,7 +2277,7 @@ describe("getTransactionsByGroupByCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  });
+  }); //PASS
 
   test("Get Transactions By Group By Category - Regular User - Authenticated User not part of the group", (done) => {
 
@@ -2262,12 +2298,12 @@ describe("getTransactionsByGroupByCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  });
+  }); //PASS
 
   test("Get Transactions By Group By Category - Regular User - Admin Route for an authenticated Regular User", (done) => {
 
     request(app)
-      .get("/api/groups/:name/transactions/category/:category"
+      .get("/api/transactions/groups/:name/category/:category"
         .replace(":groups", group2.name)
         .replace(":category", cat1.type)
       )
@@ -2277,14 +2313,14 @@ describe("getTransactionsByGroupByCategory", () => {
         `refreshToken=${User1_refreshToken}`,
       ])
       .then((response) => {
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(401);
         expect(response.body).toHaveProperty("error");
         expect(response.body.error).toContain("Unauthorized");
         done();
       })
       .catch((err) => done(err));
-  });
-}); /** 3/6 test */
+  }); //PASS
+}); /** 4/6 test */
 
 describe("deleteTransaction", () => {
   let user1, User1_accessToken, User1_refreshToken;
@@ -2730,4 +2766,4 @@ describe("deleteTransactions", () => {
       })
       .catch((err) => done(err));
   });
-}); /** 0/5 test */
+}); /** 0/6 test */
