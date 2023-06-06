@@ -15,12 +15,12 @@ These figures will not be used to evaluate neither the project nor the team, the
 |   apr 10 - 16   |          15ph           |  15ph  |   /    |      /       |          /          |         /          |     /      |     /     |
 |   apr 17 - 23   |          15ph           |  15ph  |   /    |      /       |          /          |         /          |     /      |     /     |
 | apr 24 - apr 30 |           4ph           |  4ph   |   /    |      /       |          /          |         /          |     /      |     /     |
-|    may 1 - 7    |                         |        |        |              |                     |                    |            |           |
-|   may 8 - 14    |                         |        |        |              |                     |                    |            |           |
-|   may 15 - 21   |                         |        |        |              |                     |                    |            |           |
-|   may 22 - 28   |                         |        |        |              |                     |                    |            |           |
-| may 29 - jun 4  |                         |        |        |              |                     |                    |            |           |
-|   jun 5 - 11    |                         |        |        |              |                     |                    |            |           |
+|    may 1 - 7    |            /            |   /    |  15ph  |      /       |          /          |         /          |     /      |     /     |
+|   may 8 - 14    |            /            |   /    |  15ph  |      /       |          /          |         /          |     /      |     /     |
+|   may 15 - 21   |            /            |   /    |  15ph  |      /       |          /          |         /          |     /      |     /     |
+|   may 22 - 28   |            /            |   /    |  5ph   |     10ph     |         5ph         |        5ph         |     /      |     /     |
+| may 29 - jun 4  |            /            |   /    |  2ph   |     7ph      |        10ph         |        5ph         |     /      |     /     |
+|   jun 5 - 11    |            /            |   /    |  1ph   |     2ph      |         2ph         |        2ph         |     /      |     /     |
 |   jun 12 -18    |                         |        |        |              |                     |                    |            |           |
 |   jun 19 - 25   |                         |        |        |              |                     |                    |            |           |
 | jun 26 - jul 2  |                         |        |        |              |                     |                    |            |           |
