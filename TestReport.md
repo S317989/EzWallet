@@ -15,7 +15,7 @@
 
 # Dependency graph
 
-![Dependency_graph](assets/Images/Dependency%20graph.png)
+![Dependency_graph](assets/Images/dependency%20graph2.jpg)
 # Integration approach
 
 In our project implementation, we have chosen to adopt a "Bottom-Up Integration" approach as our preferred integration strategy. This approach allows us to initially test the lower-level components, which serve as the foundational building blocks of the system, and gradually progress towards integrating the higher-level units.
