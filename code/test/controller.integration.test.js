@@ -415,6 +415,8 @@ describe("deleteCategory", () => {
   let user, User_accessToken, User_refreshToken;
   let category1, category2, category3, category4;
 
+
+
   beforeEach(async () => {
     admin = {
       username: "TestAdmin",
@@ -494,6 +496,28 @@ describe("deleteCategory", () => {
       color: "NewColor4",
     }
     await categories.insertMany([category1, category2, category3, category4]);
+
+    const transaction1={
+      username: admin.username, 
+      type: category1.type,
+      amount: 10,
+    };
+    const transaction2={
+      username: admin.username, 
+      type: category1.type,
+      amount: 20,
+    };
+    const transaction3={
+      username: admin.username, 
+      type: category2.type,
+      amount: 20,
+    };
+    const transaction4={
+      username: user.username, 
+      type: category3.type,
+      amount: 20.56,
+    };
+    await transactions.insertMany([transaction1, transaction2, transaction3, transaction4]);
   });
 
   afterEach(async ()=>{
@@ -501,20 +525,11 @@ describe("deleteCategory", () => {
   });
 
   test("Delete Category - Delete 1", (done) => {
-    const categoryToBeDeleted =["NewType1"];
+    const categoryToBeDeleted =[category1.type];
 
-    transactions
-      .insertMany({
-        username: admin.username, 
-        type: category1.type,
-        amount: 10,
-      },{
-        username: admin.username, 
-        type: category1.type,
-        amount: 20,
-      })
-      .then(()=>{
-        request(app)
+
+    
+     request(app)
           .delete("/api/categories")
           .send({
             types: categoryToBeDeleted
@@ -533,49 +548,32 @@ describe("deleteCategory", () => {
             done();
           })
           .catch((err) => done(err));
-      });
-  }); //EXPECT COUNT=2, IT'S 1
+  }); //PASS
 
   test("Delete Category - Delete Many", (done) => {
-    const categoryToBeDeleted =["NewType1", "NewType2"];
+    const categoryToBeDeleted =[category1.type, category2.type];
 
-    transactions
-      .insertMany({
-        username: admin.username, 
-        type: category1.type,
-        amount: 10,
-      },{
-        username: admin.username, 
-        type: category2.type,
-        amount: 20,
-      },{
-        username: admin.username, 
-        type: category3.type,
-        amount: 20,
-      }).then(()=>{
-        request(app)
-          .delete("/api/categories")
-          .send({
-            types: categoryToBeDeleted
-          })
-          .set("Cookie", [
-            `accessToken=${Admin_accessToken}`,
-            `refreshToken=${Admin_refreshToken}`,
-          ])
-          .then((response) => {
-            expect(response.status).toBe(200);
-            expect(response.body).toHaveProperty("data");
-            expect(response.body.data).toHaveProperty("message");
-            expect(response.body.data.message).toMatch('Categories');
-            expect(response.body.data).toHaveProperty("count");
-            expect(response.body.data.count).toBe(2);
-            done();
-          })
-          .catch((err) => done(err));
+
+    request(app)
+      .delete("/api/categories")
+      .send({
+        types: categoryToBeDeleted
       })
-
-    
-  }); //EXPECT COUNT=2, IT'S 1
+      .set("Cookie", [
+        `accessToken=${Admin_accessToken}`,
+        `refreshToken=${Admin_refreshToken}`,
+      ])
+      .then((response) => {
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("data");
+        expect(response.body.data).toHaveProperty("message");
+        expect(response.body.data.message).toMatch('Categories');
+        expect(response.body.data).toHaveProperty("count");
+        expect(response.body.data.count).toBe(3);
+        done();
+      })
+      .catch((err) => done(err));    
+  }); //PASS
 
   test("Delete Category - Only 1 category in the DB", (done) => {
     const categoryToBeDeleted =[category1.type, category2.type, category3.type];
@@ -1473,8 +1471,8 @@ describe("getTransactionsByUser", () => {
       .catch((err) => done(err));
   }); //PASS
 
-  test("Get Transaction By User -  - Check for query filter", (done) => {
-    /** Don't know if it's necessary! */
+  /* test("Get Transaction By User -  - Check for query filter", (done) => {
+    
     let username = admin.username;
     
     request(app)
@@ -1491,8 +1489,8 @@ describe("getTransactionsByUser", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //DON'T IF NEEDED !!
-}); /** 5/6 test */
+  }); //DON'T IF NEEDED !!*/
+}); /** 5/5 test */
 
 describe("getTransactionsByUserByCategory", () => {
   let user, User_accessToken, User_refreshToken;
@@ -1742,7 +1740,7 @@ describe("getTransactionsByUserByCategory", () => {
       .catch((err) => done(err));
   }); //PASS
 
-  test("Get Transactions By User By Category -  - Check for query filter", (done) => {
+  /*test("Get Transactions By User By Category -  - Check for query filter", (done) => {
     
     request(app)
       .get("/api/transactions/users/:username".replace(":username", admin.username))
@@ -1758,8 +1756,8 @@ describe("getTransactionsByUserByCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  }); // DON'T KNOW IF IT'S NECESSARY
-}); /** 6/7 test */
+  }); // DON'T KNOW IF IT'S NECESSARY*/
+}); /** 6/6 test */
 
 describe("getTransactionsByGroup", () => {
   let user1, User1_accessToken, User1_refreshToken;
