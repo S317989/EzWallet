@@ -1444,8 +1444,6 @@ describe("getTransactionsByUserByCategory", () => {
       jest.spyOn(User, "findOne").mockResolvedValueOnce(user);
       jest.spyOn(User, "findOne").mockResolvedValueOnce(false);
 
-      
-
       await controllerMethods.getTransactionsByUserByCategory(
         mockRequest,
         mockResponse
@@ -1531,6 +1529,8 @@ describe("getTransactionsByGroup", () => {
     });
 
     test("GetTransactionByGroup - Admin - Success - Filled list", async () => {
+      User.find = jest.fn().mockResolvedValueOnce([{ username: "TestUser1" }]);
+
       transactions.aggregate.mockResolvedValueOnce(
         mockTransaction
           .filter((transaction) => group.members.includes(transaction.username))
@@ -1555,6 +1555,8 @@ describe("getTransactionsByGroup", () => {
 
     test("GetTransactionByGroup - Admin - Success - Empty list", async () => {
       group.members = ["TestUser3", "TestUser4"];
+
+      User.find = jest.fn().mockResolvedValueOnce([{ username: "TestUser1" }]);
 
       transactions.aggregate.mockResolvedValueOnce(
         mockTransaction
@@ -1629,6 +1631,8 @@ describe("getTransactionsByGroup", () => {
     });
 
     test("GetTransactionByGroup - Group - Success - Filled list", async () => {
+      User.find = jest.fn().mockResolvedValueOnce([{ username: "TestUser1" }]);
+
       transactions.aggregate.mockResolvedValueOnce(
         mockTransaction
           .filter((transaction) => group.members.includes(transaction.username))
@@ -1653,6 +1657,8 @@ describe("getTransactionsByGroup", () => {
 
     test("GetTransactionByGroup - Group - Success - Empty list", async () => {
       group.members = ["TestUser3", "TestUser4"];
+
+      User.find = jest.fn().mockResolvedValueOnce([{ username: "TestUser1" }]);
 
       transactions.aggregate.mockResolvedValueOnce(
         mockTransaction
@@ -1763,6 +1769,8 @@ describe("getTransactionsByGroupByCategory", () => {
     });
 
     test("GetTransactionByGroupByCategory - Admin - Success - Filled list", async () => {
+      User.find = jest.fn().mockResolvedValueOnce([{ username: "TestUser1" }]);
+
       transactions.aggregate.mockResolvedValueOnce(
         mockTransaction
           .filter(
@@ -1794,6 +1802,8 @@ describe("getTransactionsByGroupByCategory", () => {
 
     test("GetTransactionByGroupByCategory - Admin - Success - Empty list", async () => {
       mockRequest.params.category = "test";
+
+      User.find = jest.fn().mockResolvedValueOnce([{ username: "TestUser1" }]);
 
       transactions.aggregate.mockResolvedValueOnce(
         mockTransaction
@@ -1896,6 +1906,8 @@ describe("getTransactionsByGroupByCategory", () => {
     });
 
     test("GetTransactionByGroupByCategory - Group - Success - Filled list", async () => {
+      User.find = jest.fn().mockResolvedValueOnce([{ username: "TestUser1" }]);
+
       transactions.aggregate.mockResolvedValueOnce(
         mockTransaction
           .filter(
@@ -1927,6 +1939,8 @@ describe("getTransactionsByGroupByCategory", () => {
 
     test("GetTransactionByGroupByCategory - Group - Success - Empty list", async () => {
       mockRequest.params.category = "test";
+
+      User.find = jest.fn().mockResolvedValueOnce([{ username: "TestUser1" }]);
 
       transactions.aggregate.mockResolvedValueOnce(
         mockTransaction

@@ -6,7 +6,6 @@ import dotenv from "dotenv";
 import { Group, User } from "../models/User";
 const jwt = require("jsonwebtoken");
 
-
 dotenv.config();
 
 beforeAll(async () => {
@@ -17,8 +16,6 @@ beforeAll(async () => {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
-
-  
 });
 
 afterAll(async () => {
@@ -27,32 +24,32 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await categories.deleteMany({})
-  await transactions.deleteMany({})
-  await User.deleteMany({})
-  await Group.deleteMany({})
-})
+  await categories.deleteMany({});
+  await transactions.deleteMany({});
+  await User.deleteMany({});
+  await Group.deleteMany({});
+});
 
 describe("createCategory", () => {
   let admin, accessToken, refreshToken;
 
-  beforeEach(async ()=>{
+  beforeEach(async () => {
     admin = {
       username: "TestAdmin",
       email: "admin@test.com",
       password: "TestAdmin",
-      role: "Admin"
+      role: "Admin",
     };
     accessToken = jwt.sign(
       {
-       username: admin.username,
-       email: admin.email,
-       password: admin.password,
-       role: "Admin",
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
+        role: "Admin",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     refreshToken = jwt.sign(
@@ -70,7 +67,7 @@ describe("createCategory", () => {
     await User.create(admin);
   });
 
-  afterEach(async ()=>{
+  afterEach(async () => {
     await categories.deleteMany({});
   });
 
@@ -79,7 +76,7 @@ describe("createCategory", () => {
       type: "TestType",
       color: "TestColor",
     };
-    
+
     request(app)
       .post("/api/categories")
       .send(category)
@@ -87,7 +84,7 @@ describe("createCategory", () => {
         `accessToken=${accessToken}`,
         `refreshToken=${refreshToken}`,
       ])
-      .then((response)=>{
+      .then((response) => {
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("data");
         expect(response.body.data).toHaveProperty("type");
@@ -111,7 +108,7 @@ describe("createCategory", () => {
         `accessToken=${accessToken}`,
         `refreshToken=${refreshToken}`,
       ])
-      .then((response)=>{
+      .then((response) => {
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
         expect(response.body).toEqual({
@@ -135,7 +132,7 @@ describe("createCategory", () => {
         `accessToken=${accessToken}`,
         `refreshToken=${refreshToken}`,
       ])
-      .then((response)=>{
+      .then((response) => {
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
         expect(response.body).toEqual({
@@ -160,7 +157,7 @@ describe("createCategory", () => {
           `accessToken=${accessToken}`,
           `refreshToken=${refreshToken}`,
         ])
-        .then((response)=>{
+        .then((response) => {
           expect(response.status).toBe(400);
           expect(response.body).toHaveProperty("error");
           expect(response.body).toEqual({
@@ -169,9 +166,9 @@ describe("createCategory", () => {
           done();
         })
         .catch((err) => done(err));
-      });
+    });
   });
-  
+
   test("Create Catetgory - Not an Admin", (done) => {
     const category = {
       type: "TestType",
@@ -181,13 +178,13 @@ describe("createCategory", () => {
     request(app)
       .post("/api/categories")
       .send(category)
-      .then((response)=>{
+      .then((response) => {
         expect(response.status).toBe(401);
         expect(response.body).toHaveProperty("error");
-          expect(response.body).toEqual({
-            error: expect.stringContaining(`Unauthorized`),
-          });
-          done();
+        expect(response.body).toEqual({
+          error: expect.stringContaining(`Unauthorized`),
+        });
+        done();
       })
       .catch((err) => done(err));
   });
@@ -197,28 +194,28 @@ describe("updateCategory", () => {
   let admin, Admin_accessToken, Admin_refreshToken;
   let user, User_accessToken, User_refreshToken;
 
-  const standardValue ={
-      type:"TestType",
-      color:"TestColor",
-  }
+  const standardValue = {
+    type: "TestType",
+    color: "TestColor",
+  };
 
-  beforeEach(async () =>{
+  beforeEach(async () => {
     admin = {
       username: "TestAdmin",
       email: "admin@test.com",
       password: "TestAdmin",
-      role:"Admin"
+      role: "Admin",
     };
     Admin_accessToken = jwt.sign(
       {
-       username: admin.username,
-       email: admin.email,
-       password: admin.password,
-       role: "Admin",
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
+        role: "Admin",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     Admin_refreshToken = jwt.sign(
@@ -237,18 +234,18 @@ describe("updateCategory", () => {
       username: "TestUser",
       email: "user@test.com",
       password: "TestUser",
-      role: "Regular"
+      role: "Regular",
     };
     User_accessToken = jwt.sign(
       {
-       username: user.username,
-       email: user.email,
-       password: user.password,
-       role: "Regular",
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: "Regular",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     User_refreshToken = jwt.sign(
@@ -267,15 +264,15 @@ describe("updateCategory", () => {
     await categories.create(standardValue);
   });
 
-  afterEach(async ()=>{
+  afterEach(async () => {
     await categories.deleteMany({});
   });
 
   test("Update Category - Success", (done) => {
-    const newValue ={
-      type:"NewType",
+    const newValue = {
+      type: "NewType",
       color: "NewColor",
-    }
+    };
 
     request(app)
       .patch("/api/categories/:type".replace(":type", standardValue.type))
@@ -294,13 +291,12 @@ describe("updateCategory", () => {
         done();
       })
       .catch((err) => done(err));
-
   });
 
   test("Update Category - Invalid Parameters", (done) => {
-    const newValue ={
-      type:"NewType",
-    }
+    const newValue = {
+      type: "NewType",
+    };
 
     request(app)
       .patch("/api/categories/:type".replace(":type", standardValue.type))
@@ -319,10 +315,10 @@ describe("updateCategory", () => {
   });
 
   test("Update Category - Empty Parameters", (done) => {
-    const newValue ={
-      type:"",
-      color: "NewColor"
-    }
+    const newValue = {
+      type: "",
+      color: "NewColor",
+    };
 
     request(app)
       .patch("/api/categories/:type".replace(":type", standardValue.type))
@@ -339,15 +335,15 @@ describe("updateCategory", () => {
       })
       .catch((err) => done(err));
   });
-  
+
   test("Update Category - Category doesn't exist", (done) => {
-    const newValue ={
-      type:"NewType",
+    const newValue = {
+      type: "NewType",
       color: "NewColor",
-    }
+    };
 
     request(app)
-      .patch("/api/categories/:type".replace(":type","Type"))
+      .patch("/api/categories/:type".replace(":type", "Type"))
       .send(newValue)
       .set("Cookie", [
         `accessToken=${Admin_accessToken}`,
@@ -363,14 +359,14 @@ describe("updateCategory", () => {
   });
 
   test("Update Category - New Category already exist", (done) => {
-    const newValue ={
-      type:"NewType",
+    const newValue = {
+      type: "NewType",
       color: "NewColor",
-    }
+    };
 
-    categories.create(newValue).then(()=>{
+    categories.create(newValue).then(() => {
       request(app)
-        .patch("/api/categories/:type".replace(":type",standardValue.type))
+        .patch("/api/categories/:type".replace(":type", standardValue.type))
         .send(newValue)
         .set("Cookie", [
           `accessToken=${Admin_accessToken}`,
@@ -385,15 +381,15 @@ describe("updateCategory", () => {
         .catch((err) => done(err));
     });
   });
-  
+
   test("Update Category - Not an Admin", (done) => {
-    const newValue ={
-      type:"NewType",
+    const newValue = {
+      type: "NewType",
       color: "NewColor",
-    }
+    };
 
     request(app)
-      .patch("/api/categories/:type".replace(":type",standardValue.type))
+      .patch("/api/categories/:type".replace(":type", standardValue.type))
       .send(newValue)
       .set("Cookie", [
         `accessToken=${User_accessToken}`,
@@ -407,7 +403,6 @@ describe("updateCategory", () => {
       })
       .catch((err) => done(err));
   });
-
 }); /** 6/6 test */
 
 describe("deleteCategory", () => {
@@ -420,18 +415,19 @@ describe("deleteCategory", () => {
       username: "TestAdmin",
       email: "admin@test.com",
       password: "TestAdmin",
-      role:"Admin"
+      role: "Admin",
     };
+
     Admin_accessToken = jwt.sign(
       {
-       username: admin.username,
-       email: admin.email,
-       password: admin.password,
-       role: "Admin",
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
+        role: "Admin",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     Admin_refreshToken = jwt.sign(
@@ -450,18 +446,18 @@ describe("deleteCategory", () => {
       username: "TestUser",
       email: "user@test.com",
       password: "TestUser",
-      role: "Regular"
+      role: "Regular",
     };
     User_accessToken = jwt.sign(
       {
-       username: user.username,
-       email: user.email,
-       password: user.password,
-       role: "Regular",
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: "Regular",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     User_refreshToken = jwt.sign(
@@ -477,47 +473,50 @@ describe("deleteCategory", () => {
     user.refreshToken = User_refreshToken;
     await User.insertMany([admin, user]);
 
-    category1 ={
-      type:"NewType1",
+    category1 = {
+      type: "NewType1",
       color: "NewColor1",
-    }
-    category2 ={
-      type:"NewType2",
+    };
+    category2 = {
+      type: "NewType2",
       color: "NewColor2",
-    }
-    category3 ={
-      type:"NewType3",
+    };
+    category3 = {
+      type: "NewType3",
       color: "NewColor3",
-    }
-    category4 ={
-      type:"NewType4",
+    };
+    category4 = {
+      type: "NewType4",
       color: "NewColor4",
-    }
+    };
     await categories.insertMany([category1, category2, category3, category4]);
   });
 
-  afterEach(async ()=>{
+  afterEach(async () => {
     await categories.deleteMany({});
   });
 
   test("Delete Category - Delete 1", (done) => {
-    const categoryToBeDeleted =[category1.type];
+    const categoryToBeDeleted = [category1.type];
 
     transactions
-    .insertMany([{
-      username: admin.username, 
-      type: category1.type,
-      amount: 10,
-    }, {
-      username: admin.username, 
-      type: category1.type,
-      amount: 20,
-    }])
-    .then(()=>{
+      .insertMany([
+        {
+          username: admin.username,
+          type: category1.type,
+          amount: 10,
+        },
+        {
+          username: admin.username,
+          type: category1.type,
+          amount: 20,
+        },
+      ])
+      .then(() => {
         request(app)
           .delete("/api/categories")
           .send({
-            types: categoryToBeDeleted
+            types: categoryToBeDeleted,
           })
           .set("Cookie", [
             `accessToken=${Admin_accessToken}`,
@@ -527,40 +526,41 @@ describe("deleteCategory", () => {
             expect(response.status).toBe(200);
             expect(response.body).toHaveProperty("data");
             expect(response.body.data).toHaveProperty("message");
-            expect(response.body.data.message).toMatch('deleted');
+            expect(response.body.data.message).toMatch("deleted");
             expect(response.body.data).toHaveProperty("count");
             expect(response.body.data.count).toBe(2);
             done();
           })
           .catch((err) => done(err));
-        })
+      });
   }); //PASS
 
   test("Delete Category - Delete Many", (done) => {
-    const categoryToBeDeleted =[category1.type, category2.type];
+    const categoryToBeDeleted = [category1.type, category2.type];
 
     transactions
-      .insertMany([{
-          username: admin.username, 
+      .insertMany([
+        {
+          username: admin.username,
           type: category1.type,
           amount: 20,
         },
         {
-          username: admin.username, 
+          username: admin.username,
           type: category2.type,
           amount: 20,
         },
         {
-          username: user.username, 
+          username: user.username,
           type: category3.type,
           amount: 20.56,
-        }
+        },
       ])
-      .then(()=>{
+      .then(() => {
         request(app)
           .delete("/api/categories")
           .send({
-            types: categoryToBeDeleted
+            types: categoryToBeDeleted,
           })
           .set("Cookie", [
             `accessToken=${Admin_accessToken}`,
@@ -570,33 +570,37 @@ describe("deleteCategory", () => {
             expect(response.status).toBe(200);
             expect(response.body).toHaveProperty("data");
             expect(response.body.data).toHaveProperty("message");
-            expect(response.body.data.message).toMatch('Categories');
+            expect(response.body.data.message).toMatch("Categories");
             expect(response.body.data).toHaveProperty("count");
             expect(response.body.data.count).toBe(2);
             done();
           })
-          .catch((err) => done(err)); 
+          .catch((err) => done(err));
       });
   }); //PASS
 
   test("Delete Category - Only 1 category in the DB", (done) => {
-    const categoryToBeDeleted =[category1.type];
+    const categoryToBeDeleted = [category1.type];
 
     categories
       .deleteMany({
-        $or: [{
-          type: category2.type, 
-        },{
-          type: category3.type},
-        {
-          type: category4.type
-        }]
+        $or: [
+          {
+            type: category2.type,
+          },
+          {
+            type: category3.type,
+          },
+          {
+            type: category4.type,
+          },
+        ],
       })
       .then(async () => {
         request(app)
           .delete("/api/categories")
           .send({
-            types: categoryToBeDeleted
+            types: categoryToBeDeleted,
           })
           .set("Cookie", [
             `accessToken=${Admin_accessToken}`,
@@ -605,21 +609,20 @@ describe("deleteCategory", () => {
           .then((response) => {
             expect(response.status).toBe(400);
             expect(response.body).toHaveProperty("error");
-            expect(response.body.error).toMatch('No categories can be deleted');
+            expect(response.body.error).toMatch("No categories can be deleted");
             done();
           })
           .catch((err) => done(err));
       });
-    
   }); //PASS
 
   test("Delete Category - 1 type is empty in the input array", (done) => {
-    const categoryToBeDeleted =["", "NewType2", "NewType3"];
+    const categoryToBeDeleted = ["", "NewType2", "NewType3"];
 
     request(app)
       .delete("/api/categories")
       .send({
-        types: categoryToBeDeleted
+        types: categoryToBeDeleted,
       })
       .set("Cookie", [
         `accessToken=${Admin_accessToken}`,
@@ -628,14 +631,14 @@ describe("deleteCategory", () => {
       .then((response) => {
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
-        expect(response.body.error).toMatch('Empty string');
+        expect(response.body.error).toMatch("Empty string");
         done();
       })
-      .catch((err) => done(err));    
+      .catch((err) => done(err));
   }); //PASS
 
   test("Delete Category - 1 is not a category in the DB", (done) => {
-    const categoryToBeDeleted =["Type", "NewType2", "NewType3"];
+    const categoryToBeDeleted = ["Type", "NewType2", "NewType3"];
 
     request(app)
       .delete("/api/categories")
@@ -647,14 +650,13 @@ describe("deleteCategory", () => {
       .then((response) => {
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
-        expect(response.body.error).toMatch('Missing');
+        expect(response.body.error).toMatch("Missing");
         done();
       })
-      .catch((err) => done(err));    
+      .catch((err) => done(err));
   }); //PASS
 
   test("Delete Category - Body doesn't contain all ", (done) => {
-
     request(app)
       .delete("/api/categories")
       .send()
@@ -665,21 +667,21 @@ describe("deleteCategory", () => {
       .then((response) => {
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
-        expect(response.body.error).toMatch('Missing');
+        expect(response.body.error).toMatch("Missing");
         done();
       })
-      .catch((err) => done(err));    
+      .catch((err) => done(err));
   }); //PASS
 
   test("Delete Category - Not Authenticated", (done) => {
-    const categoryToBeDeleted =["NewType1", "NewType2", "NewType3"];
+    const categoryToBeDeleted = ["NewType1", "NewType2", "NewType3"];
 
     request(app)
-      .get("/api/categories")
+      .delete("/api/categories")
       .send({
-        types: categoryToBeDeleted
+        types: categoryToBeDeleted,
       })
-      .set("Cookie",[])
+      .set("Cookie", [])
       .then((response) => {
         expect(response.status).toBe(401);
         expect(response.body).toHaveProperty("error");
@@ -690,13 +692,18 @@ describe("deleteCategory", () => {
   }); //PASS
 
   test("Delete Category - Regular User Authenticated, not Admin", (done) => {
-    const categoryToBeDeleted =[category1.type, category2.type, category3.type];
+    const categoryToBeDeleted = [
+      category1.type,
+      category2.type,
+      category3.type,
+    ];
 
     request(app)
-      .get("/api/categories")
+      .delete("/api/categories")
       .send({
-        types: categoryToBeDeleted
-      }).set("Cookie", [
+        types: categoryToBeDeleted,
+      })
+      .set("Cookie", [
         `accessToken=${User_accessToken}`,
         `refreshToken=${User_refreshToken}`,
       ])
@@ -707,15 +714,14 @@ describe("deleteCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //200 WHILE EXPECTING 401
-}); /** 7/8 test */
+  });
+}); /** 8/8 test */
 
 describe("getCategories", () => {
   let user, accessToken, refreshToken;
-  let category1, category2, category3, category4, category5
+  let category1, category2, category3, category4, category5;
 
   beforeAll(async () => {
-
     user = {
       username: "TestUser",
       email: "user@test.com",
@@ -724,14 +730,14 @@ describe("getCategories", () => {
 
     accessToken = jwt.sign(
       {
-       username: user.username,
-       email: user.email,
-       password: user.password,
-       role: "Regular",
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: "Regular",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
 
@@ -745,33 +751,31 @@ describe("getCategories", () => {
       "EZWALLET",
       { expiresIn: "7d" }
     );
-
   });
 
-  beforeEach(async ()=>{
+  beforeEach(async () => {
     await categories.deleteMany({});
-    category1 ={
-      type:"NewType1",
+    category1 = {
+      type: "NewType1",
       color: "NewColor1",
-    }
-    category2 ={
-      type:"NewType2",
+    };
+    category2 = {
+      type: "NewType2",
       color: "NewColor2",
-    }
-    category3 ={
-      type:"NewType3",
+    };
+    category3 = {
+      type: "NewType3",
       color: "NewColor3",
-    }
-    category4 ={
-      type:"NewType4",
+    };
+    category4 = {
+      type: "NewType4",
       color: "NewColor4",
-    }
-    
+    };
+
     await categories.insertMany([category1, category2, category3, category4]);
-  })
+  });
 
   test("Get Categories - Success!", (done) => {
-
     request(app)
       .get("/api/categories")
       .send()
@@ -791,11 +795,10 @@ describe("getCategories", () => {
   }); //PASS
 
   test("Get Categories - User not Authenticated", (done) => {
-
     request(app)
       .get("/api/categories/")
       .send()
-      .set("Cookie",[])
+      .set("Cookie", [])
       .then((response) => {
         expect(response.status).toBe(401);
         expect(response.body).toHaveProperty("error");
@@ -811,23 +814,22 @@ describe("createTransaction", () => {
   let category;
 
   beforeEach(async () => {
-
     user = {
       username: "TestUser1",
       email: "user1@test.com",
       password: "TestUser1",
-      role:"Regular",
+      role: "Regular",
     };
     accessToken = jwt.sign(
       {
-       username: user.username,
-       email: user.email,
-       password: user.password,
-       role: "Regular",
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: "Regular",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     refreshToken = jwt.sign(
@@ -844,28 +846,31 @@ describe("createTransaction", () => {
     await User.insertMany([user]);
 
     category = {
-      type:"Type",
-      color:"Color",
+      type: "Type",
+      color: "Color",
     };
     await categories.insertMany([category]);
 
     await transactions.deleteMany({});
   });
-  
-  afterEach(async ()=>{
+
+  afterEach(async () => {
     await transactions.deleteMany({});
   });
 
   test("Create Transaction - Success!", (done) => {
-    const newTransaction={
-      username: user.username, 
+    const newTransaction = {
+      username: user.username,
       type: category.type,
       amount: 20,
-    }
+    };
 
     request(app)
-      .post("/api/users/:username/transactions"
-        .replace(":username", newTransaction.username)
+      .post(
+        "/api/users/:username/transactions".replace(
+          ":username",
+          newTransaction.username
+        )
       )
       .send(newTransaction)
       .set("Cookie", [
@@ -889,14 +894,17 @@ describe("createTransaction", () => {
   }); //PASS
 
   test("Create Transaction - Missing attributes", (done) => {
-    const newTransaction={
+    const newTransaction = {
       type: category.type,
       amount: 20,
-    }
+    };
 
     request(app)
-      .post("/api/users/:username/transactions"
-        .replace(":username", newTransaction.username)
+      .post(
+        "/api/users/:username/transactions".replace(
+          ":username",
+          newTransaction.username
+        )
       )
       .send(newTransaction)
       .set("Cookie", [
@@ -913,14 +921,16 @@ describe("createTransaction", () => {
   }); //PASS
 
   test("Create Transaction - Empty body attributes", (done) => {
-    const newTransaction={
-      username: "", 
+    const newTransaction = {
+      username: "",
       type: category.type,
-      amount:"",
-    }
+      amount: "",
+    };
 
     request(app)
-      .post("/api/users/:username/transactions".replace(":username", user.username))
+      .post(
+        "/api/users/:username/transactions".replace(":username", user.username)
+      )
       .send(newTransaction)
       .set("Cookie", [
         `accessToken=${accessToken}`,
@@ -936,14 +946,19 @@ describe("createTransaction", () => {
   }); //PASS
 
   test("Create Transaction - Category is not in the DB", (done) => {
-    const newTransaction={
-      username: user.username, 
+    const newTransaction = {
+      username: user.username,
       type: "OtherType",
       amount: 20,
-    }
+    };
 
     request(app)
-      .post("/api/users/:username/transactions".replace(":username", newTransaction.username))
+      .post(
+        "/api/users/:username/transactions".replace(
+          ":username",
+          newTransaction.username
+        )
+      )
       .send(newTransaction)
       .set("Cookie", [
         `accessToken=${accessToken}`,
@@ -959,14 +974,16 @@ describe("createTransaction", () => {
   }); //PASS
 
   test("Create Transaction - Route Username doesn't match the request body", (done) => {
-    const newTransaction={
-      username: "User", 
+    const newTransaction = {
+      username: "User",
       type: category.type,
       amount: 20,
-    }
+    };
 
     request(app)
-      .post("/api/users/:username/transactions".replace(":username", user.username))
+      .post(
+        "/api/users/:username/transactions".replace(":username", user.username)
+      )
       .send(newTransaction)
       .set("Cookie", [
         `accessToken=${accessToken}`,
@@ -982,11 +999,11 @@ describe("createTransaction", () => {
   }); //PASS
 
   test("Create Transaction - Route Username is not in the DB", (done) => {
-    const newTransaction={
-      username: user.username, 
+    const newTransaction = {
+      username: user.username,
       type: category.type,
       amount: 20,
-    }
+    };
 
     request(app)
       .post("/api/users/:username/transactions".replace(":username", "User"))
@@ -1004,16 +1021,18 @@ describe("createTransaction", () => {
       .catch((err) => done(err));
   }); //PASS
 
-//Need to implement (in the method) a specific check for this error !!
+  //Need to implement (in the method) a specific check for this error !!
   test(" !?!??!?! Create Transaction - Body Username is not in the DB", (done) => {
-    const newTransaction={
-      username: "User", 
+    const newTransaction = {
+      username: "User",
       type: category.type,
       amount: 20,
-    }
+    };
 
     request(app)
-      .post("/api/users/:username/transactions".replace(":username", user.username))
+      .post(
+        "/api/users/:username/transactions".replace(":username", user.username)
+      )
       .send(newTransaction)
       .set("Cookie", [
         `accessToken=${accessToken}`,
@@ -1029,14 +1048,19 @@ describe("createTransaction", () => {
   }); //PASS
 
   test("Create Transaction - Amount is not a float", (done) => {
-    const newTransaction={
-      username: user.username, 
+    const newTransaction = {
+      username: user.username,
       type: category.type,
       amount: "alpha",
-    }
+    };
 
     request(app)
-      .post("/api/users/:username/transactions".replace(":username", newTransaction.username))
+      .post(
+        "/api/users/:username/transactions".replace(
+          ":username",
+          newTransaction.username
+        )
+      )
       .send(newTransaction)
       .set("Cookie", [
         `accessToken=${accessToken}`,
@@ -1053,33 +1077,37 @@ describe("createTransaction", () => {
 
   //Need to implement (in the method) a specific check for this error !!
   test(" !!! Create Transaction !!! - Authenticated user doesn't match the user in body", (done) => {
-    
-    const newTransaction={
-      username: user.username, 
+    const newTransaction = {
+      username: user.username,
       type: category.type,
       amount: 20,
-    }
-    
-     const generalUser = {
+    };
+
+    const generalUser = {
       username: "GeneralUser",
       email: "generalUser@test.com",
       password: "GeneralUser",
     };
 
     request(app)
-      .post("/api/users/:username/transactions".replace(":username", newTransaction.username))
+      .post(
+        "/api/users/:username/transactions".replace(
+          ":username",
+          newTransaction.username
+        )
+      )
       .send(newTransaction)
       .set("Cookie", [
         `accessToken=${jwt.sign(
           {
-           username: generalUser.username,
-           email: generalUser.email,
-           password: generalUser.password,
-           role: "Admin",
+            username: generalUser.username,
+            email: generalUser.email,
+            password: generalUser.password,
+            role: "Admin",
           },
           "EZWALLET",
           {
-           expiresIn: "1h",
+            expiresIn: "1h",
           }
         )}`,
         `Admin_refreshToken=${jwt.sign(
@@ -1102,7 +1130,6 @@ describe("createTransaction", () => {
       })
       .catch((err) => done(err));
   }); // PASS
-
 }); /** 9/9 test */
 
 describe("getAllTransactions", () => {
@@ -1119,14 +1146,14 @@ describe("getAllTransactions", () => {
     };
     Admin_accessToken = jwt.sign(
       {
-       username: admin.username,
-       email: admin.email,
-       password: admin.password,
-       role: "Admin",
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
+        role: "Admin",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     Admin_refreshToken = jwt.sign(
@@ -1145,18 +1172,18 @@ describe("getAllTransactions", () => {
       username: "TestUser1",
       email: "user1@test.com",
       password: "TestUser1",
-      role:"Regular",
+      role: "Regular",
     };
     User_accessToken = jwt.sign(
       {
-       username: user.username,
-       email: user.email,
-       password: user.password,
-       role: "Regular",
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: "Regular",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     User_refreshToken = jwt.sign(
@@ -1173,40 +1200,44 @@ describe("getAllTransactions", () => {
     await User.insertMany([admin, user]);
 
     category = {
-      type:"Type",
-      color:"Color",
+      type: "Type",
+      color: "Color",
     };
     await categories.insertMany([category]);
 
     const Transaction1 = {
-      username: admin.username, 
+      username: admin.username,
       type: category.type,
       amount: 0,
     };
     const Transaction2 = {
-      username: admin.username, 
+      username: admin.username,
       type: category.type,
       amount: 5,
     };
     const Transaction3 = {
-      username: admin.username, 
+      username: admin.username,
       type: category.type,
       amount: 14.5,
     };
     const Transaction4 = {
-      username: admin.username, 
+      username: admin.username,
       type: category.type,
       amount: 7.24,
     };
-    await transactions.insertMany([Transaction1, Transaction2, Transaction3, Transaction4]);
+    await transactions.insertMany([
+      Transaction1,
+      Transaction2,
+      Transaction3,
+      Transaction4,
+    ]);
   });
 
-  afterEach(async ()=>{
+  afterEach(async () => {
     await transactions.deleteMany({});
   });
-/*!! ID of the transaction have not to be rethrived !!*/
+  /*!! ID of the transaction have not to be rethrived !!*/
   test("Get All Transaction - Success !", (done) => {
-
     request(app)
       .get("/api/transactions")
       .send()
@@ -1220,16 +1251,16 @@ describe("getAllTransactions", () => {
         expect(response.body.data).toBeInstanceOf(Array);
         expect(response.body.data[0]).toHaveProperty("username");
         expect(response.body.data[0].username).not.toBeNull();
-        
+
         expect(response.body.data[0]).toHaveProperty("type");
         expect(response.body.data[0].type).not.toBeNull();
-        
+
         expect(response.body.data[0]).toHaveProperty("amount");
         expect(response.body.data[0].amout).not.toBeNaN();
-        
+
         expect(response.body.data[0]).toHaveProperty("date");
         expect(response.body.data[0].date).not.toBeNull();
-        
+
         expect(response.body.data[0]).toHaveProperty("color");
         expect(response.body.data[0].color).not.toBeNull();
         done();
@@ -1238,10 +1269,7 @@ describe("getAllTransactions", () => {
   }); //PASS
 
   test("Get All Transaction - No Transaction in the DB", (done) => {
-
-    transactions
-    .deleteMany({})
-    .then(()=>{
+    transactions.deleteMany({}).then(() => {
       request(app)
         .get("/api/transactions")
         .send()
@@ -1283,8 +1311,7 @@ describe("getTransactionsByUser", () => {
   let admin, Admin_accessToken, Admin_refreshToken;
   let cat1, cat2;
 
-  beforeEach(async ()=>{
-    
+  beforeEach(async () => {
     admin = {
       username: "TestAdmin",
       email: "admin@test.com",
@@ -1293,14 +1320,14 @@ describe("getTransactionsByUser", () => {
     };
     Admin_accessToken = jwt.sign(
       {
-       username: admin.username,
-       email: admin.email,
-       password: admin.password,
-       role: "Admin",
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
+        role: "Admin",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     Admin_refreshToken = jwt.sign(
@@ -1319,18 +1346,18 @@ describe("getTransactionsByUser", () => {
       username: "TestUser",
       email: "user@test.com",
       password: "TestUser",
-      role:"Regular",
+      role: "Regular",
     };
     User_accessToken = jwt.sign(
       {
-       username: user.username,
-       email: user.email,
-       password: user.password,
-       role: "Regular",
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: "Regular",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     User_refreshToken = jwt.sign(
@@ -1346,14 +1373,14 @@ describe("getTransactionsByUser", () => {
     user.refreshToken = User_refreshToken;
 
     cat1 = {
-      type:"Category1",
-      color:"Color1",
+      type: "Category1",
+      color: "Color1",
     };
     cat2 = {
-      type:"Category2",
-      color:"Color2",
+      type: "Category2",
+      color: "Color2",
     };
-    
+
     const transaction1 = {
       username: user.username,
       type: cat2.type,
@@ -1377,13 +1404,19 @@ describe("getTransactionsByUser", () => {
 
     await User.create(admin, user);
     await categories.create(cat1, cat2);
-    await transactions.create(transaction1, transaction2, transaction3, transaction4);
+    await transactions.create(
+      transaction1,
+      transaction2,
+      transaction3,
+      transaction4
+    );
   });
 
   test("Get Transaction By User - Regular User - Success !", (done) => {
-
     request(app)
-      .get("/api/users/:username/transactions".replace(":username", user.username))
+      .get(
+        "/api/users/:username/transactions".replace(":username", user.username)
+      )
       .send()
       .set("Cookie", [
         `accessToken=${User_accessToken}`,
@@ -1405,9 +1438,10 @@ describe("getTransactionsByUser", () => {
   }); //PASS
 
   test("Get Transaction By User - Admin - Success !", (done) => {
-
     request(app)
-      .get("/api/transactions/users/:username".replace(":username", user.username))
+      .get(
+        "/api/transactions/users/:username".replace(":username", user.username)
+      )
       .send()
       .set("Cookie", [
         `accessToken=${Admin_accessToken}`,
@@ -1419,7 +1453,7 @@ describe("getTransactionsByUser", () => {
         expect(response.body.data).toBeInstanceOf(Array);
         expect(response.body.data[0]).toHaveProperty("username");
         expect(response.body.data[0].username).toContain(user.username);
-        
+
         expect(response.body.data[0]).toHaveProperty("type");
         expect(response.body.data[0]).toHaveProperty("amount");
         expect(response.body.data[0]).toHaveProperty("date");
@@ -1430,14 +1464,13 @@ describe("getTransactionsByUser", () => {
   }); //PASS
 
   test("Get Transaction By User - Admin - Username in params not in the DB", (done) => {
-
     request(app)
-    .get("/api/transactions/users/:username".replace(":username", "User1"))
-    .send()
-    .set("Cookie", [
-      `accessToken=${Admin_accessToken}`,
-      `refreshToken=${Admin_refreshToken}`,
-    ])
+      .get("/api/transactions/users/:username".replace(":username", "User1"))
+      .send()
+      .set("Cookie", [
+        `accessToken=${Admin_accessToken}`,
+        `refreshToken=${Admin_refreshToken}`,
+      ])
       .then((response) => {
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
@@ -1448,9 +1481,10 @@ describe("getTransactionsByUser", () => {
   }); //PASS
 
   test("Get Transaction By User - Regular User - User authenticated and params doesn't match ", (done) => {
-    
     request(app)
-      .get("/api/users/:username/transactions".replace(":username", admin.username))
+      .get(
+        "/api/users/:username/transactions".replace(":username", admin.username)
+      )
       .send()
       .set("Cookie", [
         `accessToken=${User_accessToken}`,
@@ -1466,9 +1500,10 @@ describe("getTransactionsByUser", () => {
   }); //PASS
 
   test("Get Transaction By User - Regular User - Admin route for an authorized regular user", (done) => {
-    
     request(app)
-      .get("/api/transactions/users/:username".replace(":username", admin.username))
+      .get(
+        "/api/transactions/users/:username".replace(":username", admin.username)
+      )
       .send()
       .set("Cookie", [
         `accessToken=${User_accessToken}`,
@@ -1509,8 +1544,7 @@ describe("getTransactionsByUserByCategory", () => {
   let admin, Admin_accessToken, Admin_refreshToken;
   let cat1, cat2;
 
-  beforeEach(async ()=>{
-
+  beforeEach(async () => {
     admin = {
       username: "TestAdmin",
       email: "admin@test.com",
@@ -1519,14 +1553,14 @@ describe("getTransactionsByUserByCategory", () => {
     };
     Admin_accessToken = jwt.sign(
       {
-       username: admin.username,
-       email: admin.email,
-       password: admin.password,
-       role: "Admin",
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
+        role: "Admin",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     Admin_refreshToken = jwt.sign(
@@ -1545,18 +1579,18 @@ describe("getTransactionsByUserByCategory", () => {
       username: "TestUser",
       email: "user@test.com",
       password: "TestUser",
-      role:"Regular",
+      role: "Regular",
     };
     User_accessToken = jwt.sign(
       {
-       username: user.username,
-       email: user.email,
-       password: user.password,
-       role: "Regular",
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        role: "Regular",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     User_refreshToken = jwt.sign(
@@ -1572,51 +1606,57 @@ describe("getTransactionsByUserByCategory", () => {
     user.refreshToken = User_refreshToken;
 
     cat1 = {
-      type:"Category1",
-      color:"Color1",
+      type: "Category1",
+      color: "Color1",
     };
     cat2 = {
-      type:"Category2",
-      color:"Color2",
+      type: "Category2",
+      color: "Color2",
     };
 
     const transaction1 = {
       username: user.username,
       type: cat2.type,
       amount: 100,
-    }
+    };
     const transaction2 = {
       username: admin.username,
       type: cat2.type,
       amount: 3,
-    }
+    };
     const transaction3 = {
       username: user.username,
       type: cat2.type,
       amount: 17.9,
-    }
+    };
     const transaction4 = {
       username: user.username,
       type: cat1.type,
       amount: 0.78,
-    }
+    };
     const transaction5 = {
       username: admin.username,
       type: cat1.type,
       amount: 15.93,
-    }
+    };
 
     await categories.insertMany([cat1, cat2]);
     await User.insertMany([admin, user]);
-    await transactions.insertMany([transaction1, transaction2, transaction3, transaction4, transaction5]);
+    await transactions.insertMany([
+      transaction1,
+      transaction2,
+      transaction3,
+      transaction4,
+      transaction5,
+    ]);
   });
 
   test("Get Transactions By User By Category - Regular User - Success !", (done) => {
-
     request(app)
-      .get("/api/users/:username/transactions/category/:category"
-        .replace(":username", user.username)
-        .replace(":category", cat1.type)
+      .get(
+        "/api/users/:username/transactions/category/:category"
+          .replace(":username", user.username)
+          .replace(":category", cat1.type)
       )
       .send()
       .set("Cookie", [
@@ -1640,11 +1680,11 @@ describe("getTransactionsByUserByCategory", () => {
   }); //PASS
 
   test("Get Transactions By User By Category - Admin - Success !", (done) => {
-
     request(app)
-      .get("/api/transactions/users/:username/category/:category"
-        .replace(":username", admin.username)
-        .replace(":category", cat1.type)
+      .get(
+        "/api/transactions/users/:username/category/:category"
+          .replace(":username", admin.username)
+          .replace(":category", cat1.type)
       )
       .send()
       .set("Cookie", [
@@ -1669,11 +1709,11 @@ describe("getTransactionsByUserByCategory", () => {
   }); //PASS
 
   test("Get Transactions By User By Category - Admin - Username in params not in the DB", (done) => {
-
     request(app)
-      .get("/api/transactions/users/:username/category/:category"
-        .replace(":username", "User1")
-        .replace(":category", cat1.type)
+      .get(
+        "/api/transactions/users/:username/category/:category"
+          .replace(":username", "User1")
+          .replace(":category", cat1.type)
       )
       .send()
       .set("Cookie", [
@@ -1690,11 +1730,11 @@ describe("getTransactionsByUserByCategory", () => {
   }); //PASS
 
   test("Get Transactions By User By Category - Admin - Category in params not in the DB", (done) => {
-
     request(app)
-      .get("/api/transactions/users/:username/category/:category"
-        .replace(":username", admin.username)
-        .replace(":category", "Category")
+      .get(
+        "/api/transactions/users/:username/category/:category"
+          .replace(":username", admin.username)
+          .replace(":category", "Category")
       )
       .send()
       .set("Cookie", [
@@ -1711,11 +1751,11 @@ describe("getTransactionsByUserByCategory", () => {
   }); //PASS
 
   test("Get Transactions By User By Category - Regular User - User authenticated and params doesn't match", (done) => {
-
     request(app)
-      .get("/api/users/:username/transactions/category/:category"
-        .replace(":username", admin.username)
-        .replace(":category", cat1.type)
+      .get(
+        "/api/users/:username/transactions/category/:category"
+          .replace(":username", admin.username)
+          .replace(":category", cat1.type)
       )
       .send()
       .set("Cookie", [
@@ -1732,11 +1772,11 @@ describe("getTransactionsByUserByCategory", () => {
   }); //PASS
 
   test("Get Transactions By User By Category - Regular User - Admin route for an authorized regular user", (done) => {
-    
     request(app)
-      .get("/api/transactions/users/:username/category/:category"
-        .replace(":username", admin.username)
-        .replace(":category", cat1.type)
+      .get(
+        "/api/transactions/users/:username/category/:category"
+          .replace(":username", admin.username)
+          .replace(":category", cat1.type)
       )
       .send()
       .set("Cookie", [
@@ -1777,9 +1817,9 @@ describe("getTransactionsByGroup", () => {
   let admin, Admin_accessToken, Admin_refreshToken;
   let cat1, cat2;
   let group1, group2;
+  let transaction1, transaction2, transaction3, transaction4;
 
-  beforeEach(async ()=>{
-    
+  beforeEach(async () => {
     admin = {
       username: "TestAdmin",
       email: "admin@test.com",
@@ -1788,14 +1828,14 @@ describe("getTransactionsByGroup", () => {
     };
     Admin_accessToken = jwt.sign(
       {
-       username: admin.username,
-       email: admin.email,
-       password: admin.password,
-       role: "Admin",
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
+        role: "Admin",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     Admin_refreshToken = jwt.sign(
@@ -1814,18 +1854,18 @@ describe("getTransactionsByGroup", () => {
       username: "TestUser1",
       email: "user1@test.com",
       password: "TestUser1",
-      role:"Regular",
+      role: "Regular",
     };
     User1_accessToken = jwt.sign(
       {
-       username: user1.username,
-       email: user1.email,
-       password: user1.password,
-       role: "Regular",
+        username: user1.username,
+        email: user1.email,
+        password: user1.password,
+        role: "Regular",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     User1_refreshToken = jwt.sign(
@@ -1844,18 +1884,18 @@ describe("getTransactionsByGroup", () => {
       username: "TestUser2",
       email: "user2@test.com",
       password: "TestUser2",
-      role:"Regular",
+      role: "Regular",
     };
     User2_accessToken = jwt.sign(
       {
-       username: user2.username,
-       email: user2.email,
-       password: user2.password,
-       role: "Regular",
+        username: user2.username,
+        email: user2.email,
+        password: user2.password,
+        role: "Regular",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     User2_refreshToken = jwt.sign(
@@ -1872,63 +1912,70 @@ describe("getTransactionsByGroup", () => {
     await User.insertMany([admin, user1, user2]);
 
     cat1 = {
-      type:"Category1",
-      color:"Color1",
+      type: "Category1",
+      color: "Color1",
     };
     cat2 = {
-      type:"Category2",
-      color:"Color2",
+      type: "Category2",
+      color: "Color2",
     };
     await categories.insertMany([cat1, cat2]);
-    
+
     group1 = {
       name: "Group1",
-      members: [{
-        email: admin.email,
-        user: (await User.findOne({username: admin.username})),
-      },{
-        email: user1.email,
-        user: (await User.findOne({username: user1.username})),
-      }]
+      members: [
+        {
+          email: admin.email,
+          user: await User.findOne({ username: admin.username }),
+        },
+        {
+          email: user1.email,
+          user: await User.findOne({ username: user1.username }),
+        },
+      ],
     };
     group2 = {
       name: "Group2",
-      members: [{
-        email: user2.email,
-        user: (await User.findOne({username: user2.username})),
-      }]
+      members: [
+        {
+          email: user2.email,
+          user: await User.findOne({ username: user2.username }),
+        },
+      ],
     };
     await Group.insertMany([group1, group2]);
 
-    const transaction1 = {
+    transaction1 = {
       username: user1.username,
       type: cat2.type,
       amount: 100,
     };
-    const transaction2 = {
+    transaction2 = {
       username: admin.username,
       type: cat2.type,
       amount: 3,
     };
-    const transaction3 = {
+    transaction3 = {
       username: user2.username,
       type: cat2.type,
       amount: 17.9,
     };
-    const transaction4 = {
+    transaction4 = {
       username: user2.username,
       type: cat1.type,
       amount: 0.78,
     };
-    await transactions.insertMany([transaction1, transaction2, transaction3, transaction4]);
+    await transactions.insertMany([
+      transaction1,
+      transaction2,
+      transaction3,
+      transaction4,
+    ]);
   });
 
   test("Get Transactions By Group - Regular User - Success !", (done) => {
-
     request(app)
-      .get("/api/groups/:name/transactions"
-        .replace(":name", group1.name)
-      )
+      .get(`/api/groups/${group1.name}/transactions`)
       .send()
       .set("Cookie", [
         `accessToken=${User1_accessToken}`,
@@ -1947,14 +1994,11 @@ describe("getTransactionsByGroup", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //EXPECTED 2 TRX, RECEIVED 0
+  });
 
   test("Get Transactions By Group - Admin - Success !", (done) => {
-
     request(app)
-      .get("/api/transactions/groups/:name"
-        .replace(":name", group2.name)
-      )
+      .get("/api/transactions/groups/:name".replace(":name", group2.name))
       .send()
       .set("Cookie", [
         `accessToken=${Admin_accessToken}`,
@@ -1973,14 +2017,11 @@ describe("getTransactionsByGroup", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //EXPECTED 2 TRX, RECEIVED 0
+  });
 
   test("Get Transaction By Group - Admin - Group in params not in the DB", (done) => {
-
     request(app)
-      .get("/api/transactions/groups/:name"
-        .replace(":groups", "Group")
-      )
+      .get("/api/transactions/groups/:name".replace(":groups", "Group"))
       .send()
       .set("Cookie", [
         `accessToken=${Admin_accessToken}`,
@@ -1996,11 +2037,8 @@ describe("getTransactionsByGroup", () => {
   }); //PASS
 
   test("Get Transaction By Group - Regular User - Authenticated User not part of the group", (done) => {
-
     request(app)
-      .get("/api/groups/:name/transactions"
-        .replace(":groups", group1.name)
-      )
+      .get("/api/groups/:name/transactions".replace(":groups", group1.name))
       .send()
       .set("Cookie", [
         `accessToken=${User2_accessToken}`,
@@ -2016,11 +2054,8 @@ describe("getTransactionsByGroup", () => {
   }); //PASS
 
   test("Get Transaction By Group - Regular User - Admin Route for an authenticated Regular User", (done) => {
-
     request(app)
-      .get("/api/transactions/groups/:name"
-        .replace(":groups", group2.name)
-      )
+      .get("/api/transactions/groups/:name".replace(":groups", group2.name))
       .send()
       .set("Cookie", [
         `accessToken=${User1_accessToken}`,
@@ -2033,7 +2068,7 @@ describe("getTransactionsByGroup", () => {
         done();
       })
       .catch((err) => done(err));
-  });//PASS
+  }); //PASS
 }); /** 3/5 test */
 
 describe("getTransactionsByGroupByCategory", () => {
@@ -2043,8 +2078,7 @@ describe("getTransactionsByGroupByCategory", () => {
   let cat1, cat2;
   let group1, group2;
 
-  beforeEach(async ()=>{
-    
+  beforeEach(async () => {
     admin = {
       username: "TestAdmin",
       email: "admin@test.com",
@@ -2053,14 +2087,14 @@ describe("getTransactionsByGroupByCategory", () => {
     };
     Admin_accessToken = jwt.sign(
       {
-       username: admin.username,
-       email: admin.email,
-       password: admin.password,
-       role: "Admin",
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
+        role: "Admin",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     Admin_refreshToken = jwt.sign(
@@ -2079,18 +2113,18 @@ describe("getTransactionsByGroupByCategory", () => {
       username: "TestUser1",
       email: "user1@test.com",
       password: "TestUser1",
-      role:"Regular",
+      role: "Regular",
     };
     User1_accessToken = jwt.sign(
       {
-       username: user1.username,
-       email: user1.email,
-       password: user1.password,
-       role: "Regular",
+        username: user1.username,
+        email: user1.email,
+        password: user1.password,
+        role: "Regular",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     User1_refreshToken = jwt.sign(
@@ -2109,18 +2143,18 @@ describe("getTransactionsByGroupByCategory", () => {
       username: "TestUser2",
       email: "user2@test.com",
       password: "TestUser2",
-      role:"Regular",
+      role: "Regular",
     };
     User2_accessToken = jwt.sign(
       {
-       username: user2.username,
-       email: user2.email,
-       password: user2.password,
-       role: "Regular",
+        username: user2.username,
+        email: user2.email,
+        password: user2.password,
+        role: "Regular",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     User2_refreshToken = jwt.sign(
@@ -2137,31 +2171,36 @@ describe("getTransactionsByGroupByCategory", () => {
     await User.insertMany([admin, user1, user2]);
 
     cat1 = {
-      type:"Category1",
-      color:"Color1",
+      type: "Category1",
+      color: "Color1",
     };
     cat2 = {
-      type:"Category2",
-      color:"Color2",
+      type: "Category2",
+      color: "Color2",
     };
     await categories.insertMany([cat1, cat2]);
-    
+
     group1 = {
       name: "Group1",
-      members: [{
-        email: admin.email,
-        user: (await User.findOne({username: admin.username})),
-      },{
-        email: user1.email,
-        user: (await User.findOne({username: user1.username})),
-      }]
+      members: [
+        {
+          email: admin.email,
+          user: await User.findOne({ username: admin.username }),
+        },
+        {
+          email: user1.email,
+          user: await User.findOne({ username: user1.username }),
+        },
+      ],
     };
     group2 = {
       name: "Group2",
-      members: [{
-        email: user2.email,
-        user: (await User.findOne({username: user2.username})),
-      }]
+      members: [
+        {
+          email: user2.email,
+          user: await User.findOne({ username: user2.username }),
+        },
+      ],
     };
     await Group.insertMany([group1, group2]);
 
@@ -2185,15 +2224,20 @@ describe("getTransactionsByGroupByCategory", () => {
       type: cat1.type,
       amount: 0.78,
     };
-    await transactions.insertMany([transaction1, transaction2, transaction3, transaction4]);
+    await transactions.insertMany([
+      transaction1,
+      transaction2,
+      transaction3,
+      transaction4,
+    ]);
   });
 
   test("Get Transactions By Group By Category - Regular User - Success !", (done) => {
-
     request(app)
-      .get("/api/groups/:name/transactions/category/:category"
-        .replace(":name", group1.name)
-        .replace(":category", cat2.type)
+      .get(
+        "/api/groups/:name/transactions/category/:category"
+          .replace(":name", group1.name)
+          .replace(":category", cat2.type)
       )
       .send()
       .set("Cookie", [
@@ -2214,16 +2258,17 @@ describe("getTransactionsByGroupByCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //EXPECTED 2 TRX, RECEIVED 0 
+  });
 
   test("Get Transactions By Group By Category - Admin - Success !", (done) => {
     const groupname = group2.name;
     const category = cat1.type;
 
     request(app)
-      .get("/api/transactions/groups/:name/category/:category"
-        .replace(":name", group2.name)
-        .replace(":category", cat1.type)
+      .get(
+        "/api/transactions/groups/:name/category/:category"
+          .replace(":name", group2.name)
+          .replace(":category", cat1.type)
       )
       .send()
       .set("Cookie", [
@@ -2244,15 +2289,16 @@ describe("getTransactionsByGroupByCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //EXPECTED 1 TRX, RECEIVED 0 
+  });
 
   test("Get Transactions By Group By Category - Admin - Group in params not in the DB", (done) => {
     const category = cat1.type;
 
     request(app)
-      .get("/api/transactions/groups/:name/category/:category"
-        .replace(":name", "Group")
-        .replace(":category", cat1.type)
+      .get(
+        "/api/transactions/groups/:name/category/:category"
+          .replace(":name", "Group")
+          .replace(":category", cat1.type)
       )
       .send()
       .set("Cookie", [
@@ -2269,11 +2315,11 @@ describe("getTransactionsByGroupByCategory", () => {
   }); //PASS
 
   test("Get Transactions By Group By Category - Admin - Category in params not in the DB", (done) => {
-
     request(app)
-      .get("/api/transactions/groups/:name/category/:category"
-        .replace(":name", group1.name)
-        .replace(":category", "Category")
+      .get(
+        "/api/transactions/groups/:name/category/:category"
+          .replace(":name", group1.name)
+          .replace(":category", "Category")
       )
       .send()
       .set("Cookie", [
@@ -2290,11 +2336,11 @@ describe("getTransactionsByGroupByCategory", () => {
   }); //PASS
 
   test("Get Transactions By Group By Category - Regular User - Authenticated User not part of the group", (done) => {
-
     request(app)
-      .get("/api/groups/:name/transactions/category/:category"
-        .replace(":groups", group1.name)
-        .replace(":category", cat1.type)
+      .get(
+        "/api/groups/:name/transactions/category/:category"
+          .replace(":groups", group1.name)
+          .replace(":category", cat1.type)
       )
       .send()
       .set("Cookie", [
@@ -2311,11 +2357,11 @@ describe("getTransactionsByGroupByCategory", () => {
   }); //PASS
 
   test("Get Transactions By Group By Category - Regular User - Admin Route for an authenticated Regular User", (done) => {
-
     request(app)
-      .get("/api/transactions/groups/:name/category/:category"
-        .replace(":groups", group2.name)
-        .replace(":category", cat1.type)
+      .get(
+        "/api/transactions/groups/:name/category/:category"
+          .replace(":groups", group2.name)
+          .replace(":category", cat1.type)
       )
       .send()
       .set("Cookie", [
@@ -2336,10 +2382,9 @@ describe("deleteTransaction", () => {
   let user1, User1_accessToken, User1_refreshToken;
   let admin, Admin_accessToken, Admin_refreshToken;
   let cat1, cat2;
-  let transactions_ID;
+  let transaction1, transaction2, transaction3, transaction4;
 
-  beforeEach(async ()=>{
-    
+  beforeEach(async () => {
     admin = {
       username: "TestAdmin",
       email: "admin@test.com",
@@ -2348,14 +2393,14 @@ describe("deleteTransaction", () => {
     };
     Admin_accessToken = jwt.sign(
       {
-       username: admin.username,
-       email: admin.email,
-       password: admin.password,
-       role: "Admin",
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
+        role: "Admin",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     Admin_refreshToken = jwt.sign(
@@ -2374,18 +2419,18 @@ describe("deleteTransaction", () => {
       username: "TestUser1",
       email: "user1@test.com",
       password: "TestUser1",
-      role:"Regular",
+      role: "Regular",
     };
     User1_accessToken = jwt.sign(
       {
-       username: user1.username,
-       email: user1.email,
-       password: user1.password,
-       role: "Regular",
+        username: user1.username,
+        email: user1.email,
+        password: user1.password,
+        role: "Regular",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     User1_refreshToken = jwt.sign(
@@ -2401,72 +2446,75 @@ describe("deleteTransaction", () => {
     user1.refreshToken = User1_refreshToken;
 
     cat1 = {
-      type:"Category1",
-      color:"Color1",
+      type: "Category1",
+      color: "Color1",
     };
     cat2 = {
-      type:"Category2",
-      color:"Color2",
+      type: "Category2",
+      color: "Color2",
     };
 
     await categories.insertMany([cat1, cat2]);
     await User.insertMany([admin, user1]);
 
-    const transaction1 = {
+    transaction1 = {
+      _id: "646b31fb907572186308033e",
       username: user1.username,
       type: cat2.type,
       amount: 100,
-    }
-    const transaction2 = {
+    };
+    transaction2 = {
       username: admin.username,
       type: cat2.type,
       amount: 3,
-    }
-    const transaction3 = {
+    };
+    transaction3 = {
       username: user1.username,
       type: cat2.type,
       amount: 17.9,
-    }
-    const transaction4 = {
+    };
+    transaction4 = {
       username: user1.username,
       type: cat1.type,
       amount: 0.78,
-    }
-    await transactions.insertMany([transaction1, transaction2, transaction3, transaction4]);
+    };
+
+    await transactions.insertMany([
+      transaction1,
+      transaction2,
+      transaction3,
+      transaction4,
+    ]);
   });
 
   test("Delete Transaction - Success !", (done) => {
-    const transaction = {
-      _id: transactions_ID[0],
-    };
+    const transactionIds = transaction1._id;
 
     request(app)
-      .get("/api/users/:username/transactions"
-        .replace(":username", user1.username)
+      .delete(
+        "/api/users/:username/transactions".replace(":username", user1.username)
       )
       .set("Cookie", [
         `accessToken=${User1_accessToken}`,
         `refreshToken=${User1_refreshToken}`,
       ])
-      .send(transaction)
+      .send({ _id: transactionIds })
       .then((response) => {
         expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("data");
-        expect(response.body.data).toHaveProperty("message");
-        expect(response.body.error).toContain("Transaction deleted");
+        expect(response.body).toEqual({
+          data: {
+            message: `Transaction ${transactionIds} successfully deleted`,
+          },
+        });
         done();
       })
       .catch((err) => done(err));
   });
 
   test("Delete Transaction - Missing body attributes", (done) => {
-    const transaction = {
-      _id: transactions_ID[0]
-    };
-
     request(app)
-      .get("/api/users/:username/transactions"
-        .replace(":username", user1.username)
+      .delete(
+        "/api/users/:username/transactions".replace(":username", user1.username)
       )
       .send()
       .set("Cookie", [
@@ -2476,88 +2524,87 @@ describe("deleteTransaction", () => {
       .then((response) => {
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
-        expect(response.body.error).toContain("Transaction deleted");
+        expect(response.body.error).toContain("Missing _ids");
         done();
       })
       .catch((err) => done(err));
   });
 
   test("Delete Transaction - Username in params not in the DB", (done) => {
-    const transaction = {
-      _id: transactions_ID[0]
-    };
+    const transactionIds = transaction1._id;
+
     request(app)
-      .get("/api/users/:username/transactions"
-        .replace(":username", "User")
-      )
+      .delete("/api/users/:username/transactions".replace(":username", "User"))
       .set("Cookie", [
         `accessToken=${User1_accessToken}`,
         `refreshToken=${User1_refreshToken}`,
       ])
-      .send(transaction)
+      .send({ _id: transactionIds })
       .then((response) => {
         expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("data");
-        expect(response.body.error).toContain("Transaction deleted");
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.error).toContain("User not found");
         done();
       })
       .catch((err) => done(err));
   });
 
   test("Delete Transaction - Transaction ID, in the body, not in the DB", (done) => {
-    const transaction = {
-      _id: transactions_ID[0]+4,
-    };
+    const transactionIds = "646b31fb907572186308033f";
 
     request(app)
-      .get("/api/users/:username/transactions"
-        .replace(":username", user1.username)
+      .delete(
+        "/api/users/:username/transactions".replace(":username", user1.username)
       )
-      .send(transaction)
+      .send({
+        _id: transactionIds,
+      })
       .set("Cookie", [
         `accessToken=${User1_accessToken}`,
         `refreshToken=${User1_refreshToken}`,
       ])
       .then((response) => {
-        expect(response.status).toBe(40);
-        expect(response.body).toHaveProperty("data");
-        expect(response.body.error).toContain("Transaction deleted");
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.error).toContain(
+          `Transaction ${transactionIds} not found`
+        );
         done();
       })
       .catch((err) => done(err));
   });
 
-  test("Delete Transaction - User Authenticated but different from params ", (done) => {
-    const transaction = {
-      _id: transactions_ID[0]
-    };
+  test("Delete Transaction - The user is not the owner", (done) => {
+    const transactionIds = transaction1._id;
+
     request(app)
-      .get("/api/users/:username/transactions"
-        .replace(":username", admin.username)
+      .delete(
+        "/api/users/:username/transactions".replace(":username", admin.username)
       )
-      .send(transaction)
+      .send({
+        _id: transactionIds,
+      })
       .set("Cookie", [
         `accessToken=${User1_accessToken}`,
         `refreshToken=${User1_refreshToken}`,
       ])
       .then((response) => {
-        expect(response.status).toBe(401);
-        expect(response.body).toHaveProperty("data");
-        expect(response.body.error).toContain("Transaction deleted");
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("error");
+        expect(response.body.error).toContain("The user is not the owner");
         done();
       })
       .catch((err) => done(err));
   });
-}); /** 0/5 test */
+}); /** 5/5 test */
 
 describe("deleteTransactions", () => {
   let user1, User1_accessToken, User1_refreshToken;
   let admin, Admin_accessToken, Admin_refreshToken;
   let cat1, cat2;
-  let transactions_ID;
+  let transaction1, transaction2, transaction3, transaction4;
 
-  beforeEach(async ()=>{
-    
+  beforeEach(async () => {
     admin = {
       username: "TestAdmin",
       email: "admin@test.com",
@@ -2566,14 +2613,14 @@ describe("deleteTransactions", () => {
     };
     Admin_accessToken = jwt.sign(
       {
-       username: admin.username,
-       email: admin.email,
-       password: admin.password,
-       role: "Admin",
+        username: admin.username,
+        email: admin.email,
+        password: admin.password,
+        role: "Admin",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     Admin_refreshToken = jwt.sign(
@@ -2592,18 +2639,18 @@ describe("deleteTransactions", () => {
       username: "TestUser1",
       email: "user1@test.com",
       password: "TestUser1",
-      role:"Regular",
+      role: "Regular",
     };
     User1_accessToken = jwt.sign(
       {
-       username: user1.username,
-       email: user1.email,
-       password: user1.password,
-       role: "Regular",
+        username: user1.username,
+        email: user1.email,
+        password: user1.password,
+        role: "Regular",
       },
       "EZWALLET",
       {
-       expiresIn: "1h",
+        expiresIn: "1h",
       }
     );
     User1_refreshToken = jwt.sign(
@@ -2619,49 +2666,56 @@ describe("deleteTransactions", () => {
     user1.refreshToken = User1_refreshToken;
 
     cat1 = {
-      type:"Category1",
-      color:"Color1",
+      type: "Category1",
+      color: "Color1",
     };
     cat2 = {
-      type:"Category2",
-      color:"Color2",
+      type: "Category2",
+      color: "Color2",
     };
 
     await categories.insertMany([cat1, cat2]);
     await User.insertMany([admin, user1]);
 
-    const transaction1 = {
+    transaction1 = {
+      _id: "646b31fb907572186308033e",
       username: user1.username,
       type: cat2.type,
       amount: 100,
-    }
-    const transaction2 = {
+    };
+    transaction2 = {
+      _id: "646b31fb907572186308033f",
       username: admin.username,
       type: cat2.type,
       amount: 3,
-    }
-    const transaction3 = {
+    };
+    transaction3 = {
       username: user1.username,
       type: cat2.type,
       amount: 17.9,
-    }
-    const transaction4 = {
+    };
+    transaction4 = {
       username: user1.username,
       type: cat1.type,
       amount: 0.78,
-    }
-    await transactions.insertMany([transaction1, transaction2, transaction3, transaction4]);
+    };
+    await transactions.insertMany([
+      transaction1,
+      transaction2,
+      transaction3,
+      transaction4,
+    ]);
   });
 
   test("Delete Transactions - Delete 1 - Success !", (done) => {
-    const transactions = {
-      _ids: [transactions_ID[0]],
-    };
+    const transactionIds = [transaction1._id];
 
     request(app)
-      .get("/api/transactions")
-      .send(transactions)
-      .set("Cookie",[
+      .delete("/api/transactions")
+      .send({
+        _ids: transactionIds,
+      })
+      .set("Cookie", [
         `accessToken=${Admin_accessToken}`,
         `refreshToken=${Admin_refreshToken}`,
       ])
@@ -2669,21 +2723,23 @@ describe("deleteTransactions", () => {
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("data");
         expect(response.body.data).toHaveProperty("message");
-        expect(response.body.message).toContain("Transactions deleted");
+        expect(response.body.data.message).toEqual(
+          `Transactions ${transactionIds} successfully deleted`
+        );
         done();
       })
       .catch((err) => done(err));
   });
 
   test("Delete Transactions - Delete many - Success !", (done) => {
-    const transactions = {
-      _ids: [transactions_ID[0], transactions_ID[1], transactions_ID[2]],
-    };
+    const transactionIds = [transaction1._id, transaction2._id];
 
     request(app)
-      .get("/api/transactions")
-      .send(transactions)
-      .set("Cookie",[
+      .delete("/api/transactions")
+      .send({
+        _ids: transactionIds,
+      })
+      .set("Cookie", [
         `accessToken=${Admin_accessToken}`,
         `refreshToken=${Admin_refreshToken}`,
       ])
@@ -2691,89 +2747,89 @@ describe("deleteTransactions", () => {
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("data");
         expect(response.body.data).toHaveProperty("message");
-        expect(response.body.message).toContain("Transactions deleted");
+        expect(response.body.data.message).toContain(
+          `Transactions ${transactionIds} successfully deleted`
+        );
         done();
       })
       .catch((err) => done(err));
   });
 
   test("Delete Transactions - Missing body attributes", (done) => {
-
     request(app)
-      .get("/api/transactions")
+      .delete("/api/transactions")
       .send()
-      .set("Cookie",[
+      .set("Cookie", [
         `accessToken=${Admin_accessToken}`,
         `refreshToken=${Admin_refreshToken}`,
       ])
       .then((response) => {
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
-        expect(response.body.error).toContain("");
+        expect(response.body.error).toContain("Missing _ids");
         done();
       })
       .catch((err) => done(err));
   });
 
   test("Delete Transactions - 1 attribute is empty", (done) => {
-    const transactions = {
-      _ids: [transactions_ID[0], "", transactions_ID[2]],
-    };
+    const transactionIds = [""];
+
     request(app)
-      .get("/api/transactions")
-      .send(transactions)
-      .set("Cookie",[
+      .delete("/api/transactions")
+      .send({
+        _ids: transactionIds,
+      })
+      .set("Cookie", [
         `accessToken=${Admin_accessToken}`,
         `refreshToken=${Admin_refreshToken}`,
       ])
       .then((response) => {
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
-        expect(response.body.error).toContain("");
+        expect(response.body.error).toContain("Empty _ids");
         done();
       })
       .catch((err) => done(err));
   });
 
   test("Delete Transactions - Transaction ID in the body not in the DB", (done) => {
-    const transactions = {
-      _ids: ["idTransax45", transactions_ID[1], transactions_ID[2]],
-    };
+    const transactionIds = ["646b31fb907572186308033c"];
 
     request(app)
-      .get("/api/transactions")
-      .send(transactions)
-      .set("Cookie",[
+      .delete("/api/transactions")
+      .send({
+        _ids: transactionIds,
+      })
+      .set("Cookie", [
         `accessToken=${Admin_accessToken}`,
         `refreshToken=${Admin_refreshToken}`,
       ])
       .then((response) => {
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error");
-        expect(response.body.error).toContain("");
+        expect(response.body.error).toContain(
+          `Transactions [${transactionIds}] don't exist, cannot proceed with deletion`
+        );
         done();
       })
       .catch((err) => done(err));
   });
 
   test("Delete Transactions - Not authenticated", (done) => {
-    const transactions = {
-      _ids: [transactions_ID[1], transactions_ID[2]],
-    };
-
     request(app)
-      .get("/api/transactions")
-      .send(transactions)
-      .set("Cookie",[
+      .delete("/api/transactions")
+      .send()
+      .set("Cookie", [
         `accessToken=${User1_accessToken}`,
         `refreshToken=${User1_refreshToken}`,
       ])
       .then((response) => {
         expect(response.status).toBe(401);
         expect(response.body).toHaveProperty("error");
-        expect(response.body.error).toContain("Unauthenticated");
+        expect(response.body.error).toContain("Unauthorized");
         done();
       })
       .catch((err) => done(err));
   });
-}); /** 0/6 test */
+}); /** 6/6 test */
