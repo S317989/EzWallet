@@ -13,37 +13,57 @@
   - [Coverage of FR](#coverage-of-fr)
   - [Coverage white box](#coverage-white-box)
 
-# Dependency graph
 
-     <report the here the dependency graph of EzWallet>
 
+
+
+# Dependency graph 
+
+![Dependency_graph](assets/Images/Dependency%20graph.png)
 # Integration approach
 
     <Write here the integration sequence you adopted, in general terms (top down, bottom up, mixed) and as sequence
-    (ex: step1: unit A, step 2: unit A+B, step 3: unit A+B+C, etc)>
+    (ex: step1: unit A, step 2: unit A+B, step 3: unit A+B+C, etc)> 
     <Some steps may  correspond to unit testing (ex step1 in ex above)>
     <One step will  correspond to API testing, or testing unit route.js>
+    
+
 
 # Tests
 
-<in the table below list the test cases defined For each test report the object tested, the test level (API, integration, unit) and the technique used to define the test case (BB/ eq partitioning, BB/ boundary, WB/ statement coverage, etc)> <split the table if needed>
+   <in the table below list the test cases defined For each test report the object tested, the test level (API, integration, unit) and the technique used to define the test case  (BB/ eq partitioning, BB/ boundary, WB/ statement coverage, etc)>   <split the table if needed>
+
 
 | Test case name | Object(s) tested | Test level | Technique used |
-| -------------- | ---------------- | ---------- | -------------- |
-|                |                  |            |                |
+|--|--|--|--|
+|||||
+
+
+
+
 
 # Coverage
 
+
+
 ## Coverage of FR
 
-<Report in the following table the coverage of functional requirements (from official requirements) >
+<Report in the following table the coverage of  functional requirements (from official requirements) >
 
-| Functional Requirements covered | Test(s) |
-| ------------------------------- | ------- |
-| FRx                             |         |
-| FRy                             |         |
-| ...                             |         |
+| Functional Requirements covered |   Test(s) | 
+| ------------------------------- | ----------- | 
+| FRx                             |             |             
+| FRy                             |             | 
+| ... ||
+
+
 
 ## Coverage white box
 
-Report here the screenshot of coverage values obtained with jest-- coverage
+Report here the screenshot of coverage values obtained with jest-- coverage 
+
+
+
+
+
+
