@@ -28,7 +28,7 @@ describe("handleDateFilterParams", () => {
   test("HandleDateFilterParams -  Date not in format YYYY-MM-DD", async () => {
     mockRequest = {
       query: {
-        date: "2023/05/30",
+        date: "2023/05/31",
       },
     };
 
