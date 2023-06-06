@@ -415,8 +415,6 @@ describe("deleteCategory", () => {
   let user, User_accessToken, User_refreshToken;
   let category1, category2, category3, category4;
 
-
-
   beforeEach(async () => {
     admin = {
       username: "TestAdmin",
@@ -496,28 +494,6 @@ describe("deleteCategory", () => {
       color: "NewColor4",
     }
     await categories.insertMany([category1, category2, category3, category4]);
-
-    const transaction1={
-      username: admin.username, 
-      type: category1.type,
-      amount: 10,
-    };
-    const transaction2={
-      username: admin.username, 
-      type: category1.type,
-      amount: 20,
-    };
-    const transaction3={
-      username: admin.username, 
-      type: category2.type,
-      amount: 20,
-    };
-    const transaction4={
-      username: user.username, 
-      type: category3.type,
-      amount: 20.56,
-    };
-    await transactions.insertMany([transaction1, transaction2, transaction3, transaction4]);
   });
 
   afterEach(async ()=>{
@@ -527,9 +503,18 @@ describe("deleteCategory", () => {
   test("Delete Category - Delete 1", (done) => {
     const categoryToBeDeleted =[category1.type];
 
-
-    
-     request(app)
+    transactions
+    .insertMany([{
+      username: admin.username, 
+      type: category1.type,
+      amount: 10,
+    }, {
+      username: admin.username, 
+      type: category1.type,
+      amount: 20,
+    }])
+    .then(()=>{
+        request(app)
           .delete("/api/categories")
           .send({
             types: categoryToBeDeleted
@@ -544,43 +529,70 @@ describe("deleteCategory", () => {
             expect(response.body.data).toHaveProperty("message");
             expect(response.body.data.message).toMatch('deleted');
             expect(response.body.data).toHaveProperty("count");
-            expect(response.body.data.count).toBe(2);//return 1, but expected 2
+            expect(response.body.data.count).toBe(2);
             done();
           })
           .catch((err) => done(err));
+        })
   }); //PASS
 
   test("Delete Category - Delete Many", (done) => {
     const categoryToBeDeleted =[category1.type, category2.type];
 
-
-    request(app)
-      .delete("/api/categories")
-      .send({
-        types: categoryToBeDeleted
-      })
-      .set("Cookie", [
-        `accessToken=${Admin_accessToken}`,
-        `refreshToken=${Admin_refreshToken}`,
+    transactions
+      .insertMany([{
+          username: admin.username, 
+          type: category1.type,
+          amount: 20,
+        },
+        {
+          username: admin.username, 
+          type: category2.type,
+          amount: 20,
+        },
+        {
+          username: user.username, 
+          type: category3.type,
+          amount: 20.56,
+        }
       ])
-      .then((response) => {
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("data");
-        expect(response.body.data).toHaveProperty("message");
-        expect(response.body.data.message).toMatch('Categories');
-        expect(response.body.data).toHaveProperty("count");
-        expect(response.body.data.count).toBe(3);
-        done();
-      })
-      .catch((err) => done(err));    
+      .then(()=>{
+        request(app)
+          .delete("/api/categories")
+          .send({
+            types: categoryToBeDeleted
+          })
+          .set("Cookie", [
+            `accessToken=${Admin_accessToken}`,
+            `refreshToken=${Admin_refreshToken}`,
+          ])
+          .then((response) => {
+            expect(response.status).toBe(200);
+            expect(response.body).toHaveProperty("data");
+            expect(response.body.data).toHaveProperty("message");
+            expect(response.body.data.message).toMatch('Categories');
+            expect(response.body.data).toHaveProperty("count");
+            expect(response.body.data.count).toBe(2);
+            done();
+          })
+          .catch((err) => done(err)); 
+      });
   }); //PASS
 
   test("Delete Category - Only 1 category in the DB", (done) => {
-    const categoryToBeDeleted =[category1.type, category2.type, category3.type];
+    const categoryToBeDeleted =[category1.type];
 
     categories
-      .deleteMany([category2, category3, category4])
-      .then(() => {
+      .deleteMany({
+        $or: [{
+          type: category2.type, 
+        },{
+          type: category3.type},
+        {
+          type: category4.type
+        }]
+      })
+      .then(async () => {
         request(app)
           .delete("/api/categories")
           .send({
@@ -593,13 +605,13 @@ describe("deleteCategory", () => {
           .then((response) => {
             expect(response.status).toBe(400);
             expect(response.body).toHaveProperty("error");
-            expect(response.body.error).toMatch('Empty string');
+            expect(response.body.error).toMatch('No categories can be deleted');
             done();
           })
           .catch((err) => done(err));
       });
     
-  }); //TIMEOUT
+  }); //PASS
 
   test("Delete Category - 1 type is empty in the input array", (done) => {
     const categoryToBeDeleted =["", "NewType2", "NewType3"];
@@ -678,7 +690,7 @@ describe("deleteCategory", () => {
   }); //PASS
 
   test("Delete Category - Regular User Authenticated, not Admin", (done) => {
-    const categoryToBeDeleted =["NewType1", "NewType2", "NewType3"];
+    const categoryToBeDeleted =[category1.type, category2.type, category3.type];
 
     request(app)
       .get("/api/categories")
@@ -696,7 +708,7 @@ describe("deleteCategory", () => {
       })
       .catch((err) => done(err));
   }); //200 WHILE EXPECTING 401
-}); /** 4/8 test */
+}); /** 7/8 test */
 
 describe("getCategories", () => {
   let user, accessToken, refreshToken;
@@ -1091,7 +1103,7 @@ describe("createTransaction", () => {
       .catch((err) => done(err));
   }); // PASS
 
-}); /** 7/9 test */
+}); /** 9/9 test */
 
 describe("getAllTransactions", () => {
   let admin, Admin_accessToken, Admin_refreshToken;
@@ -2195,7 +2207,7 @@ describe("getTransactionsByGroupByCategory", () => {
         expect(response.body.data).toHaveLength(2);
         expect(response.body.data[0]).toHaveProperty("username");
         expect(response.body.data[0]).toHaveProperty("type");
-        
+        expect(response.body.data[0].type).toEqual(cat2.type);
         expect(response.body.data[0]).toHaveProperty("amount");
         expect(response.body.data[0]).toHaveProperty("date");
         expect(response.body.data[0]).toHaveProperty("color");
@@ -2225,7 +2237,7 @@ describe("getTransactionsByGroupByCategory", () => {
         expect(response.body.data).toHaveLength(1);
         expect(response.body.data[0]).toHaveProperty("username");
         expect(response.body.data[0]).toHaveProperty("type");
-
+        expect(response.body.data[0].type).toEqual(cat1.type);
         expect(response.body.data[0]).toHaveProperty("amount");
         expect(response.body.data[0]).toHaveProperty("date");
         expect(response.body.data[0]).toHaveProperty("color");
