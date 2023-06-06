@@ -355,6 +355,8 @@ describe("handleAmountFilterParams", () => {
         },
       };
 
+
+
       mockResponse = {
         cookie: jest.fn(),
         locals: {},
@@ -367,8 +369,11 @@ describe("handleAmountFilterParams", () => {
 
       const result = utilsMethods.verifyAuth(mockRequest, mockResponse, {});
 
+
+
       expect(result.flag).toBe(true);
       expect(result.cause).toBe("Authorized");
+
 
       expect(mockResponse.locals.message).toBe(
         "Access token has been refreshed. Remember to copy the new one in the headers of subsequent calls"
