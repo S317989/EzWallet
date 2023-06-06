@@ -421,7 +421,7 @@ describe("getGroups", () => {
     };
   });
 
-  test("GetUsers - Success", async () => {
+  test("GetGroups - Success", async () => {
     const mockGroups = [
       {
         name: "Group1",
@@ -453,7 +453,7 @@ describe("getGroups", () => {
     });
   });
 
-  test("GetUsers - Unauthorized", async () => {
+  test("GetGroups - Unauthorized", async () => {
     jest.spyOn(verifyAuth, "verifyAuth").mockReturnValueOnce({
       flag: false,
       cause: "Unauthorized",

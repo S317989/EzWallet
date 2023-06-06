@@ -49,50 +49,22 @@ Upon completing the aforementioned steps, we conducted Integration Tests of the 
 | Functional Requirements covered | Test(s) |
 | ------------------------------- | ----------- |
 | FR1 | |  
-| FR1.1 |  "register" : "Registration - Done" / "Registration - Invalid Email" / "Registration - Already Registered" , Admin = registerAdmin : "Register Admin - Done" / "Register Admin - Missing Information" / "Register Admin - Already Registered" |
-| FR1.2 | "LogIn" : "Login - Done" / "Login - Missing or Empty Field" / "Login - Not registered" / "Login - Wrong Credentials" |
-| FR1.3 | "LogOut" : "Logout - Done" / "Logout - Already logged out" / "Logout - User not found - find" |
+| FR11 |  "register" : "Registration - Done" / "Registration - Invalid Email" / "Registration - Already Registered" |
+| FR12 | "LogIn" : "Login - Done" / "Login - Missing or Empty Field" / "Login - Not registered" / "Login - Wrong Credentials" |
+| FR13 | "LogOut" : "Logout - Done" / "Logout - Already logged out" / "Logout - User not found - find" |
+|FR14 |"Admin" = registerAdmin : "Register Admin - Done" / "Register Admin - Missing Information" / "Register Admin - Already Registered"|
+|FR15 |"getUsers" : "GetUsers - Success with filled list" / "GetUsers - Success with empty list" / "GetUsers - Unauthorized" |
+|FR16 | "getUser" : <br> 1 - "Admin" : "GetUser - Success" / "GetUser - User not found" <br> 2 - "Regular" : "GetUser - Success" / "GetUser - User not found" / "GetUser - Unauthorized"|
+|FR17 | "deleteUser" : "DeleteUser - Success" / "DeleteUser - Unauthorized" / "DeleteUser - No email provided" / "DeleteUser - Invalid email format" /"DeleteUser - User not found" / "DeleteUser - Admin not removable"|
 | FR2 | |  
-| FR2.1 | "createGroup" = " createGroup-success" / "CreateGroup - Unauthorized" /"CreateGroup - Missing parameters"/ "CreateGroup - Group already exists" / "CreateGroup - User already in a group" |  
-| FR2.2 | "addToGroup" = "AddToGroup - Success"/ "AddToGroup - Group not found" / "AddToGroup - No emails provided" / "AddToGroup - User doesn't exist or already in group" |  
-| FR2.3 | "RemoveFromGroup" = "RemoveFromGroup - Success" / "RemoveFromGroup - Group does not exist" / "RemoveFromGroup - No emails provided" / "RemoveFromGroup - Cannot remove all members of a group" / "RemoveFromGroup - Invalid emails" |  
-| FR3 | |  
-| FR3.1 | |  
-| FR3.2 | 1 - "getTransactionsByGroupByCategory <br> 1.1 - "Admin" : "GetTransactionByGroupByCategory - Admin - Success - Filled list" / "GetTransactionByGroupByCategory - Admin - Success - Empty list" / "GetTransactionByGroupByCategory - Admin - Unauthorized" / "GetTransactionByGroupByCategory - Admin - Group not found" / "GetTransactionByGroupByCategory - Admin - Category not found".  <br>      3 - Group : "GetTransactionByGroupByCategory - Group - Success - Filled list" / "GetTransactionByGroupByCategory - Group - Success - Empty list" / "GetTransactionByGroupByCategory - Group - Unauthorized" / "GetTransactionByGroupByCategory - Group - Group not found" / "GetTransactionByGroupByCategory - Group - Category not found".  <br> 4-User :"GetTransactionByUserByCategory - User - Success - Filled list" / "GetTransactionByUserByCategory - User - Success - Empty list" / "GetTransactionByUserByCategory - User - Unauthorized" / "GetTransactionByUserByCategory - User - User not found" / "GetTransactionByUserByCategory - User - Category not found" |  
-| FR3.3 | createTransaction : "CreateTransaction - Success" / "CreateTransaction - Unauthorized" / "CreateTransaction - Missing or empty parameters" / "CreateTransaction - Amount is not a number" / "CreateTransaction - Username not equivalent" / "CreateTransaction - Username (or Category) doesn't exists" |  
-| FR3.4 | 1-getTransactionsByUser                                                                                                        2 - Admin User : "GetTransactionByUser - Admin - Success" / "GetTransactionByUser - Admin - Unauthorized" / "GetTransactionByUser - Admin - User not found" /"GetTransactionByUser - Admin - No transactions" .                                                                   3- Regular User :"GetTransactionByUser - User - Success - Date Filter with filled list" / "GetTransactionByUser - User - Success - Date Filter with empty list" / "GetTransactionByUser - User - Success - From filter with filled list" / "GetTransactionByUser - User - Success - From Filter with empty list" / "GetTransactionByUser - User - Success - UpTo filter with filled list" /"GetTransactionByUser - User - Success - UpTo Filter with empty list" / "GetTransactionByUser - User - Success - MinAmount Filter with empty list" / "GetTransactionByUser - User - Success - MinAmount Filter with filled list" / "GetTransactionByUser - User - Success - MaxAmount Filter with empty list" / "GetTransactionByUser - User - Success - MaxAmount Filter with filled list" / "GetTransactionByUser - User - Throws error cause From and UpTo cannot be together" / "GetTransactionByUser - User - Unauthorized" / "GetTransactionByUser - User - User not found" .                                                                                                                                4- getTransactionsByUserByCategory 5-Admin:"GetTransactionByUserByCategory - Admin - Success - Filled list" / "GetTransactionByUserByCategory - Admin - Success - Empty list" / "GetTransactionByUserByCategory - Admin - Unauthorized" / "GetTransactionByUserByCategory - Admin - User not found" / "GetTransactionByUserByCategory - Admin - Category not found" .      6- User :"GetTransactionByUserByCategory - User - Success - Filled list" / "GetTransactionByUserByCategory - User - Success - Empty list" / "GetTransactionByUserByCategory - User - Unauthorized" / "GetTransactionByUserByCategory - User - User not found" / "GetTransactionByUserByCategory - User - Category not found" .       7- getTransactionsByGroup     8-Admin : "GetTransactionByGroup - Admin - Success - Filled list" / "GetTransactionByGroup - Admin - Success - Empty list" / "GetTransactionByGroup - Admin - Unauthorized" / "GetTransactionByGroup - Admin - Group not found" .                 9- Group : "GetTransactionByGroup - Group - Success - Filled list" / "GetTransactionByGroup - Group - Success - Empty list" / "GetTransactionByGroup - Group - Unauthorized" / "GetTransactionByGroup - Group - Group not found" .                10- getTransactionsByGroupByCategory 11-Admin : "GetTransactionByGroupByCategory - Admin - Success - Filled list" / "GetTransactionByGroupByCategory - Admin - Success - Empty list" / "GetTransactionByGroupByCategory - Admin - Unauthorized" / "GetTransactionByGroupByCategory - Admin - Group not found" / "GetTransactionByGroupByCategory - Admin - Category not found".       12 - Group : " GetTransactionByGroupByCategory - Group - Success - Filled list" / "GetTransactionByGroupByCategory - Group - Success - Empty list" / "GetTransactionByGroupByCategory - Group - Unauthorized" / " GetTransactionByGroupByCategory - Group - Group not found" / "GetTransactionByGroupByCategory - Group - Category not found" . |  
-| FR3.5 | |  
-| FR4 | |  
-| FR4.1 | |  
-| FR4.2 | |  
-| FR4.3 | |  
-| FR4.4 | |  
-| FR4.5 | |
-| FR4.6 | |  
-| FR4.7 | |  
-| FR4.8 | |  
-| FR4.9 | |  
-| FR5 | |  
-| FR5.1 | |  
-| FR5.2 | |  
-| FR5.3 | |  
-| FR5.4 | |  
-| FR5.5 | |
-| FR5.6 | |
-| FR6 | |  
-| FR6.1 | |  
-| FR6.2 | |  
-| FR6.3 | |  
-| FR6.4 | |  
-| FR6.5 | |
-| FR6.6 | |
-| FR6.7 | |
-| FR7 | |  
-| FR7.1 | |  
-| FR7.2 | |  
-| FR7.3 | |  
-| FR7.4 | |  
-| FR7.5 | |
+| FR21 | "createGroup" = " createGroup-success" / "CreateGroup - Unauthorized" /"CreateGroup - Missing parameters"/ "CreateGroup - Group already exists" / "CreateGroup - User already in a group" | 
+|FR22 |"getGroups" : "GetUsers - Success" / "GetUsers - Unauthorized" |
+|FR23 |"getGroup" : "GetGroup - Group doesn't exist" <br> 1 - "Admin" : "GetGroup - Admin - Success" / "GetGroup - Admin - Unauthorized" <br> 2 - "User" : "GetGroup - User - Success" / "GetGroup - User - Unauthorized" / "GetGroup - User - User not found" / "GetGroup - User - User not in group"  | 
+| FR24 | "addToGroup" = "AddToGroup - Success"/ "AddToGroup - Group not found" / "AddToGroup - No emails provided" / "AddToGroup - User doesn't exist or already in group" | 
+| FR26 |"RemoveFromGroup" = "RemoveFromGroup - Success" / "RemoveFromGroup - Group does not exist" / "RemoveFromGroup - No emails provided" / "RemoveFromGroup - Cannot remove all members of a group" / "RemoveFromGroup - Invalid emails"  |     
+| FR28 | "deleteGroup" : "DeleteGroup - Success" / "DeleteGroup - Unauthorized" / "DeleteGroup - Missing group name" / "DeleteGroup - Group doesn't exist" |
+
+
 
 ## Coverage white box
 
