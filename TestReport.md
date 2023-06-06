@@ -19,7 +19,7 @@
 
 # Dependency graph 
 
-![Dependency_graph](assets/Images/Dependency%20graph.png)
+![Dependency_graph](assets/Images/dependency%20graph2.jpg)
 # Integration approach
 
     <Write here the integration sequence you adopted, in general terms (top down, bottom up, mixed) and as sequence
