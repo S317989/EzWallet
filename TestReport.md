@@ -1,3 +1,5 @@
+<link rel="stylesheet" type="text/css" media="all" href="./markdownStyle.css" />
+
 # Test Report
 
 <The goal of this document is to explain how the application was tested, detailing how the test cases were defined and what they cover>
@@ -15,7 +17,8 @@
 
 # Dependency graph
 
-![Dependency_graph](assets/Images/dependency%20graph2.jpg)
+![ReportImages](assets/Images/dependency%20graph2.jpg)
+
 # Integration approach
 
 In our project implementation, we have chosen to adopt a "Bottom-Up Integration" approach as our preferred integration strategy. This approach allows us to initially test the lower-level components, which serve as the foundational building blocks of the system, and gradually progress towards integrating the higher-level units.
@@ -45,12 +48,9 @@ Upon completing the aforementioned steps, we conducted Integration Tests of the 
 
 <Report in the following table the coverage of functional requirements (from official requirements) >
 
-| Functional Requirements covered | Test(s) |
-| ------------------------------- | ------- |
-| FRx                             |         |
-| FRy                             |         |
-| ...                             |         |
-
 ## Coverage white box
 
-Report here the screenshot of coverage values obtained with jest-- coverage
+![ReportImages](assets/Images/CoverageScreen.png)
+
+Note:
+The "Uncovered Lines" are the sections corresponding to "Errors 500" within the try-catch blocks.

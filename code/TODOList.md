@@ -10,16 +10,16 @@ Pre-Conditions to be checked:
   - [x] getUsers role to be checked
   - [x] getAllTransactions role to be checked
   - [x] registerAdmin role to be checked
-- [ ] Unit Tests
-  - [ ] Auth
-  - [ ] Controller
-  - [ ] Users
-  - [ ] Utils
-- [ ] Integration tests
-  - [ ] Auth
-  - [ ] Controller
-  - [ ] Users
-  - [ ] Utils
+- [x] Unit Tests
+  - [x] Auth
+  - [x] Controller
+  - [x] Users
+  - [x] Utils
+- [x] Integration tests
+  - [x] Auth
+  - [x] Controller
+  - [x] Users
+  - [x] Utils
 - [x] Controller.js
   - [x] UpdateCategory
   - [x] DeleteCategory
