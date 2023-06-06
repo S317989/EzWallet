@@ -12,7 +12,7 @@ const moduleMock = { ...moduleToTest };
 
 let mockRequest, mockResponse;
 
-beforeAll(() => {
+beforeEach(() => {
   jest.restoreAllMocks();
 });
 
