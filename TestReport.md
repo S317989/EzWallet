@@ -30,7 +30,7 @@ Here is the sequence of steps we followed:
 | Step 3 | After confirming the functionality of the fundamental units, we conducted tests on the "Users" component to ensure proper management of system users, privileges, and gain a clear understanding of the system actors.                  |
 | Step 4 | Finally, we concluded with the integration of the "Controller" unit, which represents the highest and most complex level. We deliberately addressed it last to resolve any issues that may have arisen from the other supporting units. |
 
-Al termine di tutto ciò, abbiamo eseguito gli Integration Test delle API attraverso l'utilizzo delle routes contenute in "Route.js", per la verifica del flusso completo di richieste-risposte attraverso le diverse unità e componenti integrati.
+Upon completing the aforementioned steps, we conducted Integration Tests of the APIs by utilizing the routes defined in "Route.js". These tests aimed to verify the seamless flow of requests and responses across the various integrated units and components, ensuring the end-to-end functionality of the system.
 
 # Tests
 
