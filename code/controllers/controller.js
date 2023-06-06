@@ -525,10 +525,16 @@ export const getTransactionsByGroup = async (req, res) => {
           refreshedTokenMessage: res.locals.refreshedTokenMessage,
         });
 
-      const memberUserIds = group.members.map((member) => member.email);
+      let membersEmail = group.members.map((member) => member.email);
+
+      let membersAssociated = await User.find({
+        email: { $in: membersEmail },
+      });
+
+      let membersUsername = membersAssociated.map((member) => member.username);
 
       filter = {
-        $and: [{ username: { $in: memberUserIds } }],
+        $and: [{ username: { $in: membersUsername } }],
       };
 
       filter.$and = filter.$and.filter((condition) => condition !== null);
@@ -556,8 +562,14 @@ export const getTransactionsByGroup = async (req, res) => {
       )
         return res.status(401).json({ error: "Unauthorized" });
 
+      let membersAssociated = await User.find({
+        email: { $in: membersEmail },
+      });
+
+      let membersUsername = membersAssociated.map((member) => member.username);
+
       filter = {
-        $and: [{ username: { $in: membersEmail } }],
+        $and: [{ username: { $in: membersUsername } }],
       };
 
       // Remove the null element
@@ -610,10 +622,16 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
           refreshedTokenMessage: res.locals.refreshedTokenMessage,
         });
 
-      const memberUserIds = group.members.map((member) => member.email);
+      let membersEmail = group.members.map((member) => member.email);
+
+      let membersAssociated = await User.find({
+        email: { $in: membersEmail },
+      });
+
+      let membersUsername = membersAssociated.map((member) => member.username);
 
       filter = {
-        $and: [{ username: { $in: memberUserIds } }, { type: category.type }],
+        $and: [{ username: { $in: membersUsername } }, { type: category.type }],
       };
 
       return res.status(200).json({
@@ -649,11 +667,14 @@ export const getTransactionsByGroupByCategory = async (req, res) => {
       )
         return res.status(401).json({ error: "Unauthorized" });
 
-      // Estrai gli ID degli utenti associati ai membri del gruppo
-      const memberUserIds = groupSearched.members.map((member) => member.email);
+      let membersAssociated = await User.find({
+        email: { $in: membersEmail },
+      });
+
+      let membersUsername = membersAssociated.map((member) => member.username);
 
       filter = {
-        $and: [{ username: { $in: memberUserIds } }, { type: category.type }],
+        $and: [{ username: { $in: membersUsername } }, { type: category.type }],
       };
 
       return res.status(200).json({
