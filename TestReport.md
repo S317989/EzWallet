@@ -48,8 +48,7 @@ Upon completing the aforementioned steps, we conducted Integration Tests of the 
 | Functional Requirements covered |   Test(s) | 
 | ------------------------------- | ----------- | 
 | FR1        |     |             
-| FR1.1     |  user =  register: "Registration - Done" / "Registration - Invalid Email" / "Registration - Already Registered"  
-Admin = registerAdmin : "Register Admin - Done" / "Register Admin - Missing Information" / "Register Admin - Already Registered"  | 
+| FR1.1     |  user =  register: "Registration - Done" / "Registration - Invalid Email" / "Registration - Already Registered"  , Admin = registerAdmin : "Register Admin - Done" / "Register Admin - Missing Information" / "Register Admin - Already Registered"  | 
 | FR1.2    | LogIn  :   "Login - Done" / "Login - Missing or Empty Field" / "Login - Not registered" / "Login - Wrong Credentials"     |
 | FR1.3    | LogOut : "Logout - Done" /   "Logout - Already logged out" / "Logout - User not found - find"  |
 | FR2        |     |  
