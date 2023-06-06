@@ -17,7 +17,7 @@
 
 # Dependency graph
 
-![ReportImages](assets/Images/dependency%20graph2.jpg)
+![ReportImages](assets/Images/dependency%20graph2.png)
 
 # Integration approach
 
