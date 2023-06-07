@@ -40,7 +40,63 @@ Upon completing the aforementioned steps, we conducted Integration Tests of the 
 
 | Test case name | Object(s) tested | Test level | Technique used |
 | -------------- | ---------------- | ---------- | -------------- |
-|                |                  |            |                |
+|Registration - Success|authMethods.register|Unit|WB - Statement|
+|Registration - Exists|authMethods.register|Unit|wb - branches|
+|Registration - Invalid Email|authMethods.register|Unit|wb - branches|
+|Registration Admin - Success| authMethods.registerAdmin|Unit|WB - Statement|
+|Registration Admin - Already Registered|authMethods.registerAdmin|Unit|wb - branches|
+|Registration Admin - Invalid Email| authMethods.registerAdmin|Unit|wb - branches|
+|Login - Success|authMethods.login|Unit|WB - Statement|
+|Login - User Not Registered|authMethods.login|Unit|wb - branches|
+|Logout - Success|authMethods.logout|Unit|WB - Statement|
+|Logout - Already logged out|authMethods.logout|Unit|wb - branches|
+|Logout - User not found|authMethods.logout|Unit|wb - branches|
+|getUsers - Success with filled list|usersMethods.getUsers|Unit|wb - Statement|
+|getUsers - Success with empty list|usersMethods.getUsers|Unit|wb - Statement|
+|getUsers - Unauthorized|usersMethods.getUsers|Unit|wb - branches|
+|getUser - Admin - Success|usersMethods.getUser|Unit|wb - Statement|
+|getUser - Admin - User not found|usersMethods.getUser|Unit|wb - branches|
+|getUser - Regular - Success|usersMethods.getUser|Unit|wb - Statement|
+|getUser - Regular - User not found|usersMethods.getUser|Unit|wb - branches|
+|getUser - Regular - Unauthorized|usersMethods.getUser|Unit|wb - branches|
+|createGroup - Success|usersMethods.createGroup|Unit|wb - Statement|
+|createGroup - Unauthorized|usersMethods.createGroup|Unit|wb - branches|
+|createGroup - Missing parameters|usersMethods.createGroup|Unit|wb - branches|
+|createGroup - Group already exists|usersMethods.createGroup|Unit|wb - branches|
+|createGroup - User already in a group|usersMethods.createGroup|Unit|wb - branches|
+|getGroups - Success|usersMethods.getGroups|unit|wb - Statement|
+|getGroups - Unauthorized|usersMethods.getGroups|unit|wb - Branches|
+|getGroup - Group doesn't exist|usersMethods.getGroups|unit|wb - Branches|
+|getGroup - Admin - Success|usersMethods.getGroups|unit|wb - Statement|
+|getGroup - Admin - Unauthorized|usersMethods.getGroups|unit|wb - Branches|
+|DeleteUser - Unauthorized|usersMethods.deleteUser|unit|wb - Branches|
+|DeleteUser - No email provided|usersMethods.deleteUse|unit|wb - Branches|
+|DeleteUser - Invalid email format|usersMethods.deleteUser|unit|wb - Branches|
+|DeleteUser - User not found|usersMethods.deleteUser|unit|wb - Branches|
+|DeleteUser - Admin not removable|usersMethods.deleteUser|unit|wb - Branches|
+|DeleteGroup - Success|usersMethods.deleteUser|unit|wb - Statement|
+|DeleteGroup - Unauthorized|usersMethods.deleteUser|unit|wb - Statement|
+|DeleteGroup - Missing group name|usersMethods.deleteUser|unit|wb - Statement|
+|DeleteGroup - Group doesn't exist|usersMethods.deleteUser|unit|wb - Statement|
+|HandleDateFilterParams - upTo and from cannot be together|utilsMethods.handleDateFilterParams()|unit|Exception handling|
+|HandleDateFilterParams - Date not in format YYYY-MM-DD|utilsMethods.handleDateFilterParams()|unit|Exception handling|
+|HandleDateFilterParams - Success with date filter|utilsMethods.handleDateFilterParams()|unit|Assertion (Expected result)|
+|HandleDateFilterParams - Success with from filter|utilsMethods.handleDateFilterParams()|unit|Assertion (Expected result)|
+|HandleDateFilterParams - Success with upTo filter|utilsMethods.handleDateFilterParams()|unit|Assertion (Expected result)|
+|HandleAmountFilterParams - Min amount not a number|utilsMethods.handleAmountFilterParams()|unit|Exception handling|
+|HandleAmountFilterParams - MaxAmount not a number|utilsMethods.handleAmountFilterParams()|unit|Exception handling|
+|HandleAmountFilterParams - Success with minAmount and maxAmount filters|utilsMethods.handleAmountFilterParams()|unit|Assertion (Expected result)|
+|HandleAmountFilterParams - Success with only minAmount filter|utilsMethods.handleAmountFilterParams()|unit|Assertion (Expected result)|
+|HandleAmountFilterParams - Success with only maxAmount filter|utilsMethods.handleAmountFilterParams()|unit|Assertion (Expected result)|
+|VerifyAuth - Success|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
+|VerifyAuth - Tokens missing|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
+|VerifyAuth - Tokens is missing information|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
+|VerifyAuth - Mismatched users|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
+|VerifyAuth - AccessToken expired|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
+
+
+
+
 
 # Coverage
 
