@@ -188,7 +188,6 @@ CreateTransaction - Username (or Category) doesn't exists|controller.createTrans
 |GetAllTransactions - Success|controller.getAllTransactions|Unit| WB - Statement Coverage |
 |GetAllTransactions - Empty list|controller.getAllTransactions|Unit| WB - Statement Coverage |
 |GetAllTransactions - Unauthorized|controller.getAllTransactions|Unit| WB - Branch Coverage |
-
 |GetTransactionByUser - Admin - Success|controller.getTransactionsByUser|Unit| WB - Statement Coverage |
 |GetTransactionByUser - Admin - Unauthorized|controller.getTransactionsByUser|Unit| WB - Branch Coverage |
 |GetTransactionByUser - Admin - User not found|controller.getTransactionsByUser|Unit| WB - Branch Coverage |
@@ -206,7 +205,6 @@ CreateTransaction - Username (or Category) doesn't exists|controller.createTrans
 |GetTransactionByUser - User - Throws error cause From and UpTo cannot be together|controller.getTransactionsByUser|Unit| WB - Branch Coverage |
 |GetTransactionByUser - User - Unauthorized|controller.getTransactionsByUser|Unit| WB - Branch Coverage |
 |GetTransactionByUser - User - User not found|controller.getTransactionsByUser|Unit| WB - Branch Coverage |
-
 |GetTransactionByUserByCategory - Admin - Success - Filled list|controller.getTransactionsByUserByCategory|Unit| WB - Statement Coverage |
 |GetTransactionByUserByCategory - Admin - Success - Empty list|controller.getTransactionsByUserByCategory|Unit| WB - Statement Coverage |
 |GetTransactionByUserByCategory - Admin - Unauthorized|controller.getTransactionsByUserByCategory|Unit| WB - Branch Coverage |
