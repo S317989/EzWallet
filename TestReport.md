@@ -40,17 +40,17 @@ Upon completing the aforementioned steps, we conducted Integration Tests of the 
 
 | Test case name | Object(s) tested | Test level | Technique used |
 | -------------- | ---------------- | ---------- | -------------- |
-|Registration - Success|authMethods.register|Unit|BB|
-|Registration - Exists|authMethods.register|Unit|BB|
-|Registration - Invalid Email|authMethods.register|Unit|BB|
-|Registration Admin - Success| authMethods.registerAdmin|Unit|BB|
-|Registration Admin - Already Registered|authMethods.registerAdmin|Unit|BB|
-|Registration Admin - Invalid Email| authMethods.registerAdmin|Unit|BB|
-|Login - Success|authMethods.login|Unit|BB|
-|Login - User Not Registered|authMethods.login|Unit|BB|
-|Logout - Success|authMethods.logout|Unit|BB|
-|Logout - Already logged out|authMethods.logout|Unit|BB|
-|Logout - User not found|authMethods.logout|Unit|BB|
+|Registration - Success|authMethods.register|Unit|WB - Statement|
+|Registration - Exists|authMethods.register|Unit|wb - branches|
+|Registration - Invalid Email|authMethods.register|Unit|wb - branches|
+|Registration Admin - Success| authMethods.registerAdmin|Unit|WB - Statement|
+|Registration Admin - Already Registered|authMethods.registerAdmin|Unit|wb - branches|
+|Registration Admin - Invalid Email| authMethods.registerAdmin|Unit|wb - branches|
+|Login - Success|authMethods.login|Unit|WB - Statement|
+|Login - User Not Registered|authMethods.login|Unit|wb - branches|
+|Logout - Success|authMethods.logout|Unit|WB - Statement|
+|Logout - Already logged out|authMethods.logout|Unit|wb - branches|
+|Logout - User not found|authMethods.logout|Unit|wb - branches|
 
 
 # Coverage
