@@ -93,6 +93,138 @@ Upon completing the aforementioned steps, we conducted Integration Tests of the 
 |VerifyAuth - Tokens is missing information|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
 |VerifyAuth - Mismatched users|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
 |VerifyAuth - AccessToken expired|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
+|Create Category - Success|controller.createCategory|Integration| WB - Statement Coverage |
+|Create Category - Not enough attributes|controller.createCategory|Integration| WB - Branch Coverage |
+|Create Category - Type attributes is empty|controller.createCategory|Integration| WB - Branch Coverage |
+|Create Category - Category already exist|controller.createCategory|Integration| WB - Branch Coverage |
+|Create Category - Not an Admin|controller.createCategory|Integration| WB - Branch Coverage |
+|Update Category - Success|controller.updateCategory|Integration| WB - Statement Coverage |
+|Update Category - Invalid Parameters|controller.updateCategory|Integration| WB - Branch Coverage |
+|Update Category - Empty Parameters|controller.updateCategory|Integration| WB - Branch Coverage |
+|Update Category - Category doesn't exist|controller.updateCategory|Integration| WB - Branch Coverage |
+|Update Category - New Category already exist|controller.updateCategory|Integration| WB - Branch Coverage |
+|Update Category - Not an Admin|controller.updateCategory|Integration| WB - Branch Coverage |
+|Delete Category - Delete 1 - Success|controller.deleteCategory|Integration| WB - Statement Coverage |
+|Delete Category - Delete Many - Success|controller.deleteCategory|Integration| WB - Branch Coverage |
+|Delete Category - Only 1 category in the DB|controller.deleteCategory|Integration| WB - Branch Coverage |
+|Delete Category - At least 1 category type is empty in the input array|controller.deleteCategory|Integration| WB - Branch Coverage |
+|Delete Category - At least 1 category is not in the DB|controller.deleteCategory|Integration| WB - Branch Coverage |
+|Delete Category - Body doesn't contain all attributes|controller.deleteCategory|Integration| WB - Branch Coverage |
+|Delete Category - Not Authenticated|controller.deleteCategory|Integration| WB - Branch Coverage |
+|Delete Category - Regular User Authenticated, not Admin|controller.deleteCategory|Integration| WB - Branch Coverage |
+|Get Categories - Success|controller.getCategories|Integration| WB - Statement Coverage |
+|Get Categories - User not Authenticated|controller.getCategories|Integration| WB - Branch Coverage |
+|Create Transaction - Success|controller.createTransaction|Integration| WB - Statement Coverage |
+|Create Transaction - Missing attributes|controller.createTransaction|Integration| WB - Branch Coverage |
+|Create Transaction - Empty body attributes|controller.createTransaction|Integration| WB - Branch Coverage |
+|Create Transaction - Category doesn't exist in the DB|controller.createTransaction|Integration| WB - Branch Coverage |
+|Create Transaction - Route Username doesn't match the request body|controller.createTransaction|Integration| WB - Branch Coverage |
+|Create Transaction - Route Username is not in the DB|controller.createTransaction|Integration| WB - Branch Coverage |
+|Create Transaction - Body Username is not in the DB|controller.createTransaction|Integration| WB - Branch Coverage |
+|Create Transaction - Amount is not a float|controller.createTransaction|Integration| WB - Branch Coverage |
+|Create Transaction - Authenticated user doesn't match the user in body|controller.createTransaction|Integration| WB - Branch Coverage |
+|Get All Transaction - Success|controller.getAllTransactions|Integration| WB - Statement Coverage |
+|Get All Transaction - No Transaction in the DB|controller.getAllTransactions|Integration| WB - Branch Coverage |
+|Get All Transaction - Authenticated Regular User, not an Admin|controller.getAllTransactions|Integration| WB - Branch Coverage |
+|Get Transaction By User - Regular User - Success|controller.getTransactionsByUser|Integration| WB - Statement Coverage |
+|Get Transaction By User - Admin - Success|controller.getTransactionsByUser|Integration| WB - Branch Coverage |
+|Get Transaction By User - Admin - Username in params not in the DB|controller.getTransactionsByUser|Integration| WB - Branch Coverage |
+|Get Transaction By User - Regular User - User authenticated and params doesn't match|controller.getTransactionsByUser|Integration| WB - Branch Coverage |
+|Get Transaction By User - Regular User - Admin route for an authorized regular user|controller.getTransactionsByUser|Integration| WB - Branch Coverage |
+|Get Transactions By User By Category - Regular User - Success|controller.getTransactionsByUserByCategory|Integration| WB - Statement Coverage |
+|Get Transactions By User By Category - Admin - Success|controller.getTransactionsByUserByCategory|Integration| WB - Branch Coverage |
+|Get Transactions By User By Category - Admin - Username in params not in the DB|controller.getTransactionsByUserByCategory|Integration| WB - Branch Coverage |
+|Get Transactions By User By Category - Admin - Category in params not in the DB|controller.getTransactionsByUserByCategory|Integration| WB - Branch Coverage |
+|Get Transactions By User By Category - Regular User - User authenticated and params doesn't match|controller.getTransactionsByUserByCategory|Integration| WB - Branch Coverage |
+|Get Transactions By User By Category - Regular User - Admin route for an authorized regular user|controller.getTransactionsByUserByCategory|Integration| WB - Branch Coverage |
+|Get Transactions By Group - Regular User - Success|controller.getTransactionsByGroup|Integration| WB - Statement Coverage |
+|Get Transactions By Group - Admin - Success|controller.getTransactionsByGroup|Integration| WB - Branch Coverage |
+|Get Transaction By Group - Admin - Group in params not in the DB|controller.getTransactionsByGroup|Integration| WB - Branch Coverage |
+|Get Transaction By Group - Regular User - Authenticated User not part of the group|controller.getTransactionsByGroup|Integration| WB - Branch Coverage |
+|Get Transaction By Group - Regular User - Admin Route for an authenticated Regular User|controller.getTransactionsByGroup|Integration| WB - Branch Coverage |
+|Get Transactions By Group By Category - Regular User - Success|controller.getTransactionsByGroupByCategory|Integration| WB - Statement Coverage |
+|Get Transactions By Group By Category - Admin - Success|controller.getTransactionsByGroupByCategory|Integration| WB - Branch Coverage |
+|Get Transactions By Group By Category - Admin - Group in params not in the DB|controller.getTransactionsByGroupByCategory|Integration| WB - Branch Coverage |
+|Get Transactions By Group By Category - Admin - Category in params not in the DB|controller.getTransactionsByGroupByCategory|Integration| WB - Branch Coverage |
+|Get Transactions By Group By Category - Regular User - Authenticated User not part of the group|controller.getTransactionsByGroupByCategory|Integration| WB - Branch Coverage |
+|Get Transactions By Group By Category - Regular User - Admin Route for an authenticated Regular User|controller.getTransactionsByGroupByCategory|Integration| WB - Branch Coverage |
+|Delete Transaction - Success|controller.deleteTransaction|Integration| WB - Statement Coverage |
+|Delete Transaction - Missing body attributes|controller.deleteTransaction|Integration| WB - Branch Coverage |
+|Delete Transaction - Username in params not in the DB|controller.deleteTransaction|Integration| WB - Branch Coverage |
+|Delete Transaction - Transaction ID, in the body, not in the DB|controller.deleteTransaction|Integration| WB - Branch Coverage |
+|Delete Transaction - The user is not the owner|controller.deleteTransaction|Integration| WB - Branch Coverage |
+|Delete Transactions - Delete 1 - Success|controller.deleteTransactions|Integration| WB - Statement Coverage |
+|Delete Transactions - Delete many - Success|controller.deleteTransactions|Integration| WB - Branch Coverage |
+|Delete Transactions - Missing body attributes|controller.deleteTransactions|Integration| WB - Branch Coverage |
+|Delete Transactions - 1 attribute is empty|controller.deleteTransactions|Integration| WB - Branch Coverage |
+|Delete Transactions - Transaction ID in the body not in the DB|controller.deleteTransactions|Integration| WB - Branch Coverage |
+|Delete Transactions - Not authenticated|controller.deleteTransactions|Integration| WB - Branch Coverage |
+|Create Category - New category inserted|controller.createCategory|Unit||
+|Create Category - Not enough attributes|controller.createCategory|Unit||
+|Create Catetgory - Type attributes is empty|controller.createCategory|Unit||
+|Create Catetgory - Category already exist|controller.createCategory|Unit||
+|Create Catetgory - Not an Admin|controller.createCategory|Integration||
+|Update Category - Success|controller.updateCategory|Unit||
+|Update Category - Invalid Parameters|controller.updateCategory|Unit||
+|Update Category - Empty Parameters|controller.updateCategory|Unit||
+|Update Category - Category doesn't exist|controller.updateCategory|Unit||
+|Update Category - New Category already exist|controller.updateCategory|Unit||
+|Update Category - Not an Admin|controller.updateCategory|Unit||
+|Delete Category - Delete 1|controller.deleteCategory|Unit||
+|Delete Category - Delete Many|controller.deleteCategory|Unit||
+|Delete Category - Only 1 category in the DB|controller.deleteCategory|Unit||
+|Delete Category - 1 type is empty in the input array|controller.deleteCategory|Unit||
+|Delete Category - 1 is not a category in the DB|controller.deleteCategory|Unit||
+|Delete Category - Body doesn't contain all|controller.deleteCategory|Unit||
+|Delete Category - Not Authenticated|controller.deleteCategory|Unit||
+|Delete Category - Regular User Authenticated, not Admin|controller.deleteCategory|Unit||
+|Get Categories - Success!|controller.getCategories|Unit||
+|Get Categories - User not Authenticated|controller.getCategories|Unit||
+|Create Transaction - Success!|controller.createTransaction|Unit||
+|Create Transaction - Missing attributes|controller.createTransaction|Unit||
+|Create Transaction - Empty body attributes|controller.createTransaction|Unit||
+|Create Transaction - Empty body attributes|controller.createTransaction|Unit||
+|Create Transaction - Route Username doesn't match the request body|controller.createTransaction|Unit||
+|Create Transaction - Route Username is not in the DB|controller.createTransaction|Unit||
+|Create Transaction - Body Username is not in the DB|controller.createTransaction|Unit||
+|Create Transaction - Amount is not a float|controller.createTransaction|Unit||
+|Create Transaction !!! - Authenticated user doesn't match the user in body|controller.createTransaction|Unit||
+|Get All Transaction - Success|controller.getAllTransactions|Unit||
+|Get All Transaction - No Transaction in the DB|controller.getAllTransactions|Unit||
+|Get All Transaction - Authenticated Regular User, not an Admin|controller.getAllTransactions|Unit||
+|Get Transaction By User - Regular User - Success|controller.getTransactionsByUser|Unit||
+|Get Transaction By User - Admin - Success|controller.getTransactionsByUser|Unit||
+|Get Transaction By User - Admin - Username in params not in the DB|controller.getTransactionsByUser|Unit||
+|Get Transaction By User - Regular User - User authenticated and params doesn't match|controller.getTransactionsByUser|Unit||
+|Get Transaction By User - Regular User - Admin route for an authorized regular user|controller.getTransactionsByUser|Unit||
+|Get Transactions By User By Category - Regular User - Success|controller.getTransactionsByUserByCategory|Unit||
+|Get Transactions By User By Category - Admin - Success|controller.getTransactionsByUserByCategory|Unit||
+|Get Transactions By User By Category - Admin - Username in params not in the DB|controller.getTransactionsByUserByCategory|Unit||
+|Get Transactions By User By Category - Admin - Category in params not in the DB|controller.getTransactionsByUserByCategory|Unit||
+|Get Transactions By User By Category - Regular User - User authenticated and params doesn't match|controller.getTransactionsByUserByCategory|Unit||
+|Get Transactions By User By Category - Regular User - Admin route for an authorized regular user|controller.getTransactionsByUserByCategory|Unit||
+|Get Transactions By Group - Regular User - Success|controller.getTransactionsByGroup|Unit||
+|Get Transactions By Group - Admin - Success|controller.getTransactionsByGroup|Unit||
+|Get Transaction By Group - Admin - Group in params not in the DB|controller.getTransactionsByGroup|Unit||
+|Get Transaction By Group - Regular User - Authenticated User not part of the group|controller.getTransactionsByGroup|Unit||
+|Get Transaction By Group - Regular User - Admin Route for an authenticated Regular User|controller.getTransactionsByGroup|Unit||
+|Get Transactions By Group By Category - Regular User - Success |controller.getTransactionsByGroupByCategory|Unit||
+|Get Transactions By Group By Category - Admin - Success|controller.getTransactionsByGroupByCategory|Unit||
+|Get Transactions By Group By Category - Admin - Group in params not in the DB|controller.getTransactionsByGroupByCategory|Unit||
+|Get Transactions By Group By Category - Admin - Category in params not in the DB|controller.getTransactionsByGroupByCategory|Unit||
+|Get Transactions By Group By Category - Regular User - Authenticated User not part of the group|controller.getTransactionsByGroupByCategory|Unit||
+|Get Transactions By Group By Category - Regular User - Admin Route for an authenticated Regular User|controller.getTransactionsByGroupByCategory|Unit||
+|Delete Transaction - Success|controller.deleteTransaction|Unit||
+|Delete Transaction - Missing body attributes|controller.deleteTransaction|Unit||
+|Delete Transaction - Username in params not in the DB|controller.deleteTransaction|Unit||
+|Delete Transaction - Transaction ID, in the body, not in the DB|controller.deleteTransaction|Unit||
+|Delete Transaction - The user is not the owner|controller.deleteTransaction|Unit||
+|Delete Transactions - Delete 1 - Success|controller.deleteTransactions|Unit||
+|Delete Transactions - Delete many - Success|controller.deleteTransactions|Unit||
+|Delete Transactions - Missing body attributes|controller.deleteTransactions|Unit||
+|Delete Transactions - 1 attribute is empty|controller.deleteTransactions|Unit||
+|Delete Transactions - Transaction ID in the body not in the DB|controller.deleteTransactions|Unit||
+|Delete Transactions - Not authenticated|controller.deleteTransactions|Unit||
 
 
 
