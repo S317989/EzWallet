@@ -259,6 +259,60 @@ CreateTransaction - Username (or Category) doesn't exists|controller.createTrans
 |Logout - Success|app, User|Integration|HTTP request|
 |Logout - Already logged out|app, User|Integration|HTTP request|
 |Logout - User not found - find|app, User|Integration|HTTP request|
+| getUsers - Success with filled list    | User                                               | Unit       | Black box, Positive  |
+| getUsers - Success with empty list     | User                                               | Unit       | Black box, Positive  |
+| getUsers - Unauthorized                | User                                               | Unit       | Black box, Negative  |
+| getUser - Success                      | User                                               | Unit       | Black box, Positive  |
+| getUser - Unauthorized - Refresh tokens don't match | User                                      | Unit       | Black box, Negative  |
+| getUser - User not found               | User                                               | Unit       | Black box, Negative  |
+| getUser (Admin) - Success              | User                                               | Unit       | Black box, Positive  |
+| getUser (Admin) - Unauthorized         | User                                               | Unit       | Black box, Negative  |
+| getUser (Admin) - User not found       | User                                               | Unit       | Black box, Negative  |
+| createGroup - Success - User in list   | User, Group                                        | Unit       | Black box, Positive  |
+| createGroup - Success - User not in list | User, Group                                      | Unit       | Black box, Positive  |
+| createGroup - Unauthorized             | Group                                              | Unit       | Black box, Negative  |
+| createGroup - Missing parameters       | Group                                              | Unit       | Black box, Negative  |
+| createGroup - Group already exists     | User, Group                                        | Unit       | Black box, Negative  |
+| createGroup - User already in a group  | User, Group                                        | Unit       | Black box, Negative  |
+| deleteGroup - Success                  | Group                                              | Unit       | Black box, Positive  |
+| deleteGroup - Unauthorized             | Group                                              | Unit       | Black box, Negative  |
+| deleteGroup - Group not found          | Group                                              | Unit       | Black box, Negative  |
+| addUserToGroup - Success               | User, Group                                        | Unit       | Black box, Positive  |
+| addUserToGroup - Unauthorized          | Group                                              | Unit       | Black box, Negative  |
+| addUserToGroup - User not found        | User, Group                                        | Unit       | Black box, Negative  |
+| removeUserFromGroup - Success          | User, Group                                        | Unit       | Black box, Positive  |
+| removeUserFromGroup - Unauthorized     | Group                                              | Unit       | Black box, Negative  |
+| removeUserFromGroup - User not found   | User, Group                                        | Unit       | Black box, Negative  |
+| authenticateUser - Success             | User                                               | Unit       | Black box, Positive  |
+| authenticateUser - User not found      | User                                               | Unit       | Black box, Negative  |
+| authenticateUser - Incorrect password  | User                                               | Unit       | Black box, Negative  |
+| authenticateUser - Missing parameters  | User                                               | Unit       | Black box, Negative  |
+| authenticateUser - Server error        | User                                               | Unit       | Black box, Negative  |
+| refreshToken - Success                 | User                                               | Unit       | Black box, Positive  |
+| refreshToken - User not found          | User                                               | Unit       | Black box, Negative  |
+| refreshToken - Server error            | User                                               | Unit       | Black box, Negative  |
+| updateUser - Success                   | User                                               | Unit       | Black box, Positive  |
+| updateUser - Unauthorized              | User                                               | Unit       | Black box, Negative  |
+| updateUser - User not found            | User                                               | Unit       | Black box, Negative  |
+| updateUser - Missing parameters        | User                                               | Unit       | Black box, Negative  |
+| updateUser - Server error              | User                                               | Unit       | Black box, Negative  |
+| deleteUser - Success                   | User                                               | Unit       | Black box, Positive  |
+| deleteUser - Unauthorized              | User                                               | Unit       | Black box, Negative  |
+| deleteUser - User not found            | User                                               | Unit       | Black box, Negative  |
+| deleteUser - Server error              | User                                               | Unit       | Black box, Negative  |
+| updateGroup - Success                  | Group                                              | Unit       | Black box, Positive  |
+| updateGroup - Unauthorized             | Group                                              | Unit       | Black box, Negative  |
+| updateGroup - Group not found          | Group                                              | Unit       | Black box, Negative  |
+| updateGroup - Missing parameters       | Group                                              | Unit       | Black box, Negative  |
+| updateGroup - Server error             | Group                                              | Unit       | Black box, Negative  |
+| AddToGroup - Success                      | API endpoint for adding users to a group      | Integration  | Black box testing    |
+| AddToGroup - Group does not exist         | API endpoint for adding users to a group      | Integration  | Black box testing    |
+| AddToGroup - No emails provided           | API endpoint for adding users to a group      | Integration  | Black box testing    |
+| AddToGroup - Users does not exist         | API endpoint for adding users to a group      | Integration  | Black box testing    |
+| RemoveFromGroup - Success                 | API endpoint for removing users from a group   | Integration  | Black box testing    |
+| RemoveFromGroup - Group does not exist    | API endpoint for removing users from a group   | Integration  | Black box testing    |
+| RemoveFromGroup - No emails provided      | API endpoint for removing users from a group   | Integration  | Black box testing    |
+| RemoveFromGroup - Cannot remove all members | API endpoint for removing users from a group  | Integration  | Black box testing    |
 
 
 # Coverage
