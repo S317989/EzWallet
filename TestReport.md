@@ -78,6 +78,22 @@ Upon completing the aforementioned steps, we conducted Integration Tests of the 
 |DeleteGroup - Unauthorized|usersMethods.deleteUser|unit|wb - Statement|
 |DeleteGroup - Missing group name|usersMethods.deleteUser|unit|wb - Statement|
 |DeleteGroup - Group doesn't exist|usersMethods.deleteUser|unit|wb - Statement|
+|HandleDateFilterParams - upTo and from cannot be together|utilsMethods.handleDateFilterParams()|unit|Exception handling|
+|HandleDateFilterParams - Date not in format YYYY-MM-DD|utilsMethods.handleDateFilterParams()|unit|Exception handling|
+|HandleDateFilterParams - Success with date filter|utilsMethods.handleDateFilterParams()|unit|Assertion (Expected result)|
+|HandleDateFilterParams - Success with from filter|utilsMethods.handleDateFilterParams()|unit|Assertion (Expected result)|
+|HandleDateFilterParams - Success with upTo filter|utilsMethods.handleDateFilterParams()|unit|Assertion (Expected result)|
+|HandleAmountFilterParams - Min amount not a number|utilsMethods.handleAmountFilterParams()|unit|Exception handling|
+|HandleAmountFilterParams - MaxAmount not a number|utilsMethods.handleAmountFilterParams()|unit|Exception handling|
+|HandleAmountFilterParams - Success with minAmount and maxAmount filters|utilsMethods.handleAmountFilterParams()|unit|Assertion (Expected result)|
+|HandleAmountFilterParams - Success with only minAmount filter|utilsMethods.handleAmountFilterParams()|unit|Assertion (Expected result)|
+|HandleAmountFilterParams - Success with only maxAmount filter|utilsMethods.handleAmountFilterParams()|unit|Assertion (Expected result)|
+|VerifyAuth - Success|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
+|VerifyAuth - Tokens missing|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
+|VerifyAuth - Tokens is missing information|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
+|VerifyAuth - Mismatched users|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
+|VerifyAuth - AccessToken expired|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
+
 
 
 
