@@ -71,7 +71,7 @@ describe("createCategory", () => {
     await categories.deleteMany({});
   });
 
-  test("Create Category - New category inserted", (done) => {
+  test("Create Category - Success", (done) => {
     const category = {
       type: "TestType",
       color: "TestColor",
@@ -496,7 +496,7 @@ describe("deleteCategory", () => {
     await categories.deleteMany({});
   });
 
-  test("Delete Category - Delete 1", (done) => {
+  test("Delete Category - Delete 1 - Success", (done) => {
     const categoryToBeDeleted = [category1.type];
 
     transactions
@@ -533,9 +533,9 @@ describe("deleteCategory", () => {
           })
           .catch((err) => done(err));
       });
-  }); //PASS
+  }); 
 
-  test("Delete Category - Delete Many", (done) => {
+  test("Delete Category - Delete Many - Success", (done) => {
     const categoryToBeDeleted = [category1.type, category2.type];
 
     transactions
@@ -577,7 +577,7 @@ describe("deleteCategory", () => {
           })
           .catch((err) => done(err));
       });
-  }); //PASS
+  }); 
 
   test("Delete Category - Only 1 category in the DB", (done) => {
     const categoryToBeDeleted = [category1.type];
@@ -614,9 +614,9 @@ describe("deleteCategory", () => {
           })
           .catch((err) => done(err));
       });
-  }); //PASS
+  }); 
 
-  test("Delete Category - 1 type is empty in the input array", (done) => {
+  test("Delete Category - At least 1 category type is empty in the input array", (done) => {
     const categoryToBeDeleted = ["", "NewType2", "NewType3"];
 
     request(app)
@@ -635,9 +635,9 @@ describe("deleteCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //PASS
+  }); 
 
-  test("Delete Category - 1 is not a category in the DB", (done) => {
+  test("Delete Category - At least 1 category is not in the DB", (done) => {
     const categoryToBeDeleted = ["Type", "NewType2", "NewType3"];
 
     request(app)
@@ -654,9 +654,9 @@ describe("deleteCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //PASS
+  }); 
 
-  test("Delete Category - Body doesn't contain all ", (done) => {
+  test("Delete Category - Body doesn't contain all attributes", (done) => {
     request(app)
       .delete("/api/categories")
       .send()
@@ -671,7 +671,7 @@ describe("deleteCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //PASS
+  }); 
 
   test("Delete Category - Not Authenticated", (done) => {
     const categoryToBeDeleted = ["NewType1", "NewType2", "NewType3"];
@@ -689,7 +689,7 @@ describe("deleteCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //PASS
+  }); 
 
   test("Delete Category - Regular User Authenticated, not Admin", (done) => {
     const categoryToBeDeleted = [
@@ -775,7 +775,7 @@ describe("getCategories", () => {
     await categories.insertMany([category1, category2, category3, category4]);
   });
 
-  test("Get Categories - Success!", (done) => {
+  test("Get Categories - Success", (done) => {
     request(app)
       .get("/api/categories")
       .send()
@@ -792,7 +792,7 @@ describe("getCategories", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //PASS
+  }); 
 
   test("Get Categories - User not Authenticated", (done) => {
     request(app)
@@ -806,7 +806,7 @@ describe("getCategories", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //PASS
+  }); 
 }); /** 2/2 test */
 
 describe("createTransaction", () => {
@@ -858,7 +858,7 @@ describe("createTransaction", () => {
     await transactions.deleteMany({});
   });
 
-  test("Create Transaction - Success!", (done) => {
+  test("Create Transaction - Success", (done) => {
     const newTransaction = {
       username: user.username,
       type: category.type,
@@ -891,7 +891,7 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //PASS
+  }); 
 
   test("Create Transaction - Missing attributes", (done) => {
     const newTransaction = {
@@ -918,7 +918,7 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //PASS
+  }); 
 
   test("Create Transaction - Empty body attributes", (done) => {
     const newTransaction = {
@@ -943,9 +943,9 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //PASS
+  }); 
 
-  test("Create Transaction - Category is not in the DB", (done) => {
+  test("Create Transaction - Category doesn't exist in the DB", (done) => {
     const newTransaction = {
       username: user.username,
       type: "OtherType",
@@ -971,7 +971,7 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //PASS
+  }); 
 
   test("Create Transaction - Route Username doesn't match the request body", (done) => {
     const newTransaction = {
@@ -996,7 +996,7 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //PASS
+  });
 
   test("Create Transaction - Route Username is not in the DB", (done) => {
     const newTransaction = {
@@ -1019,10 +1019,10 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //PASS
+  }); 
 
   //Need to implement (in the method) a specific check for this error !!
-  test(" !?!??!?! Create Transaction - Body Username is not in the DB", (done) => {
+  test("Create Transaction - Body Username is not in the DB", (done) => {
     const newTransaction = {
       username: "User",
       type: category.type,
@@ -1045,7 +1045,7 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //PASS
+  }); 
 
   test("Create Transaction - Amount is not a float", (done) => {
     const newTransaction = {
@@ -1073,10 +1073,10 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //PASS
+  }); 
 
   //Need to implement (in the method) a specific check for this error !!
-  test(" !!! Create Transaction !!! - Authenticated user doesn't match the user in body", (done) => {
+  test("Create Transaction - Authenticated user doesn't match the user in body", (done) => {
     const newTransaction = {
       username: user.username,
       type: category.type,
@@ -1129,7 +1129,7 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); // PASS
+  }); 
 }); /** 9/9 test */
 
 describe("getAllTransactions", () => {
@@ -1237,7 +1237,7 @@ describe("getAllTransactions", () => {
     await transactions.deleteMany({});
   });
   /*!! ID of the transaction have not to be rethrived !!*/
-  test("Get All Transaction - Success !", (done) => {
+  test("Get All Transaction - Success ù", (done) => {
     request(app)
       .get("/api/transactions")
       .send()
@@ -1266,7 +1266,7 @@ describe("getAllTransactions", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //PASS
+  }); 
 
   test("Get All Transaction - No Transaction in the DB", (done) => {
     transactions.deleteMany({}).then(() => {
@@ -1287,7 +1287,7 @@ describe("getAllTransactions", () => {
         })
         .catch((err) => done(err));
     });
-  }); //PASS
+  }); 
 
   test("Get All Transaction - Authenticated Regular User, not an Admin", (done) => {
     request(app)
@@ -1303,7 +1303,7 @@ describe("getAllTransactions", () => {
         done();
       })
       .catch((err) => done(err));
-  }); //PASS
+  }); 
 }); /** 3/3 test */
 
 describe("getTransactionsByUser", () => {
@@ -2069,7 +2069,7 @@ describe("getTransactionsByGroup", () => {
       })
       .catch((err) => done(err));
   }); //PASS
-}); /** 3/5 test */
+}); /** 5/5 test */
 
 describe("getTransactionsByGroupByCategory", () => {
   let user1, User1_accessToken, User1_refreshToken;
@@ -2376,7 +2376,7 @@ describe("getTransactionsByGroupByCategory", () => {
       })
       .catch((err) => done(err));
   }); //PASS
-}); /** 4/6 test */
+}); /** 6/6 test */
 
 describe("deleteTransaction", () => {
   let user1, User1_accessToken, User1_refreshToken;
