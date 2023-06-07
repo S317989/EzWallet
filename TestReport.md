@@ -40,7 +40,18 @@ Upon completing the aforementioned steps, we conducted Integration Tests of the 
 
 | Test case name | Object(s) tested | Test level | Technique used |
 | -------------- | ---------------- | ---------- | -------------- |
-|                |                  |            |                |
+|Registration - Success|authMethods.register|Unit|BB|
+|Registration - Exists|authMethods.register|Unit|BB|
+|Registration - Invalid Email|authMethods.register|Unit|BB|
+|Registration Admin - Success| authMethods.registerAdmin|Unit|BB|
+|Registration Admin - Already Registered|authMethods.registerAdmin|Unit|BB|
+|Registration Admin - Invalid Email| authMethods.registerAdmin|Unit|BB|
+|Login - Success|authMethods.login|Unit|BB|
+|Login - User Not Registered|authMethods.login|Unit|BB|
+|Logout - Success|authMethods.logout|Unit|BB|
+|Logout - Already logged out|authMethods.logout|Unit|BB|
+|Logout - User not found|authMethods.logout|Unit|BB|
+
 
 # Coverage
 
