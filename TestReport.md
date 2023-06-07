@@ -313,6 +313,18 @@ CreateTransaction - Username (or Category) doesn't exists|controller.createTrans
 | RemoveFromGroup - Group does not exist    | API endpoint for removing users from a group   | Integration  | Black box testing    |
 | RemoveFromGroup - No emails provided      | API endpoint for removing users from a group   | Integration  | Black box testing    |
 | RemoveFromGroup - Cannot remove all members | API endpoint for removing users from a group  | Integration  | Black box testing    |
+| VerifyAuth - Simple - Success            | `mockRequest`, `mockResponse`, `param` | Integration  | Assertion testing |
+| VerifyAuth - Admin - Success             | `mockRequest`, `mockResponse`, `param` | Integration  | Assertion testing |
+| VerifyAuth - User - Success              | `mockRequest`, `mockResponse`, `param` | Integration  | Assertion testing |
+| VerifyAuth - Group - Success             | `mockRequest`, `mockResponse`, `param` | Integration  | Assertion testing |
+| VerifyAuth - Admin - Mismatched User     | `mockRequest`, `mockResponse`, `param` | Integration  | Assertion testing |
+| VerifyAuth - User - Mismatched User      | `mockRequest`, `mockResponse`, `param` | Integration  | Assertion testing |
+| VerifyAuth - Group - User not in group   | `mockRequest`, `mockResponse`, `param` | Integration  | Assertion testing |
+| VerifyAuth - General - Access Token missing info      | `mockRequest`, `mockResponse`, `param` | Integration  | Assertion testing |
+| VerifyAuth - General - Refresh Token missing info     | `mockRequest`, `mockResponse`, `param` | Integration  | Assertion testing |
+| VerifyAuth - General - Refresh Token missing info     | `mockRequest`, `mockResponse`, `param` | Integration  | Assertion testing |
+| VerifyAuth - General - Access Token expired           | `mockRequest`, `mockResponse`, `param` | Integration  | Assertion testing |
+| VerifyAuth - General - Perform Login Again            | `mockRequest`, `mockResponse`, `param` | Integration  | Assertion testing |
 
 
 # Coverage
