@@ -51,6 +51,35 @@ Upon completing the aforementioned steps, we conducted Integration Tests of the 
 |Logout - Success|authMethods.logout|Unit|WB - Statement|
 |Logout - Already logged out|authMethods.logout|Unit|wb - branches|
 |Logout - User not found|authMethods.logout|Unit|wb - branches|
+|getUsers - Success with filled list|usersMethods.getUsers|Unit|wb - Statement|
+|getUsers - Success with empty list|usersMethods.getUsers|Unit|wb - Statement|
+|getUsers - Unauthorized|usersMethods.getUsers|Unit|wb - branches|
+|getUser - Admin - Success|usersMethods.getUser|Unit|wb - Statement|
+|getUser - Admin - User not found|usersMethods.getUser|Unit|wb - branches|
+|getUser - Regular - Success|usersMethods.getUser|Unit|wb - Statement|
+|getUser - Regular - User not found|usersMethods.getUser|Unit|wb - branches|
+|getUser - Regular - Unauthorized|usersMethods.getUser|Unit|wb - branches|
+|createGroup - Success|usersMethods.createGroup|Unit|wb - Statement|
+|createGroup - Unauthorized|usersMethods.createGroup|Unit|wb - branches|
+|createGroup - Missing parameters|usersMethods.createGroup|Unit|wb - branches|
+|createGroup - Group already exists|usersMethods.createGroup|Unit|wb - branches|
+|createGroup - User already in a group|usersMethods.createGroup|Unit|wb - branches|
+|getGroups - Success|usersMethods.getGroups|wb - Statement|
+|getGroups - Unauthorized|usersMethods.getGroups|wb - Branches|
+|getGroup - Group doesn't exist|usersMethods.getGroups|wb - Branches|
+|getGroup - Admin - Success|usersMethods.getGroups|wb - Statement|
+|getGroup - Admin - Unauthorized|usersMethods.getGroups|wb - Branches|
+|DeleteUser - Unauthorized|usersMethods.deleteUser|wb - Branches|
+|DeleteUser - No email provided|usersMethods.deleteUser|wb - Branches|
+|DeleteUser - Invalid email format|usersMethods.deleteUser|wb - Branches|
+|DeleteUser - User not found|usersMethods.deleteUser|wb - Branches|
+|DeleteUser - Admin not removable|usersMethods.deleteUser|wb - Branches|
+|DeleteGroup - Success|usersMethods.deleteUser|wb - Statement|
+|DeleteGroup - Unauthorized|usersMethods.deleteUser|wb - Statement|
+|DeleteGroup - Missing group name|usersMethods.deleteUser|wb - Statement|
+|DeleteGroup - Group doesn't exist|usersMethods.deleteUser|wb - Statement|
+
+
 
 
 # Coverage
