@@ -246,6 +246,19 @@ CreateTransaction - Username (or Category) doesn't exists|controller.createTrans
 |DeleteTransactions - Admin - Empty _ids|controller.deleteTransactions|Unit| WB - Branch Coverage |
 |DeleteTransactions - Admin - Transactions don't exist|controller.deleteTransactions|Unit| WB - Branch Coverage |
 |DeleteTransactions - Admin - Transaction not found|controller.deleteTransactions|Unit| WB - Branch Coverage |
+|Registration - Success|app, User|Integration|HTTP request|
+|Registration - Invalid Email	|app, User|Integration|HTTP request|
+|Registration - Already Registered|app, User|Integration|HTTP request|
+|Register Admin - Success|app, User|Integration|HTTP request|
+|Register Admin - Missing Information|app, User|Integration|HTTP request|
+|Register Admin - Already Registered|app, User|Integration|HTTP request|
+|Login - Success|app, User|Integration|HTTP request|
+|Login - Missing or Empty Field|app, User|Integration|HTTP request|
+|Login - Not registered|app, User|Integration|HTTP request|
+|Login - Wrong Credentials|app, User|Integration|HTTP request|
+|Logout - Success|app, User|Integration|HTTP request|
+|Logout - Already logged out|app, User|Integration|HTTP request|
+|Logout - User not found - find|app, User|Integration|HTTP request|
 
 
 # Coverage
