@@ -159,75 +159,95 @@ Upon completing the aforementioned steps, we conducted Integration Tests of the 
 |Delete Transactions - 1 attribute is empty|controller.deleteTransactions|Integration| WB - Branch Coverage |
 |Delete Transactions - Transaction ID in the body not in the DB|controller.deleteTransactions|Integration| WB - Branch Coverage |
 |Delete Transactions - Not authenticated|controller.deleteTransactions|Integration| WB - Branch Coverage |
-|Create Category - New category inserted|controller.createCategory|Unit||
-|Create Category - Not enough attributes|controller.createCategory|Unit||
-|Create Catetgory - Type attributes is empty|controller.createCategory|Unit||
-|Create Catetgory - Category already exist|controller.createCategory|Unit||
-|Create Catetgory - Not an Admin|controller.createCategory|Integration||
-|Update Category - Success|controller.updateCategory|Unit||
-|Update Category - Invalid Parameters|controller.updateCategory|Unit||
-|Update Category - Empty Parameters|controller.updateCategory|Unit||
-|Update Category - Category doesn't exist|controller.updateCategory|Unit||
-|Update Category - New Category already exist|controller.updateCategory|Unit||
-|Update Category - Not an Admin|controller.updateCategory|Unit||
-|Delete Category - Delete 1|controller.deleteCategory|Unit||
-|Delete Category - Delete Many|controller.deleteCategory|Unit||
-|Delete Category - Only 1 category in the DB|controller.deleteCategory|Unit||
-|Delete Category - 1 type is empty in the input array|controller.deleteCategory|Unit||
-|Delete Category - 1 is not a category in the DB|controller.deleteCategory|Unit||
-|Delete Category - Body doesn't contain all|controller.deleteCategory|Unit||
-|Delete Category - Not Authenticated|controller.deleteCategory|Unit||
-|Delete Category - Regular User Authenticated, not Admin|controller.deleteCategory|Unit||
-|Get Categories - Success!|controller.getCategories|Unit||
-|Get Categories - User not Authenticated|controller.getCategories|Unit||
-|Create Transaction - Success!|controller.createTransaction|Unit||
-|Create Transaction - Missing attributes|controller.createTransaction|Unit||
-|Create Transaction - Empty body attributes|controller.createTransaction|Unit||
-|Create Transaction - Empty body attributes|controller.createTransaction|Unit||
-|Create Transaction - Route Username doesn't match the request body|controller.createTransaction|Unit||
-|Create Transaction - Route Username is not in the DB|controller.createTransaction|Unit||
-|Create Transaction - Body Username is not in the DB|controller.createTransaction|Unit||
-|Create Transaction - Amount is not a float|controller.createTransaction|Unit||
-|Create Transaction !!! - Authenticated user doesn't match the user in body|controller.createTransaction|Unit||
-|Get All Transaction - Success|controller.getAllTransactions|Unit||
-|Get All Transaction - No Transaction in the DB|controller.getAllTransactions|Unit||
-|Get All Transaction - Authenticated Regular User, not an Admin|controller.getAllTransactions|Unit||
-|Get Transaction By User - Regular User - Success|controller.getTransactionsByUser|Unit||
-|Get Transaction By User - Admin - Success|controller.getTransactionsByUser|Unit||
-|Get Transaction By User - Admin - Username in params not in the DB|controller.getTransactionsByUser|Unit||
-|Get Transaction By User - Regular User - User authenticated and params doesn't match|controller.getTransactionsByUser|Unit||
-|Get Transaction By User - Regular User - Admin route for an authorized regular user|controller.getTransactionsByUser|Unit||
-|Get Transactions By User By Category - Regular User - Success|controller.getTransactionsByUserByCategory|Unit||
-|Get Transactions By User By Category - Admin - Success|controller.getTransactionsByUserByCategory|Unit||
-|Get Transactions By User By Category - Admin - Username in params not in the DB|controller.getTransactionsByUserByCategory|Unit||
-|Get Transactions By User By Category - Admin - Category in params not in the DB|controller.getTransactionsByUserByCategory|Unit||
-|Get Transactions By User By Category - Regular User - User authenticated and params doesn't match|controller.getTransactionsByUserByCategory|Unit||
-|Get Transactions By User By Category - Regular User - Admin route for an authorized regular user|controller.getTransactionsByUserByCategory|Unit||
-|Get Transactions By Group - Regular User - Success|controller.getTransactionsByGroup|Unit||
-|Get Transactions By Group - Admin - Success|controller.getTransactionsByGroup|Unit||
-|Get Transaction By Group - Admin - Group in params not in the DB|controller.getTransactionsByGroup|Unit||
-|Get Transaction By Group - Regular User - Authenticated User not part of the group|controller.getTransactionsByGroup|Unit||
-|Get Transaction By Group - Regular User - Admin Route for an authenticated Regular User|controller.getTransactionsByGroup|Unit||
-|Get Transactions By Group By Category - Regular User - Success |controller.getTransactionsByGroupByCategory|Unit||
-|Get Transactions By Group By Category - Admin - Success|controller.getTransactionsByGroupByCategory|Unit||
-|Get Transactions By Group By Category - Admin - Group in params not in the DB|controller.getTransactionsByGroupByCategory|Unit||
-|Get Transactions By Group By Category - Admin - Category in params not in the DB|controller.getTransactionsByGroupByCategory|Unit||
-|Get Transactions By Group By Category - Regular User - Authenticated User not part of the group|controller.getTransactionsByGroupByCategory|Unit||
-|Get Transactions By Group By Category - Regular User - Admin Route for an authenticated Regular User|controller.getTransactionsByGroupByCategory|Unit||
-|Delete Transaction - Success|controller.deleteTransaction|Unit||
-|Delete Transaction - Missing body attributes|controller.deleteTransaction|Unit||
-|Delete Transaction - Username in params not in the DB|controller.deleteTransaction|Unit||
-|Delete Transaction - Transaction ID, in the body, not in the DB|controller.deleteTransaction|Unit||
-|Delete Transaction - The user is not the owner|controller.deleteTransaction|Unit||
-|Delete Transactions - Delete 1 - Success|controller.deleteTransactions|Unit||
-|Delete Transactions - Delete many - Success|controller.deleteTransactions|Unit||
-|Delete Transactions - Missing body attributes|controller.deleteTransactions|Unit||
-|Delete Transactions - 1 attribute is empty|controller.deleteTransactions|Unit||
-|Delete Transactions - Transaction ID in the body not in the DB|controller.deleteTransactions|Unit||
-|Delete Transactions - Not authenticated|controller.deleteTransactions|Unit||
+|CreateCategory - Success|controller.createCategory|Unit| WB - Statement Coverage |
+|CreateCategory - Unauthorized|controller.createCategory|Unit| WB - Branch Coverage |
+|CreateCategory - Missing or Empty fields|controller.createCategory|Unit| WB - Branch Coverage |
+|CreateCategory - Already exists|controller.createCategory|Unit| WB - Branch Coverage |
+|UpdateCategory - Success|controller.updateCategory|Unit| WB - Statement Coverage |
+|UpdateCategory - Missing or Empty fields|controller.updateCategory|Unit| WB - Branch Coverage |
+|UpdateCategory - Unauthorized|controller.updateCategory|Unit| WB - Branch Coverage |
+|UpdateCategory - Old Category not exists|controller.updateCategory|Unit| WB - Branch Coverage |
+|Update Category - New Category already exist|controller.updateCategory|Unit| WB - Branch Coverage |
+|Delete category - Success - Only One Category|controller.deleteCategory|Unit| WB - Statement Coverage |
+|Delete category - Success - All Category, One left|controller.deleteCategory|Unit| WB - Statement Coverage |
+|Delete Category - Only 1 category in the DB|controller.deleteCategory|Unit| WB - Branch Coverage |
+|Delete category - Unauthorized|controller.deleteCategory|Unit| WB - Branch Coverage |
+|Delete category - Missing or Empty parameters|controller.deleteCategory|Unit| WB - Branch Coverage |
+|Delete category - No categories can be deleted|controller.deleteCategory|Unit| WB - Branch Coverage |
+|Delete category - Category not found|controller.deleteCategory|Unit| WB - Branch Coverage |
+|GetCategories - Success|controller.getCategories|Unit| WB - Statement Coverage |
+|GetCategories - Empty List|controller.getCategories|Unit| WB - Branch Coverage |
+|GetCategories - Unauthorized|controller.getCategories|Unit| WB - Branch Coverage |
+|CreateTransaction - Success|controller.createTransaction|Unit| WB - Statement Coverage |
+|CreateTransaction - Unauthorized|controller.createTransaction|Unit| WB - Branch Coverage |
+|Create Transaction - Empty body attributes|controller.createTransaction|Unit| WB - Branch Coverage |
+|CreateTransaction - Missing or empty parameters|controller.createTransaction|Unit| WB - Branch Coverage |
+|CreateTransaction - Amount is not a number|controller.createTransaction|Unit| WB - Branch Coverage |
+|CreateTransaction - Username not equivalent|controller.createTransaction|Unit| WB - Branch Coverage |
+CreateTransaction - Username (or Category) doesn't exists|controller.createTransaction|Unit| WB - Branch Coverage |
+|GetAllTransactions - Success|controller.getAllTransactions|Unit| WB - Statement Coverage |
+|GetAllTransactions - Empty list|controller.getAllTransactions|Unit| WB - Statement Coverage |
+|GetAllTransactions - Unauthorized|controller.getAllTransactions|Unit| WB - Branch Coverage |
 
+|GetTransactionByUser - Admin - Success|controller.getTransactionsByUser|Unit| WB - Statement Coverage |
+|GetTransactionByUser - Admin - Unauthorized|controller.getTransactionsByUser|Unit| WB - Branch Coverage |
+|GetTransactionByUser - Admin - User not found|controller.getTransactionsByUser|Unit| WB - Branch Coverage |
+|GetTransactionByUser - Admin - No transactions|controller.getTransactionsByUser|Unit| WB - Statement Coverage |
+|GetTransactionByUser - User - Success - Date Filter with filled list|controller.getTransactionsByUser|Unit| WB - Statement Coverage |
+|GetTransactionByUser - User - Success - Date Filter with empty list|controller.getTransactionsByUser|Unit| WB - Statement Coverage |
+|GetTransactionByUser - User - Success - From filter with filled list|controller.getTransactionsByUser|Unit| WB - Statement Coverage |
+|GetTransactionByUser - User - Success - From Filter with empty list|controller.getTransactionsByUser|Unit| WB - Statement Coverage |
+|GetTransactionByUser - User - Success - UpTo filter with filled list|controller.getTransactionsByUser|Unit| WB - Statement Coverage |
+|GetTransactionByUser - User - Success - UpTo Filter with empty list|controller.getTransactionsByUser|Unit| WB - Statement Coverage |
+|GetTransactionByUser - User - Success - MinAmount filter with filled list|controller.getTransactionsByUser|Unit| WB - Statement Coverage |
+|GetTransactionByUser - User - Success - MinAmount Filter with empty list|controller.getTransactionsByUser|Unit| WB - Statement Coverage |
+|GetTransactionByUser - User - Success - MaxAmount filter with filled list|controller.getTransactionsByUser|Unit| WB - Statement Coverage |
+|GetTransactionByUser - User - Success - MaxAmount Filter with empty list|controller.getTransactionsByUser|Unit| WB - Statement Coverage |
+|GetTransactionByUser - User - Throws error cause From and UpTo cannot be together|controller.getTransactionsByUser|Unit| WB - Branch Coverage |
+|GetTransactionByUser - User - Unauthorized|controller.getTransactionsByUser|Unit| WB - Branch Coverage |
+|GetTransactionByUser - User - User not found|controller.getTransactionsByUser|Unit| WB - Branch Coverage |
 
-
+|GetTransactionByUserByCategory - Admin - Success - Filled list|controller.getTransactionsByUserByCategory|Unit| WB - Statement Coverage |
+|GetTransactionByUserByCategory - Admin - Success - Empty list|controller.getTransactionsByUserByCategory|Unit| WB - Statement Coverage |
+|GetTransactionByUserByCategory - Admin - Unauthorized|controller.getTransactionsByUserByCategory|Unit| WB - Branch Coverage |
+|GetTransactionByUserByCategory - Admin - User not found|controller.getTransactionsByUserByCategory|Unit| WB - Branch Coverage |
+|GetTransactionByUserByCategory - Admin - Category not found|controller.getTransactionsByUserByCategory|Unit| WB - Branch Coverage |
+|GetTransactionByUserByCategory - User - Success - Filled list|controller.getTransactionsByUserByCategory|Unit| WB - Statement Coverage |
+|GetTransactionByUserByCategory - User - Success - Empty list|controller.getTransactionsByUserByCategory|Unit| WB - Statement Coverage |
+|GetTransactionByUserByCategory - User - Unauthorized|controller.getTransactionsByUserByCategory|Unit| WB - Branch Coverage |
+|GetTransactionByUserByCategory - User - User not found|controller.getTransactionsByUserByCategory|Unit| WB - Branch Coverage |
+|GetTransactionByUserByCategory - User - Category not found|controller.getTransactionsByUserByCategory|Unit| WB - Branch Coverage |
+|GetTransactionByGroup - Admin - Success - Filled list|controller.getTransactionsByGroup|Unit| WB - Statement Coverage |
+|GetTransactionByGroup - Admin - Success - Empty list|controller.getTransactionsByGroup|Unit| WB - Statement Coverage |
+|GetTransactionByGroup - Admin - Unauthorized|controller.getTransactionsByGroup|Unit| WB - Branch Coverage |
+|GetTransactionByGroup - Admin - Group not found|controller.getTransactionsByGroup|Unit| WB - Branch Coverage |
+|GetTransactionByGroup - Group - Success - Filled list|controller.getTransactionsByGroup|Unit| WB - Statement Coverage |
+|GetTransactionByGroup - Group - Success - Empty list|controller.getTransactionsByGroup|Unit| WB - Statement Coverage |
+|GetTransactionByGroup - Group - Unauthorized|controller.getTransactionsByGroup|Unit| WB - Branch Coverage |
+|GetTransactionByGroup - Group - Group not found|controller.getTransactionsByGroup|Unit| WB - Branch Coverage |
+|GetTransactionByGroupByCategory - Admin - Success - Filled list|controller.getTransactionsByGroupByCategory|Unit| WB - Statement Coverage |
+|GetTransactionByGroupByCategory - Admin - Success - Empty list|controller.getTransactionsByGroupByCategory|Unit| WB - Statement Coverage |
+|GetTransactionByGroupByCategory - Admin - Unauthorized|controller.getTransactionsByGroupByCategory|Unit| WB - Branch Coverage |
+|GetTransactionByGroupByCategory - Admin - Group not found|controller.getTransactionsByGroupByCategory|Unit| WB - Branch Coverage |
+|GetTransactionByGroupByCategory - Admin - Category not found|controller.getTransactionsByGroupByCategory|Unit| WB - Branch Coverage |
+|GetTransactionByGroupByCategory - Group - Success - Filled list|controller.getTransactionsByGroupByCategory|Unit| WB - Statement Coverage |
+|GetTransactionByGroupByCategory - Group - Success - Empty list|controller.getTransactionsByGroupByCategory|Unit| WB - Statement Coverage |
+|GetTransactionByGroupByCategory - Group - Unauthorized|controller.getTransactionsByGroupByCategory|Unit| WB - Branch Coverage |
+|GetTransactionByGroupByCategory - Group - Group not found|controller.getTransactionsByGroupByCategory|Unit| WB - Branch Coverage |
+|GetTransactionByGroupByCategory - Group - Category not found|controller.getTransactionsByGroupByCategory|Unit| WB - Branch Coverage |
+|DeleteTransaction - Admin - Success|controller.deleteTransaction|Unit| WB - Statement Coverage |
+|DeleteTransaction - Admin - Missing Ids|controller.deleteTransaction|Unit| WB - Branch Coverage |
+|DeleteTransaction - Admin - Transaction not found|controller.deleteTransaction|Unit| WB - Branch Coverage |
+|DeleteTransaction - User - Success|controller.deleteTransaction|Unit| WB - Statement Coverage |
+|DeleteTransaction - User - User not found|controller.deleteTransaction|Unit| WB - Branch Coverage |
+|DeleteTransaction - User - Missing Ids|controller.deleteTransaction|Unit| WB - Branch Coverage |
+|DeleteTransaction - User - Transaction not found|controller.deleteTransaction|Unit| WB - Branch Coverage |
+|DeleteTransaction - User - User not the owner|controller.deleteTransaction|Unit| WB - Branch Coverage |
+|DeleteTransactions - Admin - Success|controller.deleteTransactions|Unit| WB - Statement Coverage |
+|DeleteTransactions - Admin - Missing _ids|controller.deleteTransactions|Unit| WB - Branch Coverage |
+|DeleteTransactions - Admin - Empty _ids|controller.deleteTransactions|Unit| WB - Branch Coverage |
+|DeleteTransactions - Admin - Transactions don't exist|controller.deleteTransactions|Unit| WB - Branch Coverage |
+|DeleteTransactions - Admin - Transaction not found|controller.deleteTransactions|Unit| WB - Branch Coverage |
 
 
 # Coverage
