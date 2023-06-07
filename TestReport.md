@@ -64,35 +64,35 @@ Upon completing the aforementioned steps, we conducted Integration Tests of the 
 |createGroup - Missing parameters|usersMethods.createGroup|Unit|wb - branches|
 |createGroup - Group already exists|usersMethods.createGroup|Unit|wb - branches|
 |createGroup - User already in a group|usersMethods.createGroup|Unit|wb - branches|
-|getGroups - Success|usersMethods.getGroups|unit|wb - Statement|
-|getGroups - Unauthorized|usersMethods.getGroups|unit|wb - Branches|
-|getGroup - Group doesn't exist|usersMethods.getGroups|unit|wb - Branches|
-|getGroup - Admin - Success|usersMethods.getGroups|unit|wb - Statement|
-|getGroup - Admin - Unauthorized|usersMethods.getGroups|unit|wb - Branches|
-|DeleteUser - Unauthorized|usersMethods.deleteUser|unit|wb - Branches|
-|DeleteUser - No email provided|usersMethods.deleteUse|unit|wb - Branches|
-|DeleteUser - Invalid email format|usersMethods.deleteUser|unit|wb - Branches|
-|DeleteUser - User not found|usersMethods.deleteUser|unit|wb - Branches|
-|DeleteUser - Admin not removable|usersMethods.deleteUser|unit|wb - Branches|
-|DeleteGroup - Success|usersMethods.deleteUser|unit|wb - Statement|
-|DeleteGroup - Unauthorized|usersMethods.deleteUser|unit|wb - Statement|
-|DeleteGroup - Missing group name|usersMethods.deleteUser|unit|wb - Statement|
-|DeleteGroup - Group doesn't exist|usersMethods.deleteUser|unit|wb - Statement|
-|HandleDateFilterParams - upTo and from cannot be together|utilsMethods.handleDateFilterParams()|unit|Exception handling|
-|HandleDateFilterParams - Date not in format YYYY-MM-DD|utilsMethods.handleDateFilterParams()|unit|Exception handling|
-|HandleDateFilterParams - Success with date filter|utilsMethods.handleDateFilterParams()|unit|Assertion (Expected result)|
-|HandleDateFilterParams - Success with from filter|utilsMethods.handleDateFilterParams()|unit|Assertion (Expected result)|
-|HandleDateFilterParams - Success with upTo filter|utilsMethods.handleDateFilterParams()|unit|Assertion (Expected result)|
-|HandleAmountFilterParams - Min amount not a number|utilsMethods.handleAmountFilterParams()|unit|Exception handling|
-|HandleAmountFilterParams - MaxAmount not a number|utilsMethods.handleAmountFilterParams()|unit|Exception handling|
-|HandleAmountFilterParams - Success with minAmount and maxAmount filters|utilsMethods.handleAmountFilterParams()|unit|Assertion (Expected result)|
-|HandleAmountFilterParams - Success with only minAmount filter|utilsMethods.handleAmountFilterParams()|unit|Assertion (Expected result)|
-|HandleAmountFilterParams - Success with only maxAmount filter|utilsMethods.handleAmountFilterParams()|unit|Assertion (Expected result)|
-|VerifyAuth - Success|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
-|VerifyAuth - Tokens missing|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
-|VerifyAuth - Tokens is missing information|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
-|VerifyAuth - Mismatched users|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
-|VerifyAuth - AccessToken expired|utilsMethods.verifyAuth()|unit|Assertion (Expected result)|
+|getGroups - Success|usersMethods.getGroups|Unit|wb - Statement|
+|getGroups - Unauthorized|usersMethods.getGroups|Unit|wb - Branches|
+|getGroup - Group doesn't exist|usersMethods.getGroups|Unit|wb - Branches|
+|getGroup - Admin - Success|usersMethods.getGroups|Unit|wb - Statement|
+|getGroup - Admin - Unauthorized|usersMethods.getGroups|Unit|wb - Branches|
+|DeleteUser - Unauthorized|usersMethods.deleteUser|Unit|wb - Branches|
+|DeleteUser - No email provided|usersMethods.deleteUse|Unit|wb - Branches|
+|DeleteUser - Invalid email format|usersMethods.deleteUser|Unit|wb - Branches|
+|DeleteUser - User not found|usersMethods.deleteUser|Unit|wb - Branches|
+|DeleteUser - Admin not removable|usersMethods.deleteUser|Unit|wb - Branches|
+|DeleteGroup - Success|usersMethods.deleteUser|Unit|wb - Statement|
+|DeleteGroup - Unauthorized|usersMethods.deleteUser|Unit|wb - Statement|
+|DeleteGroup - Missing group name|usersMethods.deleteUser|Unit|wb - Statement|
+|DeleteGroup - Group doesn't exist|usersMethods.deleteUser|Unit|wb - Statement|
+|HandleDateFilterParams - upTo and from cannot be together|utilsMethods.handleDateFilterParams()|Unit|Exception handling|
+|HandleDateFilterParams - Date not in format YYYY-MM-DD|utilsMethods.handleDateFilterParams()|Unit|Exception handling|
+|HandleDateFilterParams - Success with date filter|utilsMethods.handleDateFilterParams()|Unit|Assertion (Expected result)|
+|HandleDateFilterParams - Success with from filter|utilsMethods.handleDateFilterParams()|Unit|Assertion (Expected result)|
+|HandleDateFilterParams - Success with upTo filter|utilsMethods.handleDateFilterParams()|Unit|Assertion (Expected result)|
+|HandleAmountFilterParams - Min amount not a number|utilsMethods.handleAmountFilterParams()|Unit|Exception handling|
+|HandleAmountFilterParams - MaxAmount not a number|utilsMethods.handleAmountFilterParams()|Unit|Exception handling|
+|HandleAmountFilterParams - Success with minAmount and maxAmount filters|utilsMethods.handleAmountFilterParams()|Unit|Assertion (Expected result)|
+|HandleAmountFilterParams - Success with only minAmount filter|utilsMethods.handleAmountFilterParams()|Unit|Assertion (Expected result)|
+|HandleAmountFilterParams - Success with only maxAmount filter|utilsMethods.handleAmountFilterParams()|Unit|Assertion (Expected result)|
+|VerifyAuth - Success|utilsMethods.verifyAuth()|Unit|Assertion (Expected result)|
+|VerifyAuth - Tokens missing|utilsMethods.verifyAuth()|Unit|Assertion (Expected result)|
+|VerifyAuth - Tokens is missing information|utilsMethods.verifyAuth()|Unit|Assertion (Expected result)|
+|VerifyAuth - Mismatched users|utilsMethods.verifyAuth()|Unit|Assertion (Expected result)|
+|VerifyAuth - AccessToken expired|utilsMethods.verifyAuth()|Unit|Assertion (Expected result)|
 |Create Category - Success|controller.createCategory|Integration| WB - Statement Coverage |
 |Create Category - Not enough attributes|controller.createCategory|Integration| WB - Branch Coverage |
 |Create Category - Type attributes is empty|controller.createCategory|Integration| WB - Branch Coverage |
