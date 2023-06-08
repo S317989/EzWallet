@@ -40,7 +40,7 @@ Upon completing the aforementioned steps, we conducted Integration Tests of the 
 
 | Test case name                                                                                       | Object(s) tested                             | Test level  | Technique used              |
 | ---------------------------------------------------------------------------------------------------- | -------------------------------------------- | ----------- | --------------------------- |
-| Registration - Success                                                                               | Authentication - Users                         | Unit        | WB - Statement              |
+| Registration - Success|Authentication - Users| Unit        | WB - Statement              |
 | Registration - Exists                                                                                | Authentication - Users                         | Unit        | wb - branches               |
 | Registration - Invalid Email                                                                         | Authentication - Users                         | Unit        | wb - branches               |
 | Registration Admin - Success                                                                         | Authentication - UsersAdmin                    | Unit        | WB - Statement              |
@@ -246,19 +246,19 @@ Upon completing the aforementioned steps, we conducted Integration Tests of the 
 | DeleteTransactions - Admin - Empty _ids                                                              | controller.deleteTransactions                | Unit        | WB - Branch Coverage        |
 | DeleteTransactions - Admin - Transactions don't exist                                                | controller.deleteTransactions                | Unit        | WB - Branch Coverage        |
 | DeleteTransactions - Admin - Transaction not found                                                   | controller.deleteTransactions                | Unit        | WB - Branch Coverage        |
-| Registration - Success                                                                               | app, User                                    | Integration | HTTP request                |
-| Registration - Invalid Email                                                                         | app, User                                    | Integration | HTTP request                |
-| Registration - Already Registered                                                                    | app, User                                    | Integration | HTTP request                |
-| Register Admin - Success                                                                             | app, User                                    | Integration | HTTP request                |
-| Register Admin - Missing Information                                                                 | app, User                                    | Integration | HTTP request                |
-| Register Admin - Already Registered                                                                  | app, User                                    | Integration | HTTP request                |
-| Login - Success                                                                                      | app, User                                    | Integration | HTTP request                |
-| Login - Missing or Empty Field                                                                       | app, User                                    | Integration | HTTP request                |
-| Login - Not registered                                                                               | app, User                                    | Integration | HTTP request                |
-| Login - Wrong Credentials                                                                            | app, User                                    | Integration | HTTP request                |
-| Logout - Success                                                                                     | app, User                                    | Integration | HTTP request                |
-| Logout - Already logged out                                                                          | app, User                                    | Integration | HTTP request                |
-| Logout - User not found - find                                                                       | app, User                                    | Integration | HTTP request                |
+| Registration - Success                                                                               |API endpoint through route on Users | Integration | HTTP request                |
+| Registration - Invalid Email                                                                         |API endpoint through route on Users                                    | Integration | HTTP request                |
+| Registration - Already Registered                                                                    |API endpoint through route on Users                                    | Integration | HTTP request                |
+| Register Admin - Success                                                                             |API endpoint through route on Users                                    | Integration | HTTP request                |
+| Register Admin - Missing Information                                                                 |API endpoint through route on Users                                    | Integration | HTTP request                |
+| Register Admin - Already Registered                                                                  |API endpoint through route on Users                                    | Integration | HTTP request                |
+| Login - Success                                                                                      |API endpoint through route on Users                                    | Integration | HTTP request                |
+| Login - Missing or Empty Field                                                                       |API endpoint through route on Users                                    | Integration | HTTP request                |
+| Login - Not registered                                                                               |API endpoint through route on Users                                    | Integration | HTTP request                |
+| Login - Wrong Credentials                                                                            |API endpoint through route on Users                                    | Integration | HTTP request                |
+| Logout - Success                                                                                     |API endpoint through route on Users                                    | Integration | HTTP request                |
+| Logout - Already logged out                                                                          |API endpoint through route on Users                                    | Integration | HTTP request                |
+| Logout - User not found - find                                                                       |API endpoint through route on Users                                    | Integration | HTTP request                |
 | getUsers - Success with filled list                                                                  | User                                         | integration | Black box, Positive         |
 | getUsers - Success with empty list                                                                   | User                                         | integration | Black box, Positive         |
 | getUsers - Unauthorized                                                                              | User                                         | integration | Black box, Negative         |
