@@ -1,7 +1,12 @@
-img[alt="GUIs"], img[alt="ReportImages"] {
+img[alt="GUIs"] {
     display: block;
     margin: auto;
     height: 500px;
+}
+
+img[alt="ReportImages"] {
+    display: block;
+    margin: auto;
 }
 
 .doublePicSection {
