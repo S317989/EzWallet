@@ -15,8 +15,8 @@ These figures will not be used to evaluate neither the project nor the team, the
 |   apr 10 - 16   |          15ph           |  15ph  |   /    |      /       |          /          |         /          |     /      |     /     |
 |   apr 17 - 23   |          15ph           |  15ph  |   /    |      /       |          /          |         /          |     /      |     /     |
 | apr 24 - apr 30 |           4ph           |  4ph   |   /    |      /       |          /          |         /          |     /      |     /     |
-|    may 1 - 7    |            /            |   /    |  15ph  |      /       |          /          |         /          |     /      |     /     |
-|   may 8 - 14    |            /            |   /    |  15ph  |      /       |          /          |         /          |     /      |     /     |
+|    may 1 - 7    |            /            |   /    |  15ph  |      /       |          /          |         /          |    2ph     |     /     |
+|   may 8 - 14    |            /            |   /    |  15ph  |      /       |          /          |         /          |    2ph     |     /     |
 |   may 15 - 21   |            /            |   /    |  15ph  |      /       |          /          |         /          |     /      |     /     |
 |   may 22 - 28   |            /            |   /    |  5ph   |     10ph     |         5ph         |        5ph         |     /      |     /     |
 | may 29 - jun 4  |            /            |   /    |  2ph   |     7ph      |        10ph         |        5ph         |     /      |     /     |
