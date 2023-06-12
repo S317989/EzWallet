@@ -1,53 +1,56 @@
-import mongoose from 'mongoose'
+import mongoose from "mongoose";
 
-export const UserSchema = new mongoose.Schema({
+export const UserSchema = new mongoose.Schema(
+  {
     username: {
-        type: String,
-        required: true,
-        max: 255,
-        unique: true
+      type: String,
+      required: true,
+      max: 255,
+      unique: true,
     },
     email: {
-        type: String,
-        required: true,
-        unique: true,
+      type: String,
+      required: true,
+      unique: true,
     },
     password: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     refreshToken: {
-        type: String
+      type: String,
     },
     role: {
-        type: String,
-        default: "Regular"
-    }
-}, {
+      type: String,
+      default: "Regular",
+    },
+  },
+  {
     timestamps: true,
-});
+  }
+);
 
 export const GroupSchema = new mongoose.Schema({
-    name: {
+  name: {
+    type: String,
+    required: true,
+    default: "group",
+    unique: true,
+  },
+  members: [
+    {
+      email: {
         type: String,
         required: true,
-        default: "group",
-        unique: true
+      },
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
     },
-    members: [
-        {
-            email: {
-                type: String,
-                required: true
-            },
-            user: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "User"
-            }
-        }
-    ]
-})
+  ],
+});
 
-const Group = mongoose.model("Group", GroupSchema)
-const User = mongoose.model('User', UserSchema);
-export { Group, User }
+const Group = mongoose.model("Group", GroupSchema);
+const User = mongoose.model("User", UserSchema);
+export { Group, User };
