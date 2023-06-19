@@ -44,9 +44,17 @@ describe("handleDateFilterParams", () => {
       },
     };
 
+    let gte = new Date(mockRequest.query["date"]);
+
+    let lte = new Date(mockRequest.query["date"]);
+    lte.setSeconds(59);
+    lte.setMinutes(59);
+    lte.setUTCHours(23);
+
     const expectedFilter = {
       date: {
-        $gte: new Date(mockRequest.query["date"]),
+        $gte: gte,
+        $lte: lte,
       },
     };
 
@@ -62,6 +70,7 @@ describe("handleDateFilterParams", () => {
       },
     };
 
+    
     const expectedFilter = {
       date: {
         $gte: new Date(mockRequest.query["from"]),
@@ -80,8 +89,9 @@ describe("handleDateFilterParams", () => {
     };
 
     const upToDate = new Date(mockRequest.query["upTo"]);
-    upToDate.setHours(23);
+    upToDate.setUTCHours(23);
     upToDate.setMinutes(59);
+    upToDate.setSeconds(59);
 
     const expectedFilter = {
       date: {
@@ -105,7 +115,7 @@ describe("handleAmountFilterParams", () => {
   test("HandleAmountFilterParams - Min amount not a number", () => {
     mockRequest = {
       query: {
-        minAmount: "abc",
+        min: "abc",
       },
     };
 
@@ -117,7 +127,7 @@ describe("handleAmountFilterParams", () => {
   test("HandleAmountFilterParams - MaxAmount not a number", () => {
     mockRequest = {
       query: {
-        maxAmount: "def",
+        max: "def",
       },
     };
 
@@ -129,8 +139,8 @@ describe("handleAmountFilterParams", () => {
   test("HandleAmountFilterParams - Success with minAmount and maxAmount filters", () => {
     mockRequest = {
       query: {
-        minAmount: "100",
-        maxAmount: "500",
+        min: "100",
+        max: "500",
       },
     };
 
@@ -149,7 +159,7 @@ describe("handleAmountFilterParams", () => {
   test("HandleAmountFilterParams - Success with only minAmount filter", () => {
     mockRequest = {
       query: {
-        minAmount: "100",
+        min: "100",
       },
     };
 
@@ -167,7 +177,7 @@ describe("handleAmountFilterParams", () => {
   test("HandleAmountFilterParams - Success with only maxAmount filter", () => {
     mockRequest = {
       query: {
-        maxAmount: "500",
+        max: "500",
       },
     };
 

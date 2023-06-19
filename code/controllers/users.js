@@ -269,6 +269,7 @@ export const getGroup = async (req, res) => {
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
     else {
+      
       const userAuth = verifyAuth(req, res, {
         authType: "Group",
         emails: groupInfo.members.map((member) => member.email),

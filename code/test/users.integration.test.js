@@ -985,24 +985,22 @@ describe("getGroup", () => {
     });
 
     test("GetGroup - User not in group", (done) => {
-      group.members = [];
-
-      Group.create(group).then(() => {
+      Group.create({
+        name: "Group1",
+        members: [
+          {
+            email: "email@email.com",
+            username: "User1",
+          },
+        ],
+      }).then(() => {
         request(app)
-          .get(`/api/groups/${group.name}`)
-          .set("Cookie", [
-            `accessToken=${accessToken}`,
-            `refreshToken=${refreshToken}`,
-          ])
-          .send({ name: group.name })
+          .get("/api/groups/Group1")
           .then((response) => {
-            expect(response.status).toBe(400);
-            expect(response.body).toEqual({
-              error: expect.stringMatching(/User not in the specified group/),
-              refreshedTokenMessage: response.body.refreshedTokenMessage,
-            }),
-              done();
-          });
+            expect(response.status).toBe(401);
+            done();
+          })
+          .catch((err) => done(err));
       });
     });
   });

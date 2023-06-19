@@ -130,6 +130,7 @@ describe("verifyAuth", () => {
 
     param = {
       authType: "User",
+      username: user.username,
     };
 
     const response = verifyAuth(mockRequest, mockResponse, param);

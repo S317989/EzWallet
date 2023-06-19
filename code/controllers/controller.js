@@ -776,13 +776,6 @@ export const deleteTransaction = async (req, res) => {
             refreshedTokenMessage: res.locals.refreshedTokenMessage,
           });
 
-        console.log(
-          user.refreshToken,
-          req.cookies.refreshToken,
-          transactionToBeDeleted.username,
-          req.params.username
-        );
-
         // Check if the user is the owner of the transaction
         if (
           user.refreshToken !== req.cookies.refreshToken ||

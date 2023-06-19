@@ -294,13 +294,19 @@ describe("deleteCategory", () => {
       .spyOn(categories, "find")
       .mockResolvedValueOnce([{ type: "Cat1" }, { type: "Cat2" }]);
 
-    jest.spyOn(categories, "find").mockResolvedValueOnce([{ type: "Cat1" }]);
+    jest
+      .spyOn(categories, "find")
+      .mockResolvedValueOnce([{ type: "Cat1" }])
+      .mockResolvedValueOnce([{ type: "Cat1" }, { type: "Cat2" }]);
 
     jest.spyOn(categories, "countDocuments").mockResolvedValueOnce(2);
 
     jest.spyOn(categories, "deleteMany").mockResolvedValue();
 
-    jest.spyOn(transactions, "updateMany").mockResolvedValue();
+    // SpyOn modifiedCount of updateMany
+    jest.spyOn(transactions, "updateMany").mockResolvedValueOnce({
+      modifiedCount: 0,
+    });
 
     await controllerMethods.deleteCategory(mockRequest, mockResponse);
 
@@ -333,14 +339,13 @@ describe("deleteCategory", () => {
     jest
       .spyOn(categories, "find")
       .mockResolvedValueOnce([{ type: "Cat1" }, { type: "Cat2" }])
-      .mockResolvedValueOnce([{ type: "Cat1" }, { type: "Cat2" }])
-      ;
+      .mockResolvedValueOnce([{ type: "Cat1" }, { type: "Cat2" }]);
 
     jest.spyOn(categories, "countDocuments").mockResolvedValueOnce(2);
 
     jest.spyOn(categories, "deleteMany").mockResolvedValue();
 
-
+    // SpyOn modifiedCount of updateMany
     jest.spyOn(transactions, "updateMany").mockResolvedValueOnce({
       modifiedCount: 1,
     });
@@ -571,6 +576,9 @@ describe("createTransaction", () => {
       params: {
         username: "Test1",
       },
+      cookies: {
+        refreshToken: "RefreshToken",
+      },
     };
 
     mockResponse = {
@@ -587,7 +595,11 @@ describe("createTransaction", () => {
 
     // Mock findOne methods
     jest.spyOn(categories, "findOne").mockResolvedValue(true);
-    jest.spyOn(User, "findOne").mockResolvedValue(true);
+    jest.spyOn(User, "findOne").mockResolvedValue({
+      username: "Test1",
+      email: "test1@email.com",
+      refreshToken: "RefreshToken",
+    });
 
     jest
       .spyOn(transactions.prototype, "save")
