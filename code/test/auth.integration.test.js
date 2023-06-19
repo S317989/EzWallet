@@ -87,7 +87,7 @@ describe("register", () => {
         .then((response) => {
           expect(response.status).toBe(400);
           expect(response.body).toEqual({
-            message: expect.stringMatching(`you are already registered`),
+            error: expect.stringMatching(`you are already registered`),
           });
           done();
         })
@@ -147,7 +147,7 @@ describe("registerAdmin", () => {
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
-      message: expect.stringMatching(`you are already registered`),
+      error: expect.stringMatching(`you are already registered`),
     });
   });
 });

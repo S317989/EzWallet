@@ -58,7 +58,7 @@ describe("register", () => {
 
     expect(mockResponse.status).toHaveBeenCalledWith(400);
     expect(mockResponse.json).toHaveBeenCalledWith({
-      message: "you are already registered",
+      error: "you are already registered",
     });
   });
 
@@ -125,7 +125,7 @@ describe("registerAdmin", () => {
 
     expect(mockResponse.status).toHaveBeenCalledWith(400);
     expect(mockResponse.json).toHaveBeenCalledWith({
-      message: expect.stringMatching("you are already registered"),
+      error: expect.stringMatching("you are already registered"),
     });
   });
 

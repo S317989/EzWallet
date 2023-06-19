@@ -180,7 +180,8 @@ export const createGroup = async (req, res) => {
       }
     }
 
-    if (newGroupMembers.length === 0)
+    // One member is just the caller
+    if (newGroupMembers.length === 1)
       return res.status(400).json({
         error: `All the users [${membersList}] either don't exist or are already in a group!`,
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
@@ -268,7 +269,11 @@ export const getGroup = async (req, res) => {
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
     else {
-      const userAuth = verifyAuth(req, res, { authType: "User" });
+      const userAuth = verifyAuth(req, res, {
+        authType: "Group",
+        emails: groupInfo.members.map((member) => member.email),
+      });
+
       if (userAuth.flag) {
         const user = await User.findOne({
           refreshToken: req.cookies.refreshToken,
@@ -427,12 +432,10 @@ export const removeFromGroup = async (req, res) => {
     let removingEmails = req.body.emails;
 
     if (!removingEmails || removingEmails.length === 0)
-      return res
-        .status(400)
-        .json({
-          error: "No emails provided",
-          refreshedTokenMessage: res.locals.refreshedTokenMessage,
-        });
+      return res.status(400).json({
+        error: "No emails provided",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
 
     if (!removingEmails.every((email) => validateEmail(email)))
       return res.status(400).json({
@@ -581,7 +584,7 @@ export const deleteUser = async (req, res) => {
 
     if (group) InGroup = true;
 
-    if (group.length === 0) await Group.deleteOne(group);
+    if (group && group.members.length === 0) await Group.deleteOne(group);
 
     /** Effective user removing */
     await User.deleteOne(user);

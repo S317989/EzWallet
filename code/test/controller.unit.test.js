@@ -332,13 +332,18 @@ describe("deleteCategory", () => {
 
     jest
       .spyOn(categories, "find")
-      .mockResolvedValueOnce([{ type: "Cat1" }, { type: "Cat2" }]);
+      .mockResolvedValueOnce([{ type: "Cat1" }, { type: "Cat2" }])
+      .mockResolvedValueOnce([{ type: "Cat1" }, { type: "Cat2" }])
+      ;
 
     jest.spyOn(categories, "countDocuments").mockResolvedValueOnce(2);
 
     jest.spyOn(categories, "deleteMany").mockResolvedValue();
 
-    jest.spyOn(transactions, "updateMany").mockResolvedValue();
+
+    jest.spyOn(transactions, "updateMany").mockResolvedValueOnce({
+      modifiedCount: 1,
+    });
 
     await controllerMethods.deleteCategory(mockRequest, mockResponse);
 

@@ -1,3 +1,4 @@
+import Cookies from "js-cookie";
 import { categories, transactions } from "../models/model.js";
 import { Group, User } from "../models/User.js";
 import {
@@ -178,18 +179,18 @@ export const deleteCategory = async (req, res) => {
 
     await categories.deleteMany({ type: { $in: foundCat } });
 
+    let newCategoryList = await categories.find();
+
     // Update transaction where type is in foundCat and set type to categoriesList[0].type
-    await transactions.updateMany(
+    const modifiedCat = await transactions.updateMany(
       { type: { $in: foundCat } },
-      { $set: { type: categoriesList[0].type } }
+      { $set: { type: newCategoryList[0].type } }
     );
 
     return res.status(200).json({
       data: {
         message: `Categories ${foundCat} successfully deleted!`,
-        count: await transactions.countDocuments({
-          type: { $in: foundCat },
-        }),
+        count: modifiedCat.modifiedCount,
       },
       refreshedTokenMessage: res.locals.refreshedTokenMessage,
     });
@@ -258,8 +259,22 @@ export const createTransaction = async (req, res) => {
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
 
+    let user = await User.findOne({ username: username });
+
+    if (!user || !(await categories.findOne({ type: type })))
+      return res.status(400).json({
+        error: `Username ${username} or category ${type} doesn't exist`,
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
+
     if (usernameParam !== username)
       return res.status(400).json({
+        error: "Username values are not equivalent",
+        refreshedTokenMessage: res.locals.refreshedTokenMessage,
+      });
+
+    if (req.cookies.refreshToken !== user.refreshToken)
+      return res.status(401).json({
         error: "Username values are not equivalent",
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
@@ -274,6 +289,7 @@ export const createTransaction = async (req, res) => {
       });
 
     const new_transactions = new transactions({ username, amount, type });
+
     new_transactions
       .save()
       .then((result) =>
@@ -383,7 +399,7 @@ export const getTransactionsByUser = async (req, res) => {
         return res.status(401).json({ error: "Unauthorized" });
 
       const dateIncludes = ["date", "from", "upTo"];
-      const amountIncludes = ["minAmount", "maxAmount"];
+      const amountIncludes = ["min", "max"];
 
       const filter = {
         $and: [
@@ -400,8 +416,10 @@ export const getTransactionsByUser = async (req, res) => {
       // Remove the null element
       filter.$and = filter.$and.filter((condition) => condition !== null);
 
+      let responseData = await getTransactionsDetails(req, res, filter);
+
       return res.status(200).json({
-        data: await getTransactionsDetails(req, res, filter),
+        data: responseData,
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
     }
@@ -727,17 +745,20 @@ export const deleteTransaction = async (req, res) => {
         refreshedTokenMessage: res.locals.refreshedTokenMessage,
       });
     } else {
-      const userAuth = verifyAuth(req, res, { authType: "User" });
+      const user = await User.findOne({ username: req.params.username });
+
+      if (!user)
+        return res.status(400).json({
+          error: "User not found",
+          refreshedTokenMessage: res.locals.refreshedTokenMessage,
+        });
+
+      const userAuth = verifyAuth(req, res, {
+        authType: "User",
+        username: req.params.username,
+      });
 
       if (userAuth.flag) {
-        const user = await User.findOne({ username: req.params.username });
-
-        if (!user)
-          return res.status(400).json({
-            error: "User not found",
-            refreshedTokenMessage: res.locals.refreshedTokenMessage,
-          });
-
         if (!req.body._id)
           return res.status(400).json({
             error: "Missing _ids",
@@ -754,6 +775,13 @@ export const deleteTransaction = async (req, res) => {
             error: `Transaction ${req.body._id} not found`,
             refreshedTokenMessage: res.locals.refreshedTokenMessage,
           });
+
+        console.log(
+          user.refreshToken,
+          req.cookies.refreshToken,
+          transactionToBeDeleted.username,
+          req.params.username
+        );
 
         // Check if the user is the owner of the transaction
         if (
