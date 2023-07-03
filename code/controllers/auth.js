@@ -26,7 +26,7 @@ export const register = async (req, res) => {
     });
 
     if (existingEmail || existingUsername)
-      return res.status(400).json({ message: "you are already registered" });
+      return res.status(400).json({ error: "you are already registered" });
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = await User.create({
@@ -60,10 +60,10 @@ export const registerAdmin = async (req, res) => {
       return res.status(400).json({ error: "Invalid email" });
 
     const existingEmail = await User.findOne({ email: req.body.email });
-    const existingUsername = await User.findOne({ email: req.body.username });
+    const existingUsername = await User.findOne({ username: req.body.username });
 
     if (existingEmail || existingUsername)
-      return res.status(400).json({ message: "you are already registered" });
+      return res.status(400).json({ error: "you are already registered" });
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = await User.create({

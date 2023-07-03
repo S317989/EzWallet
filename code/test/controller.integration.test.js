@@ -533,7 +533,7 @@ describe("deleteCategory", () => {
           })
           .catch((err) => done(err));
       });
-  }); 
+  });
 
   test("Delete Category - Delete Many - Success", (done) => {
     const categoryToBeDeleted = [category1.type, category2.type];
@@ -577,7 +577,7 @@ describe("deleteCategory", () => {
           })
           .catch((err) => done(err));
       });
-  }); 
+  });
 
   test("Delete Category - Only 1 category in the DB", (done) => {
     const categoryToBeDeleted = [category1.type];
@@ -614,7 +614,7 @@ describe("deleteCategory", () => {
           })
           .catch((err) => done(err));
       });
-  }); 
+  });
 
   test("Delete Category - At least 1 category type is empty in the input array", (done) => {
     const categoryToBeDeleted = ["", "NewType2", "NewType3"];
@@ -635,7 +635,7 @@ describe("deleteCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  });
 
   test("Delete Category - At least 1 category is not in the DB", (done) => {
     const categoryToBeDeleted = ["Type", "NewType2", "NewType3"];
@@ -654,7 +654,7 @@ describe("deleteCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  });
 
   test("Delete Category - Body doesn't contain all attributes", (done) => {
     request(app)
@@ -671,7 +671,7 @@ describe("deleteCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  });
 
   test("Delete Category - Not Authenticated", (done) => {
     const categoryToBeDeleted = ["NewType1", "NewType2", "NewType3"];
@@ -689,7 +689,7 @@ describe("deleteCategory", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  });
 
   test("Delete Category - Regular User Authenticated, not Admin", (done) => {
     const categoryToBeDeleted = [
@@ -792,7 +792,7 @@ describe("getCategories", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  });
 
   test("Get Categories - User not Authenticated", (done) => {
     request(app)
@@ -806,7 +806,7 @@ describe("getCategories", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  });
 }); /** 2/2 test */
 
 describe("createTransaction", () => {
@@ -891,7 +891,7 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  });
 
   test("Create Transaction - Missing attributes", (done) => {
     const newTransaction = {
@@ -918,7 +918,7 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  });
 
   test("Create Transaction - Empty body attributes", (done) => {
     const newTransaction = {
@@ -943,7 +943,7 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  });
 
   test("Create Transaction - Category doesn't exist in the DB", (done) => {
     const newTransaction = {
@@ -971,7 +971,7 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  });
 
   test("Create Transaction - Route Username doesn't match the request body", (done) => {
     const newTransaction = {
@@ -1019,7 +1019,7 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  });
 
   //Need to implement (in the method) a specific check for this error !!
   test("Create Transaction - Body Username is not in the DB", (done) => {
@@ -1045,7 +1045,7 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  });
 
   test("Create Transaction - Amount is not a float", (done) => {
     const newTransaction = {
@@ -1073,7 +1073,7 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  });
 
   //Need to implement (in the method) a specific check for this error !!
   test("Create Transaction - Authenticated user doesn't match the user in body", (done) => {
@@ -1129,7 +1129,7 @@ describe("createTransaction", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  });
 }); /** 9/9 test */
 
 describe("getAllTransactions", () => {
@@ -1266,7 +1266,7 @@ describe("getAllTransactions", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  });
 
   test("Get All Transaction - No Transaction in the DB", (done) => {
     transactions.deleteMany({}).then(() => {
@@ -1287,7 +1287,7 @@ describe("getAllTransactions", () => {
         })
         .catch((err) => done(err));
     });
-  }); 
+  });
 
   test("Get All Transaction - Authenticated Regular User, not an Admin", (done) => {
     request(app)
@@ -1303,7 +1303,7 @@ describe("getAllTransactions", () => {
         done();
       })
       .catch((err) => done(err));
-  }); 
+  });
 }); /** 3/3 test */
 
 describe("getTransactionsByUser", () => {
@@ -2464,6 +2464,7 @@ describe("deleteTransaction", () => {
       amount: 100,
     };
     transaction2 = {
+      _id: "646b31fb907572186308033f",
       username: admin.username,
       type: cat2.type,
       amount: 3,
@@ -2533,24 +2534,26 @@ describe("deleteTransaction", () => {
   test("Delete Transaction - Username in params not in the DB", (done) => {
     const transactionIds = transaction1._id;
 
-    request(app)
-      .delete("/api/users/:username/transactions".replace(":username", "User"))
-      .set("Cookie", [
-        `accessToken=${User1_accessToken}`,
-        `refreshToken=${User1_refreshToken}`,
-      ])
-      .send({ _id: transactionIds })
-      .then((response) => {
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("error");
-        expect(response.body.error).toContain("User not found");
-        done();
-      })
-      .catch((err) => done(err));
+    User.deleteOne({ username: user1.username }).then(() => {
+      request(app)
+        .delete("/api/users/User1/transactions")
+        .set("Cookie", [
+          `accessToken=${User1_accessToken}`,
+          `refreshToken=${User1_refreshToken}`,
+        ])
+        .send({ _id: transactionIds })
+        .then((response) => {
+          expect(response.status).toBe(400);
+          expect(response.body).toHaveProperty("error");
+          expect(response.body.error).toContain("User not found");
+          done();
+        })
+        .catch((err) => done(err));
+    });
   });
 
   test("Delete Transaction - Transaction ID, in the body, not in the DB", (done) => {
-    const transactionIds = "646b31fb907572186308033f";
+    const transactionIds = "646b31fb907572186308033d";
 
     request(app)
       .delete(
@@ -2579,10 +2582,10 @@ describe("deleteTransaction", () => {
 
     request(app)
       .delete(
-        "/api/users/:username/transactions".replace(":username", admin.username)
+        "/api/users/:username/transactions".replace(":username", user1.username)
       )
       .send({
-        _id: transactionIds,
+        _id: "646b31fb907572186308033f",
       })
       .set("Cookie", [
         `accessToken=${User1_accessToken}`,

@@ -11,12 +11,17 @@ import jwt from "jsonwebtoken";
  */
 export const handleDateFilterParams = (req) => {
   let { date, from, upTo } = req.query;
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // Regular expression to match the format "YYYY-MM-DD"
 
   if (date && (from || upTo))
     throw new Error("Date cannot be with from or upTo");
 
-  // return error if date is in not format YYYY-MM-DD
-  if (date && !date.match(/^\d{4}-\d{2}-\d{2}$/))
+  // throw error if date is in not format YYYY-MM-DD
+  if (
+    (date && (!date.match(dateRegex) || isNaN(Date.parse(date)))) ||
+    (from && (!from.match(dateRegex) || isNaN(Date.parse(from)))) ||
+    (upTo && (!upTo.match(dateRegex) || isNaN(Date.parse(upTo))))
+  )
     throw new Error("Date must be in format YYYY-MM-DD");
 
   let filter = {
@@ -24,15 +29,20 @@ export const handleDateFilterParams = (req) => {
   };
 
   if (date) {
-    filter.date = { $gte: new Date(req.query["date"]) };
+    let lte = new Date(req.query["date"]);
+    lte.setSeconds(59);
+    lte.setMinutes(59);
+    lte.setUTCHours(23);
+    filter.date = { $gte: new Date(req.query["date"]), $lte: lte };
   } else {
     /** Date must be alone, without from and upTo */
     if (from) filter.date.$gte = new Date(req.query["from"]);
 
     if (upTo) {
       const upToDate = new Date(req.query["upTo"]);
-      upToDate.setHours(23);
+      upToDate.setUTCHours(23);
       upToDate.setMinutes(59);
+      upToDate.setSeconds(59);
 
       filter.date.$lte = upToDate;
     }
@@ -49,21 +59,21 @@ export const handleDateFilterParams = (req) => {
  *  Example: {amount: {$gte: 100}} returns all transactions whose `amount` parameter is greater or equal than 100
  */
 export const handleAmountFilterParams = (req, data) => {
-  let { minAmount, maxAmount } = req.query;
+  let { min, max } = req.query;
 
   let filter = {
     amount: {},
   };
 
-  if (minAmount) {
-    if (isNaN(minAmount)) throw new Error("Min amount must be a number");
+  if (min) {
+    if (isNaN(min)) throw new Error("Min amount must be a number");
 
-    filter.amount.$gte = parseInt(minAmount);
+    filter.amount.$gte = parseInt(min);
   }
-  if (maxAmount) {
-    if (isNaN(maxAmount)) throw new Error("Max amount must be a number");
+  if (max) {
+    if (isNaN(max)) throw new Error("Max amount must be a number");
 
-    filter.amount.$lte = parseInt(maxAmount);
+    filter.amount.$lte = parseInt(max);
   }
   return filter;
 };
@@ -204,8 +214,7 @@ const checkRolesPermissions = (
     case "Admin":
       if (
         decodedAccessToken.role !== "Admin" ||
-        decodedRefreshToken.role !== "Admin" ||
-        (!decodedAccessToken && decodedRefreshToken.role !== "Admin")
+        decodedRefreshToken.role !== "Admin"
       )
         return { flag: false, cause: "Mismatched users" };
 
@@ -213,12 +222,9 @@ const checkRolesPermissions = (
     case "Simple":
       return { flag: true, cause: "Authorized" };
       break;
+
     case "User":
-      if (
-        decodedAccessToken.role !== "Regular" ||
-        decodedRefreshToken.role !== "Regular" ||
-        (!decodedAccessToken && decodedRefreshToken.role !== "Regular")
-      )
+      if (decodedAccessToken.username !== info.username)
         return { flag: false, cause: "Mismatched users" };
 
       break;
